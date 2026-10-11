@@ -16,7 +16,7 @@ The current prototype uses `tools/flatpak/ibus-flatpak-host-wrapper.sh` to launc
 
 ## Current blocker and interpretation
 
-The cache-generation test and the active daemon are not equivalent: seeing the component in `ibus read-cache` confirms that the generated cache contains the descriptor, but does not prove that the running daemon has registered the engine. The user-service environment override also failed to change discovery, so the environment variable alone is not an established fix.
+The cache-generation test and the active daemon are not equivalent: `ibus write-cache --file=/tmp/...` writes a separate cache file, not the live daemon's registry, and seeing the component in that file does not prove that the running daemon has registered the engine. IBus documents `IBUS_COMPONENT_PATH` as a colon-delimited custom component path; when set, it replaces the default component search path, so any diagnostic value must explicitly include `/usr/share/ibus/component` if standard engines should remain available. The user-service environment override was tried and did not change discovery, so the environment variable alone is not an established fix. See the [IBusRegistry documentation](https://ibus.github.io/docs/ibus-1.5/IBusRegistry.html) and [ibus command manual](https://manpages.debian.org/testing/ibus-data/ibus.1.en.html).
 
 The temporary descriptor emitted GLib critical warnings from `g_variant_new_string` during `ibus write-cache`, and the decoded cache showed `[Invalid UTF-8]` for missing optional `homepage` and `textdomain` fields. This is a concrete warning worth eliminating in future test fixtures, but the investigation did not prove that these warnings explain the discovery failure. The production descriptor template, `data/openbangla.xml.in`, already supplies both fields.
 
@@ -34,7 +34,13 @@ In `src/engine/ibus/main.cpp`, the `--ibus` path requests the `org.freedesktop.I
 ## Next engineering work
 
 1. Improve the disposable component fixture so it includes the metadata fields expected by IBus and produces no avoidable GLib warnings.
-2. Capture the GNOME-managed IBus daemon's startup/debug logs while it builds its registry, and determine which registry/cache path it actually consumes.
+2. Capture the GNOME-managed IBus daemon's logs and effective unit configuration, then determine which registry/cache path it actually consumes. Read-only baseline commands are:
+
+   ```sh
+   systemctl --user show org.freedesktop.IBus.session.GNOME.service -p ExecStart -p Environment
+   journalctl --user -u org.freedesktop.IBus.session.GNOME.service -b --no-pager
+   ibus list-engine --name-only | grep -i openbangla || true
+   ```
 3. Validate the component descriptor and launch semantics against the installed IBus version, including whether the host daemon attempts to execute the descriptor's `<exec>` command and how that command should bridge to Flatpak.
 4. Add an end-to-end test only once there is a repeatable, isolated test environment. It must assert engine discovery and text entry, not just process startup or D-Bus name ownership.
 
