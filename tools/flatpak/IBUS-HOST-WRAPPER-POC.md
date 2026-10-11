@@ -17,7 +17,7 @@ SHANTI_FLATPAK_APP_ID=org.example.Shanti flatpak run --help
 SHANTI_FLATPAK_APP_ID=org.example.Shanti bash tools/flatpak/ibus-flatpak-host-wrapper.sh
 ```
 
-The second command is a direct engine launch smoke test, not a complete IBus integration test. Run it only in a disposable development session where an IBus daemon is active. It may remain running while the engine serves requests; stop it with Ctrl-C. The placeholder ID is not a declared Shanti app ID.
+The second command is a direct engine launch smoke test, not a complete IBus integration test. Run it only in a disposable development session where an IBus daemon is active. The wrapper runs Flatpak in a separate process group and traps termination to stop the sandbox process group; verify cleanup on the target system before relying on it as a component launcher. The placeholder ID is not a declared Shanti app ID.
 
 The `--talk-name=org.freedesktop.IBus` and `--own-name=org.freedesktop.IBus.OpenBangla` options are deliberately narrow, but their effectiveness depends on the installed app's D-Bus policy and Flatpak version. Do not broaden them to the whole session bus to make a test pass. If Flatpak rejects either override or the engine cannot reach the intended IBus service, record the exact error and stop; do not change production permissions on that basis alone.
 
@@ -159,7 +159,7 @@ The experimental launcher and its fixed-app-ID template now:
 - retain the narrowly scoped `org.freedesktop.IBus` talk and `org.freedesktop.IBus.OpenBangla` own-name options;
 - fail clearly if `ibus` is unavailable or address discovery fails.
 
-The wrapper unit test mocks `ibus address` and checks the explicit address, socket-specific read-only filesystem grant, and absolute engine command. The wrapper and fixed-ID template now extract the socket path from a `unix:path=...` address and grant access only to that socket, rather than the full `~/.cache/ibus` directory.
+The wrapper unit test mocks `ibus address` and checks the explicit address, socket-specific read-only filesystem grant, absolute engine command, and signal cleanup against a mock child process. The wrapper and fixed-ID template extract the socket path from a `unix:path=...` address and grant access only to that socket, rather than the full `~/.cache/ibus` directory. The cleanup test does not prove that every Flatpak/bwrap version terminates all sandbox descendants; confirm this with the disposable live probe.
 
 Live disposable-probe observations on 2026-10-11:
 - With `IBUS_ADDRESS` but no filesystem grant, the engine logged IBus/GLib connection criticals.
