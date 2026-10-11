@@ -15,12 +15,14 @@ app_id="${SHANTI_FLATPAK_APP_ID:-}"
 [[ "$app_id" =~ ^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$ ]] || fail 'SHANTI_FLATPAK_APP_ID is not a valid reverse-DNS-style app ID'
 command -v flatpak >/dev/null 2>&1 || fail 'flatpak command not found' 69
 
-# The IBus engine uses --ibus to request its well-known IBus component name.
-# This grants only the IBus bus name for this invocation; do not replace it
-# with --socket=session-bus or a broad session-bus policy without a security
-# review. Whether this narrow grant is sufficient must be tested on a real
+# The engine's --ibus startup path requests ownership of
+# org.freedesktop.IBus.OpenBangla and talks to org.freedesktop.IBus.
+# Grant only those two names for this invocation. Do not replace this with
+# --socket=session-bus or a broad session-bus policy without security review.
+# The actual D-Bus behaviour still needs an end-to-end test on a disposable
 # desktop session.
 exec flatpak run \
     --talk-name=org.freedesktop.IBus \
+    --own-name=org.freedesktop.IBus.OpenBangla \
     --command=ibus-engine-openbangla \
     "$app_id" --ibus "$@"
