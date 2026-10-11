@@ -38,6 +38,7 @@ expected="$tmp/expected"
 cat > "$expected" <<'EXPECTED'
 run
 --talk-name=org.freedesktop.IBus
+--own-name=org.freedesktop.IBus.OpenBangla
 --command=ibus-engine-openbangla
 org.example.Shanti
 --ibus
