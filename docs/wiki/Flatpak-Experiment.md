@@ -421,8 +421,6 @@ This is evidence that the disposable engine can connect and acquire its expected
 
 Next, update and test only the experimental wrapper/template to use `/app/libexec/ibus-engine-openbangla` and supply the host IBus address, then repeat the name-ownership check without the cache mount. Keep the production installer, production Flatpak permissions, and normal desktop IBus configuration unchanged until the disposable integration path has passed discovery and text-entry tests.
 
-### Experimental wrapper address-handling update — 2026-10-11
-
 ### Experimental wrapper socket-access update — 2026-10-11
 
 The wrapper and fixed-ID template now pass the host address returned by `ibus address` as `IBUS_ADDRESS`, execute `/app/libexec/ibus-engine-openbangla`, and grant read-only access to the specific Unix socket path extracted from the address. They reject addresses that are not in the expected `unix:path=...` form. This avoids granting access to the entire `~/.cache/ibus` directory. The wrapper unit test now expects the socket-specific `--filesystem=/tmp/ibus-test:ro` argument.
