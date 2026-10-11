@@ -21,6 +21,13 @@ command -v ibus >/dev/null 2>&1 || fail 'ibus command not found; cannot discover
 ibus_address="$(ibus address)" || fail 'failed to obtain the host IBus address' 69
 [[ -n "$ibus_address" ]] || fail 'host IBus returned an empty address' 69
 
+# Flatpak cannot see the host IBus Unix socket unless its path is granted.
+# Grant read-only access to the specific socket, not the whole IBus cache.
+[[ "$ibus_address" == unix:path=* ]] || fail 'host IBus address is not a supported unix:path address' 69
+ibus_socket_path="${ibus_address#unix:path=}"
+ibus_socket_path="${ibus_socket_path%%,*}"
+[[ -n "$ibus_socket_path" && "$ibus_socket_path" == /* ]] || fail 'host IBus address contains an invalid socket path' 69
+
 # The engine is installed under /app/libexec, which is not on Flatpak's
 # default PATH (/app/bin:/usr/bin). Keep the D-Bus grants limited to the
 # service name the engine talks to and the name it owns.
