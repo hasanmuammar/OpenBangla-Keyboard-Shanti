@@ -63,5 +63,5 @@ cmp -s "$expected" "$FLATPAK_ARGS_FILE" || {
     fail 'wrapper passed unexpected arguments to Flatpak'
 }
 
-printf 'PASS: wrapper syntax, input validation, and Flatpak argument forwarding\n'
+printf 'PASS: wrapper syntax, input validation, missing-command handling, and Flatpak argument forwarding\n'
 printf 'NOTE: this test does not validate Flatpak permissions, D-Bus connectivity, IBus discovery, or text entry.\n'
