@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # EXPERIMENTAL ONLY: host IBus -> Flatpak engine launcher.
 # Not installed by the production installer and not a production integration.
+# Launching the engine does not register it with host IBus; a host-side
+# component descriptor and successful daemon discovery are separate requirements.
 set -euo pipefail
 
 fail() {
