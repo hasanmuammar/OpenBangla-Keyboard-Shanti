@@ -420,3 +420,9 @@ The disposable probe has been rebuilt and reinstalled after the `QCoreApplicatio
 This is evidence that the disposable engine can connect and acquire its expected D-Bus name under the tested launch conditions. It is **not** an end-to-end host IBus integration result: no host component has been registered, the input-method selector has not been checked, and Bangla typing has not been tested. The successful run still included the temporary read-only IBus-cache mount, so rerun without that mount before deciding whether any filesystem grant is needed.
 
 Next, update and test only the experimental wrapper/template to use `/app/libexec/ibus-engine-openbangla` and supply the host IBus address, then repeat the name-ownership check without the cache mount. Keep the production installer, production Flatpak permissions, and normal desktop IBus configuration unchanged until the disposable integration path has passed discovery and text-entry tests.
+
+### Experimental wrapper address-handling update — 2026-10-11
+
+The disposable host wrapper and fixed-ID template have been updated to pass the host address returned by `ibus address` as `IBUS_ADDRESS` and to execute `/app/libexec/ibus-engine-openbangla` explicitly. The wrapper unit test was extended to assert both arguments. The source changes are committed, but the revised unit test and live wrapper launch have not yet been run on the developer VM.
+
+The successful direct-engine/name-ownership test previously used a temporary read-only mount of `~/.cache/ibus`. The revised wrapper does not add that filesystem permission; the next test must establish whether explicit address injection alone works. If it does not, diagnose the exact socket-access failure before considering any narrowly scoped permission for the disposable probe. No host IBus component has been registered, and production installer behavior and permissions remain unchanged.
