@@ -54,6 +54,7 @@ SHANTI_FLATPAK_APP_ID='org.example.Shanti' PATH="$tmp/bin:/usr/bin:/bin" bash "$
 expected="$tmp/expected"
 cat > "$expected" <<'EXPECTED'
 run
+--filesystem=/tmp/ibus-test:ro
 --env=IBUS_ADDRESS=unix:path=/tmp/ibus-test,guid=0123456789abcdef
 --talk-name=org.freedesktop.IBus
 --own-name=org.freedesktop.IBus.OpenBangla
