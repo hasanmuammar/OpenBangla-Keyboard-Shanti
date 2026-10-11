@@ -388,3 +388,22 @@ This project packages the Chinese Rime engine as an AppImage. Its documented flo
 - Chinese engine extension example: [flatpak.fcitx5-mcbopomofo](https://github.com/Brli/flatpak.fcitx5-mcbopomofo)
 - IBus Rime AppImage: [ibus-rime.AppImage](https://github.com/hchunhui/ibus-rime.AppImage)
 
+### Latest disposable IBus engine probe update — 2026-10-11
+
+The earlier environment-inventory statements above predate the latest local build and are superseded where they conflict with this update. The disposable engine probe has now been built, exported to a dedicated local Flatpak repository, and installed as io.github.hasanmuammar.ShantiIbusEngineProbe on the developer's Fedora Workstation 44 system, using org.kde.Platform//5.15-25.08 and org.kde.Sdk//5.15-25.08.
+
+Confirmed:
+
+- The engine target compiled successfully in the KDE SDK after enabling the Rust stable SDK extension.
+- The explicitly staged payload contained 14 files: the engine executable, IBus descriptor, icon, seven layouts, and four data JSON files.
+- ldd inside the KDE Platform runtime reported no unresolved shared libraries.
+- The minimal disposable Flatpak was exported to a dedicated local repository and installed successfully. This confirms packaging and local installation only.
+
+Launch remains failed/unverified:
+
+- Direct launches with --help and --ibus produced Qt warnings that QCoreApplication::applicationDirPath() was called before a Qt application object was instantiated.
+- The engine failed to set its database directory. It fell back to the app-private XDG path under ~/.var/app/io.github.hasanmuammar.ShantiIbusEngineProbe/data/openbangla-keyboard/data; the parent directory existed and was writable, but the final data directory did not exist.
+- The engine emitted IBus/GLib criticals because its IBus D-Bus connection was null/not connected. The --ibus launch timed out after 10 seconds (exit status 124).
+- Source inspection indicates that src/engine/ibus/main.cpp calls update_with_settings() before creating any Qt application object, while src/shared/FileSystem.cpp uses QCoreApplication::applicationDirPath() to locate bundled Linux resources. The observed warnings and fallback path are consistent with a resource-path initialization-order defect. This diagnosis has not yet been fixed or confirmed by a retest.
+
+Next, fix or validate executable-relative resource discovery, rebuild the disposable probe, and verify that database initialization uses /app/share/openbangla-keyboard/data. Then investigate the IBus D-Bus connection through the intended host-wrapper launch path. Do not register a host component or broaden sandbox permissions yet. The package has not been proven to connect to host IBus, appear in the input-method selector, or type Bangla in host applications.
