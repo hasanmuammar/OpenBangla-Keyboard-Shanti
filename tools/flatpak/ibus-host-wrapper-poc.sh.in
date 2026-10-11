@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# TEMPLATE for disposable integration testing only.
+# Configure by replacing @SHANTI_POC_APP_ID@ and install under ~/.local/bin.
+# Do not use as a production launcher.
+set -euo pipefail
+
+app_id='@SHANTI_POC_APP_ID@'
+if [[ "$app_id" == @SHANTI_POC_APP_ID@ || ! "$app_id" =~ ^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$ ]]; then
+    printf 'shanti-ibus-flatpak-poc: invalid or unsubstituted app ID\n' >&2
+    exit 64
+fi
+command -v flatpak >/dev/null 2>&1 || {
+    printf 'shanti-ibus-flatpak-poc: flatpak command not found\n' >&2
+    exit 69
+}
+
+exec flatpak run \
+    --talk-name=org.freedesktop.IBus \
+    --own-name=org.freedesktop.IBus.OpenBangla \
+    --command=ibus-engine-openbangla \
+    "$app_id" --ibus "$@"
