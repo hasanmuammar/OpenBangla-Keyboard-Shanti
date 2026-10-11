@@ -34,6 +34,21 @@ The wrapper itself appends `--ibus` when launching the sandboxed engine, so the 
 
 These are templates, not installed integration files. No host IBus registration, daemon restart, or production permission change has been performed.
 
+To generate and validate concrete files without installing or registering them, run this from the repository root:
+
+```sh
+python3 tools/flatpak/prepare-ibus-host-poc.py \
+  --app-id io.github.hasanmuammar.ShantiIbusEngineProbe \
+  --wrapper-path "$HOME/.local/bin/shanti-ibus-flatpak-poc" \
+  --output-dir "$HOME/shanti-ibus-host-poc-generated"
+
+sed -n '1,120p' "$HOME/shanti-ibus-host-poc-generated/shanti-ibus-flatpak-wrapper"
+sed -n '1,100p' "$HOME/shanti-ibus-host-poc-generated/openbangla-flatpak-poc.xml"
+```
+
+The generator validates the app-ID syntax, substitutes both template tokens, runs `bash -n` on the generated wrapper, parses the component XML, and checks that the XML `exec` resolves to exactly the chosen wrapper path. It shell-quotes the wrapper path for the IBus command field and XML-escapes it. It only writes into the specified output directory; it does not install files, register the component, or restart IBus. The wrapper path may be the planned installation destination and does not need to exist yet.
+
+
 ## Required end-to-end test
 
 A successful direct launch is insufficient. Before this approach can be considered viable, a test deployment and a host-side IBus component entry must be created manually in a disposable account or VM. Install the wrapper into the test account with `install -Dm755 tools/flatpak/ibus-flatpak-host-wrapper.sh "$HOME/.local/bin/shanti-ibus-flatpak-wrapper"` and set `SHANTI_FLATPAK_APP_ID` in the component launch environment. The component's `exec` must point to that installed host wrapper, not to a path inside the Flatpak deployment.
