@@ -32,6 +32,7 @@ ibus_socket_path="${ibus_socket_path%%,*}"
 # default PATH (/app/bin:/usr/bin). Keep the D-Bus grants limited to the
 # service name the engine talks to and the name it owns.
 exec flatpak run \
+    "--filesystem=$ibus_socket_path:ro" \
     "--env=IBUS_ADDRESS=$ibus_address" \
     --talk-name=org.freedesktop.IBus \
     --own-name=org.freedesktop.IBus.OpenBangla \
