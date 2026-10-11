@@ -108,3 +108,33 @@ Not yet completed:
 The initial probe build hit a stale `rofiles-fuse` mount/cleanup error. Unmounting the stale mount did not resolve it; disabling rofiles FUSE allowed the probe build to complete. This workaround was used for the probe only and is not a production build recommendation.
 
 Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. The wrapper unit test is confirmed passing on the development VM. The developer has since confirmed that both `org.kde.Platform//5.15-25.08` and `org.kde.Sdk//5.15-25.08` are installed. The Platform contains Qt 5 Core 5.15.18 and IBus library `libibus-1.0.so.5.0.532`; inside the SDK, CMake/Ninja/Make/pkg-config and Qt5 Widgets/Network/Svg, IBus development metadata, and libzstd are available. Rust and Cargo were missing from the initial SDK shell. Flathub search found `org.freedesktop.Sdk.Extension.rust-stable//25.08`; its installation and availability inside the KDE SDK are not yet verified. Next, verify Rust/Cargo in the SDK, then prepare a disposable Flatpak build configured for `/app` and inspect its component descriptor and resource layout. Only after that should the engine be launched through the wrapper and host IBus discovery/text-entry testing begin in a disposable session.
+
+## Latest disposable engine Flatpak probe — 2026-10-11
+
+This section supersedes earlier statements in this log that no Flatpak engine package had been built. It records the developer's latest terminal output; it is still not an end-to-end IBus integration result.
+
+Build and package results:
+
+- Built the ibus-engine-openbangla target inside org.kde.Sdk//5.15-25.08 with ENABLE_IBUS=ON, ENABLE_FCITX=OFF, the Rust stable SDK extension, and CMAKE_INSTALL_PREFIX=/app.
+- Explicitly staged the engine executable, generated component descriptor, icon, seven layout JSON files, and four data JSON files. The staged tree contained 14 files.
+- ldd on the staged executable, executed inside org.kde.Platform//5.15-25.08, reported no unresolved shared libraries.
+- Built the disposable manifest using org.kde.Platform and org.kde.Sdk version 5.15-25.08. The first flatpak-builder --user --install attempt stalled while Flatpak updated the KDE locale extension; the app was not installed by that attempt.
+- Exporting with flatpak-builder --disable-rofiles-fuse --force-clean --repo=... succeeded. Installing from the local repository succeeded. App ID: io.github.hasanmuammar.ShantiIbusEngineProbe; installed size reported as 11.6 MB.
+- The manifest command must be /app/libexec/ibus-engine-openbangla; the bare command name failed finalization because the executable is under /app/libexec, not the default command search path.
+
+Launch test findings:
+
+- Running timeout 10s flatpak run io.github.hasanmuammar.ShantiIbusEngineProbe --help and again with --ibus emitted two Qt warnings: QCoreApplication::applicationDirPath: Please instantiate the QApplication object first.
+- Both runs logged that setting the database directory failed. The attempted path was the app-private ~/.var/app/io.github.hasanmuammar.ShantiIbusEngineProbe/data/openbangla-keyboard/data. Inspection confirmed that the app-private data/openbangla-keyboard parent existed and was writable, but its data subdirectory did not exist.
+- Both direct launches emitted IBus/GLib criticals because the IBus factory received a null/non-D-Bus connection and the bus was not connected. The --ibus run timed out after 10 seconds (exit status 124). This does not demonstrate a healthy engine startup.
+- Source inspection of src/shared/FileSystem.cpp shows that Linux bundled-resource lookup depends on QCoreApplication::applicationDirPath(), then checks the sibling ../share/openbangla-keyboard directory before falling back to the generic XDG data directory. The engine's main() calls update_with_settings() before constructing any QCoreApplication/QApplication object. The warnings and fallback path are consistent with this initialization-order defect; this is a source-based diagnosis, not yet a patched-and-retested fix.
+- Do not treat clean ldd output or successful package installation as proof that bundled resources are found at runtime or that the engine can connect to host IBus.
+
+Next required work:
+
+1. Fix or validate executable-relative resource discovery without relying on QCoreApplication::applicationDirPath() before a Qt application object exists. A minimal QCoreApplication created before Settings/database initialization is one candidate; verify whether the engine's event-loop setup permits that cleanly.
+2. Rebuild and reinstall the disposable probe, then confirm the database path resolves to /app/share/openbangla-keyboard/data and the database initialization error disappears.
+3. Separately diagnose the IBus connection under the intended host-wrapper/component launch path. Do not register a host component until the data-path issue is fixed and the exact D-Bus failure is understood.
+4. Do not broaden session-bus permissions, add host filesystem grants, or modify production installer behavior based only on this test.
+
+The host wrapper, host component registration, IBus discovery, and Bengali typing in a host-native application remain untested.
