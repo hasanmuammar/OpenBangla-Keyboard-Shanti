@@ -138,3 +138,15 @@ Next required work:
 4. Do not broaden session-bus permissions, add host filesystem grants, or modify production installer behavior based only on this test.
 
 The host wrapper, host component registration, IBus discovery, and Bengali typing in a host-native application remain untested.
+
+## Runtime connection probe update — 2026-10-11
+
+The developer rebuilt and reinstalled the disposable `io.github.hasanmuammar.ShantiIbusEngineProbe` after the `QCoreApplication` initialization-order fix. The earlier Qt warnings and app-private database-directory initialization error no longer appear in the latest direct launch. This supports the resource-path fix, although the database path itself was not printed in the supplied output.
+
+The host wrapper as currently written still fails at executable lookup: `bwrap: execvp ibus-engine-openbangla: No such file or directory`. The executable is present at `/app/libexec/ibus-engine-openbangla`, but the sandbox `PATH` is `/app/bin:/usr/bin`; therefore the wrapper's bare `--command=ibus-engine-openbangla` is not resolvable. A direct launch using `--command=/app/libexec/ibus-engine-openbangla` bypasses this lookup failure.
+
+Without an explicit `IBUS_ADDRESS`, that direct launch emits IBus/GLib criticals indicating that `ibus_bus_new()` did not yield a connected bus. A separate `gdbus call --address "$(ibus address)" ... Introspect` from inside the sandbox succeeded when the host IBus cache was temporarily exposed read-only, proving that the host IBus socket is reachable under that test setup. Adding `--env="IBUS_ADDRESS=$(ibus address)"` to the direct launch removed the critical messages. While that launch was running, a host-side `NameHasOwner` query for `org.freedesktop.IBus.OpenBangla` returned `(true,)`; the process remained alive and its captured log was empty.
+
+This validates that the disposable engine can acquire the expected D-Bus name when launched with an absolute executable path and an explicit IBus address. It does **not** validate IBus component registration, engine discovery in the selector, or Bangla text entry. The current wrapper/template has not yet been updated to pass the explicit address and use the absolute executable path. The temporary `--filesystem="$HOME/.cache/ibus:ro"` override was used in the successful test; whether it is actually required with the explicit address has not yet been isolated, so do not make it permanent based on this result.
+
+Next: update and unit-test the experimental wrapper/template for absolute command resolution and IBus address discovery; rerun the name-ownership test without the temporary cache mount; then proceed to host component registration only in a disposable session. Production installer behavior and production permissions remain unchanged.
