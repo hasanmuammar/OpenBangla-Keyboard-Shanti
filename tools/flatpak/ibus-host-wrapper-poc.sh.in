@@ -1,11 +1,4 @@
 #!/usr/bin/env bash
-
-# Flatpak cannot see the host IBus Unix socket unless its path is granted.
-# Grant read-only access to the specific socket, not the whole IBus cache.
-[[ "$ibus_address" == unix:path=* ]] || fail 'host IBus address is not a supported unix:path address' 69
-ibus_socket_path="${ibus_address#unix:path=}"
-ibus_socket_path="${ibus_socket_path%%,*}"
-[[ -n "$ibus_socket_path" && "$ibus_socket_path" == /* ]] || fail 'host IBus address contains an invalid socket path' 69
 # TEMPLATE for disposable integration testing only.
 # Configure by replacing @SHANTI_POC_APP_ID@ and install under ~/.local/bin.
 # Do not use as a production launcher.
