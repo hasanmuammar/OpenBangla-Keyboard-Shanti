@@ -159,4 +159,12 @@ The experimental launcher and its fixed-app-ID template now:
 - retain the narrowly scoped `org.freedesktop.IBus` talk and `org.freedesktop.IBus.OpenBangla` own-name options;
 - fail clearly if `ibus` is unavailable or address discovery fails.
 
-The wrapper unit test now mocks `ibus address` and checks the explicit address and absolute command are forwarded. These changes have been committed, but the updated unit test and a live launch through the revised wrapper still need to be run on the developer's VM. In particular, the successful direct-engine test included a temporary read-only mount of `~/.cache/ibus`; the revised wrapper intentionally does not add that filesystem grant yet. Run the revised wrapper first to establish whether address injection alone is sufficient. If it fails because the socket path is inaccessible, reassess the narrowest acceptable access in the disposable test only. No host component registration or production integration has been performed.
+The wrapper unit test mocks `ibus address` and checks the explicit address, socket-specific read-only filesystem grant, and absolute engine command. The wrapper and fixed-ID template now extract the socket path from a `unix:path=...` address and grant access only to that socket, rather than the full `~/.cache/ibus` directory.
+
+Live disposable-probe observations on 2026-10-11:
+- With `IBUS_ADDRESS` but no filesystem grant, the engine logged IBus/GLib connection criticals.
+- With the cache directory mounted read-only, the engine remained running with an empty log and was observed to own `org.freedesktop.IBus.OpenBangla`.
+- A five-second run with the individual socket path mounted read-only exited through `timeout` (124) with an empty log. A background run later showed the name owned while the engine process was running. Some ownership checks raced startup and returned `NameHasNoOwner`; repeated tests left processes running, and these were subsequently cleaned up. The latest cleanup confirmed no engine processes and no name owner.
+- The socket-specific grant is therefore the next experimental configuration to validate through the updated wrapper. The updated unit test and live wrapper launch still need to be run on the developer VM.
+
+No host IBus component has been registered. Engine discovery, actual Bangla input, candidate selection, commit, backspace, focus changes, and session-restart behavior remain untested. Keep this work limited to the disposable probe and experimental wrapper; production installer behavior and production permissions remain unchanged.
