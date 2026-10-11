@@ -150,3 +150,13 @@ Without an explicit `IBUS_ADDRESS`, that direct launch emits IBus/GLib criticals
 This validates that the disposable engine can acquire the expected D-Bus name when launched with an absolute executable path and an explicit IBus address. It does **not** validate IBus component registration, engine discovery in the selector, or Bangla text entry. The current wrapper/template has not yet been updated to pass the explicit address and use the absolute executable path. The temporary `--filesystem="$HOME/.cache/ibus:ro"` override was used in the successful test; whether it is actually required with the explicit address has not yet been isolated, so do not make it permanent based on this result.
 
 Next: update and unit-test the experimental wrapper/template for absolute command resolution and IBus address discovery; rerun the name-ownership test without the temporary cache mount; then proceed to host component registration only in a disposable session. Production installer behavior and production permissions remain unchanged.
+
+## Wrapper implementation update — 2026-10-11
+
+The experimental launcher and its fixed-app-ID template now:
+- obtain the host IBus address with `ibus address` and pass it to the Flatpak process as `IBUS_ADDRESS`;
+- invoke the engine by its absolute sandbox path, `/app/libexec/ibus-engine-openbangla`, because `/app/libexec` is not in the default sandbox `PATH`;
+- retain the narrowly scoped `org.freedesktop.IBus` talk and `org.freedesktop.IBus.OpenBangla` own-name options;
+- fail clearly if `ibus` is unavailable or address discovery fails.
+
+The wrapper unit test now mocks `ibus address` and checks the explicit address and absolute command are forwarded. These changes have been committed, but the updated unit test and a live launch through the revised wrapper still need to be run on the developer's VM. In particular, the successful direct-engine test included a temporary read-only mount of `~/.cache/ibus`; the revised wrapper intentionally does not add that filesystem grant yet. Run the revised wrapper first to establish whether address injection alone is sufficient. If it fails because the socket path is inaccessible, reassess the narrowest acceptable access in the disposable test only. No host component registration or production integration has been performed.
