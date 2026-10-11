@@ -45,3 +45,39 @@ Keep logs and the exact Flatpak/IBus versions with the test result. Do not call 
 - The engine's D-Bus connection to host IBus has not been verified in a real desktop session.
 - Fcitx5 is a separate integration target: its host module ABI requirement is not addressed by this IBus prototype.
 - Do not add production filesystem grants, host session-bus permissions, automatic IBus restarts, or installer hooks as part of this experiment.
+
+
+## Development VM test log
+
+Last updated: 2026-10-11. These are environment-preparation results, not an end-to-end integration result.
+
+Test environment reported by the developer:
+
+- Fedora Workstation 44, GNOME Shell 50.5, Wayland.
+- IBus 1.5.34 and Flatpak 1.18.4.
+- GCC/G++ 16.2.1, CMake 4.3.0, Qt 5.15.18, Rust/Cargo 1.98.1, and libzstd 1.5.7.
+- The checkout is on `experiment/flatpak-ibus` at commit `3f7b705`.
+
+Completed checks:
+
+- The disposable `io.github.hasanmuammar.ShantiFilesystemProbe` Flatpak built, installed, and ran after using `flatpak-builder --disable-rofiles-fuse --user --install --force-clean ...`. All four disposable test-path create/write/read checks passed. The XDG data/config/cache results were under the probe's private `~/.var/app/io.github.hasanmuammar.ShantiFilesystemProbe/` directories; they do not prove general host XDG directory access.
+- Wrapper validation rejected an unset `SHANTI_FLATPAK_APP_ID` and malformed value `invalid`, returning exit code 64 in both cases.
+- CMake configuration for a native IBus build completed successfully with:
+  ```sh
+  cmake -S . -B "$HOME/shanti-ibus-build" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DENABLE_IBUS=ON \
+    -DENABLE_FCITX=OFF
+  ```
+  The configured dependencies were IBus 1.5.34, Qt 5.15.18, and libzstd 1.5.7.
+
+Not yet completed:
+
+- The native engine has not yet been compiled, and no `ibus-engine-openbangla` executable has been located in the checkout.
+- There is no Shanti Flatpak manifest or confirmed production app ID in this checkout; the installed app is only the disposable filesystem probe.
+- The wrapper has not been launched against a real Shanti Flatpak deployment.
+- No temporary host IBus component has been registered, and Bangla typing in a host-native application has not been tested.
+
+The initial probe build hit a stale `rofiles-fuse` mount/cleanup error. Unmounting the stale mount did not resolve it; disabling rofiles FUSE allowed the probe build to complete. This workaround was used for the probe only and is not a production build recommendation.
+
+Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. Continue with native engine compilation, then build a disposable test deployment and complete the end-to-end checklist above.
