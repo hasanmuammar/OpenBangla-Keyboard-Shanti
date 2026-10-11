@@ -423,6 +423,15 @@ Next, update and test only the experimental wrapper/template to use `/app/libexe
 
 ### Experimental wrapper address-handling update — 2026-10-11
 
-The disposable host wrapper and fixed-ID template have been updated to pass the host address returned by `ibus address` as `IBUS_ADDRESS` and to execute `/app/libexec/ibus-engine-openbangla` explicitly. The wrapper unit test was extended to assert both arguments. The source changes are committed, but the revised unit test and live wrapper launch have not yet been run on the developer VM.
+### Experimental wrapper socket-access update — 2026-10-11
 
-The successful direct-engine/name-ownership test previously used a temporary read-only mount of `~/.cache/ibus`. The revised wrapper does not add that filesystem permission; the next test must establish whether explicit address injection alone works. If it does not, diagnose the exact socket-access failure before considering any narrowly scoped permission for the disposable probe. No host IBus component has been registered, and production installer behavior and permissions remain unchanged.
+The wrapper and fixed-ID template now pass the host address returned by `ibus address` as `IBUS_ADDRESS`, execute `/app/libexec/ibus-engine-openbangla`, and grant read-only access to the specific Unix socket path extracted from the address. They reject addresses that are not in the expected `unix:path=...` form. This avoids granting access to the entire `~/.cache/ibus` directory. The wrapper unit test now expects the socket-specific `--filesystem=/tmp/ibus-test:ro` argument.
+
+Live disposable-probe observations:
+
+- With `IBUS_ADDRESS` but no filesystem grant, the engine logged IBus/GLib connection criticals.
+- With a read-only grant for the entire `~/.cache/ibus` directory plus `IBUS_ADDRESS`, the engine remained running with an empty log and was observed to own `org.freedesktop.IBus.OpenBangla`.
+- A five-second run with a read-only grant for the individual socket path exited via timeout (124) with an empty log. A subsequent background run showed the name owned and the engine process running, although an earlier ownership check during another launch had raced and returned `NameHasNoOwner`. Repeated manual tests left stale processes, which were subsequently terminated. The latest cleanup confirmed no engine processes remained and the name was unowned.
+- These results support the socket-specific grant as the next experimental configuration, but the wrapper change has not yet been rerun on the VM with the unit test, nor has actual input processing been verified.
+
+No host IBus component has been registered. Engine discovery in the input-method selector, Bangla composition/candidate/commit behavior, focus changes, and session-restart behavior remain untested. Keep this work limited to the disposable probe and experimental wrapper; do not change production installer behavior or production permissions.
