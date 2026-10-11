@@ -61,7 +61,7 @@ Test environment reported by the developer:
 Completed checks:
 
 - The disposable `io.github.hasanmuammar.ShantiFilesystemProbe` Flatpak built, installed, and ran after using `flatpak-builder --disable-rofiles-fuse --user --install --force-clean ...`. All four disposable test-path create/write/read checks passed. The XDG data/config/cache results were under the probe's private `~/.var/app/io.github.hasanmuammar.ShantiFilesystemProbe/` directories; they do not prove general host XDG directory access.
-- Wrapper validation rejected an unset `SHANTI_FLATPAK_APP_ID` and malformed value `invalid`, returning exit code 64 in both cases. The wrapper and its argument-forwarding test were subsequently updated to include the exact `--own-name=org.freedesktop.IBus.OpenBangla` permission identified from the engine source. The revised unit test has not yet been run in the developer's VM.
+- The developer reported that the wrapper unit test passed for syntax, app-ID input validation, and exact Flatpak argument forwarding. The test did not previously cover a missing `flatpak` executable. A deterministic missing-command case has now been added; its result is pending a test run. The test still does not validate sandbox permissions, D-Bus connectivity, IBus discovery, or text entry.
 - The native CMake configure completed successfully with IBus 1.5.34, Qt 5.15.18, and libzstd 1.5.7.
 - A native Release build completed successfully. The resulting executables were `$HOME/shanti-ibus-build/src/engine/ibus/ibus-engine-openbangla` and `$HOME/shanti-ibus-build/src/frontend/openbangla-gui`; CMake listed the `ibus-engine-openbangla` target.
 - `ldd` reported no missing shared libraries for the native engine.
