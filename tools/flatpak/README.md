@@ -31,3 +31,7 @@ For a second test, use a disposable user account configured with non-default hos
 ## Current limitation
 
 The workflow [Flatpak filesystem permission probe](../../.github/workflows/flatpak-permission-probe.yml) builds and runs this test on an Ubuntu GitHub Actions runner when the probe files change on `experiment/flatpak-ibus` or when manually dispatched. The result must be checked in GitHub Actions; adding the workflow is not itself evidence that the sandbox test passed. A local host-shell run is explicitly refused by the probe.
+
+## Experimental IBus host integration
+
+The wrapper-based host IBus integration is separate from this filesystem-permission probe and is **not yet working end to end**. See [Experimental host IBus integration status](IBUS-HOST-INTEGRATION.md) for verified results, the current discovery blocker, safety constraints, and next investigation steps. Passing the filesystem probe or the wrapper's mock-based tests does not prove that GNOME can discover the engine or commit text.
