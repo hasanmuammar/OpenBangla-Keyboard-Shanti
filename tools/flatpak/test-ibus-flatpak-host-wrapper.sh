@@ -20,7 +20,12 @@ cat > "$tmp/bin/flatpak" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$@" > "$FLATPAK_ARGS_FILE"
 MOCK
-chmod +x "$tmp/bin/flatpak"
+cat > "$tmp/bin/ibus" <<'MOCK'
+#!/usr/bin/env bash
+[[ "${1:-}" == address ]] || exit 2
+printf '%s\n' 'unix:path=/tmp/ibus-test,guid=0123456789abcdef'
+MOCK
+chmod +x "$tmp/bin/flatpak" "$tmp/bin/ibus"
 
 if env -u SHANTI_FLATPAK_APP_ID PATH="$tmp/bin:/usr/bin:/bin" bash "$wrapper" >"$tmp/out" 2>&1; then
     fail 'wrapper accepted an unset app ID'
@@ -43,14 +48,16 @@ set -e
 [[ "$missing_flatpak_status" -eq 69 ]] || fail "missing flatpak returned exit code $missing_flatpak_status, expected 69"
 grep -q 'flatpak command not found' "$tmp/out" || fail 'missing flatpak error was not clear'
 
+# Verify explicit address discovery and exact Flatpak argument forwarding.
 export FLATPAK_ARGS_FILE="$tmp/args"
 SHANTI_FLATPAK_APP_ID='org.example.Shanti' PATH="$tmp/bin:/usr/bin:/bin" bash "$wrapper" --probe-arg
 expected="$tmp/expected"
 cat > "$expected" <<'EXPECTED'
 run
+--env=IBUS_ADDRESS=unix:path=/tmp/ibus-test,guid=0123456789abcdef
 --talk-name=org.freedesktop.IBus
 --own-name=org.freedesktop.IBus.OpenBangla
---command=ibus-engine-openbangla
+--command=/app/libexec/ibus-engine-openbangla
 org.example.Shanti
 --ibus
 --probe-arg
@@ -63,5 +70,5 @@ cmp -s "$expected" "$FLATPAK_ARGS_FILE" || {
     fail 'wrapper passed unexpected arguments to Flatpak'
 }
 
-printf 'PASS: wrapper syntax, input validation, missing-command handling, and Flatpak argument forwarding\n'
+printf 'PASS: wrapper syntax, input validation, missing-command handling, IBus address discovery, and Flatpak argument forwarding\n'
 printf 'NOTE: this test does not validate Flatpak permissions, D-Bus connectivity, IBus discovery, or text entry.\n'
