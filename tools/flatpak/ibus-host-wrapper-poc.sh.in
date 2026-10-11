@@ -13,9 +13,22 @@ command -v flatpak >/dev/null 2>&1 || {
     printf 'shanti-ibus-flatpak-poc: flatpak command not found\n' >&2
     exit 69
 }
+command -v ibus >/dev/null 2>&1 || {
+    printf 'shanti-ibus-flatpak-poc: ibus command not found; cannot discover the host IBus address\n' >&2
+    exit 69
+}
+ibus_address="$(ibus address)" || {
+    printf 'shanti-ibus-flatpak-poc: failed to obtain the host IBus address\n' >&2
+    exit 69
+}
+[[ -n "$ibus_address" ]] || {
+    printf 'shanti-ibus-flatpak-poc: host IBus returned an empty address\n' >&2
+    exit 69
+}
 
 exec flatpak run \
+    "--env=IBUS_ADDRESS=$ibus_address" \
     --talk-name=org.freedesktop.IBus \
     --own-name=org.freedesktop.IBus.OpenBangla \
-    --command=ibus-engine-openbangla \
+    --command=/app/libexec/ibus-engine-openbangla \
     "$app_id" --ibus "$@"
