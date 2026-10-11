@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- TEMPLATE for manual testing in a disposable user account only.
+     Substitute @SHANTI_POC_WRAPPER_PATH@ with the absolute host path to the
+     installed POC wrapper. Do not install this into a normal user session. -->
+<component>
+    <name>org.freedesktop.IBus.OpenBangla</name>
+    <description>OpenBangla Keyboard (experimental Flatpak engine POC)</description>
+    <exec>@SHANTI_POC_WRAPPER_PATH@ --ibus</exec>
+    <version>0.0.0-poc</version>
+    <author>OpenBangla Keyboard Shanti</author>
+    <license>GPL-3.0-or-later</license>
+    <homepage>https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti</homepage>
+    <textdomain>openbangla</textdomain>
+    <engines>
+        <engine>
+            <name>openbangla</name>
+            <longname>OpenBangla Keyboard (POC)</longname>
+            <description>Experimental Flatpak-backed OpenBangla engine</description>
+            <language>bn</language>
+            <license>GPL-3.0-or-later</license>
+            <author>OpenBangla Keyboard Shanti</author>
+            <layout>us</layout>
+            <rank>80</rank>
+            <icon>OpenBangla-Keyboard</icon>
+            <symbol>অ</symbol>
+        </engine>
+    </engines>
+</component>
