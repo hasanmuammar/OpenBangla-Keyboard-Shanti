@@ -21,6 +21,19 @@ The second command is a direct engine launch smoke test, not a complete IBus int
 
 The `--talk-name=org.freedesktop.IBus` and `--own-name=org.freedesktop.IBus.OpenBangla` options are deliberately narrow, but their effectiveness depends on the installed app's D-Bus policy and Flatpak version. Do not broaden them to the whole session bus to make a test pass. If Flatpak rejects either override or the engine cannot reach the intended IBus service, record the exact error and stop; do not change production permissions on that basis alone.
 
+## Temporary host component and fixed-ID wrapper templates
+
+Two templates now define the disposable host-launch contract:
+
+- `ibus-host-wrapper-poc.sh.in`: a wrapper template with an explicit app-ID substitution token. It does not depend on an interactive shell exporting `SHANTI_FLATPAK_APP_ID`, which IBus may not inherit.
+- `ibus-host-component-poc.xml.in`: a host-side IBus component template whose `<exec>` points to the installed host wrapper. It does not point at `/app/libexec/ibus-engine-openbangla`, because that path exists inside the Flatpak sandbox, not as a host executable.
+
+For this POC, substitute the app ID with `io.github.hasanmuammar.ShantiIbusEngineProbe` and substitute the component's wrapper-path token with the absolute path of the wrapper installed in the disposable test account. Generate the files into a temporary directory first, inspect the results, and check the XML is well-formed before any registration attempt. Do not commit generated files containing a machine-specific home path, and do not install or register these templates on the normal desktop session.
+
+The wrapper itself appends `--ibus` when launching the sandboxed engine, so the host component's `<exec>` contains only the wrapper path; adding `--ibus` to the XML as well would duplicate the argument. The wrapper grants only `org.freedesktop.IBus` talk access and `org.freedesktop.IBus.OpenBangla` name ownership for the launch. These flags are hypotheses to test, not proof that the app's D-Bus policy and Flatpak version permit the required connection.
+
+These are templates, not installed integration files. No host IBus registration, daemon restart, or production permission change has been performed.
+
 ## Required end-to-end test
 
 A successful direct launch is insufficient. Before this approach can be considered viable, a test deployment and a host-side IBus component entry must be created manually in a disposable account or VM. Install the wrapper into the test account with `install -Dm755 tools/flatpak/ibus-flatpak-host-wrapper.sh "$HOME/.local/bin/shanti-ibus-flatpak-wrapper"` and set `SHANTI_FLATPAK_APP_ID` in the component launch environment. The component's `exec` must point to that installed host wrapper, not to a path inside the Flatpak deployment.
