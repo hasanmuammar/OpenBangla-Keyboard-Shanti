@@ -1,4 +1,5 @@
 #include <ibus.h>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QStandardPaths>
 #include <filesystem>
@@ -418,6 +419,8 @@ void start_setup(bool ibus) {
 }
 
 int main(int argc, char* argv[]) {
+    QCoreApplication qtApp(argc, argv);
+
     gSettings = new Settings();
     UserFolders folders;
     config = riti_config_new();
