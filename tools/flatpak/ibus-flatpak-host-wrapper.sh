@@ -28,13 +28,47 @@ ibus_socket_path="${ibus_address#unix:path=}"
 ibus_socket_path="${ibus_socket_path%%,*}"
 [[ -n "$ibus_socket_path" && "$ibus_socket_path" == /* ]] || fail 'host IBus address contains an invalid socket path' 69
 
+# Run Flatpak in its own process group so the EXIT/signal cleanup can stop
+# the sandbox and its descendants without using app-wide "flatpak kill".
+# Enabling job control gives this asynchronous job a distinct process group.
+flatpak_pid=""
+cleanup() {
+    local status=$?
+    trap - EXIT INT TERM HUP
+
+    if [[ -n "$flatpak_pid" ]]; then
+        if kill -0 -- "-$flatpak_pid" 2>/dev/null; then
+            kill -TERM -- "-$flatpak_pid" 2>/dev/null || true
+            for _ in {1..20}; do
+                kill -0 -- "-$flatpak_pid" 2>/dev/null || break
+                sleep 0.1
+            done
+            kill -KILL -- "-$flatpak_pid" 2>/dev/null || true
+        fi
+        wait "$flatpak_pid" 2>/dev/null || true
+    fi
+
+    exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+set -m
+
 # The engine is installed under /app/libexec, which is not on Flatpak's
-# default PATH (/app/bin:/usr/bin). Keep the D-Bus grants limited to the
-# service name the engine talks to and the name it owns.
-exec flatpak run \
+# default PATH (/app/bin:/usr/bin). Keep the D-Bus grants narrowly scoped.
+flatpak run \
     "--filesystem=$ibus_socket_path:ro" \
     "--env=IBUS_ADDRESS=$ibus_address" \
     --talk-name=org.freedesktop.IBus \
     --own-name=org.freedesktop.IBus.OpenBangla \
     --command=/app/libexec/ibus-engine-openbangla \
-    "$app_id" --ibus "$@"
+    "$app_id" --ibus "$@" &
+flatpak_pid=$!
+
+set +e
+wait "$flatpak_pid"
+status=$?
+set -e
+exit "$status"
