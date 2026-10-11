@@ -89,6 +89,20 @@ This experiment does not currently aim to:
 
 ## 7. Current status
 
+### Source-level packaging findings
+
+The following paths and build constraints have been confirmed by source inspection. They are not yet a substitute for running the packaged engine inside Flatpak.
+
+- The IBus target is `ibus-engine-openbangla`, installed under `${LIBEXECDIR}`; with the intended Flatpak prefix this resolves to `/app/libexec/ibus-engine-openbangla`.
+- CMake generates `openbangla.xml` from `data/openbangla.xml.in` into the build tree's `data/` directory and installs it to `${DATADIR}/ibus/component`; for a Flatpak prefix this is expected at `/app/share/ibus/component/openbangla.xml`. The generated descriptor must be inspected to ensure its executable path is correct.
+- The shared install rules place seven keyboard layout JSON files under `share/openbangla-keyboard/layouts/` and the autocorrect, dictionary, suffix, and regex data files under `share/openbangla-keyboard/data/`.
+- On Linux, `src/shared/FileSystem.cpp` first checks for `../share/openbangla-keyboard` relative to the executable directory. For an engine at `/app/libexec/ibus-engine-openbangla`, this resolves to `/app/share/openbangla-keyboard`, matching the bundled resource layout. If that directory is absent, the code falls back to the user's generic XDG data directory, which is not the desired packaged-resource path.
+- The top-level CMake configuration unconditionally requires Qt5 Widgets, Network, and Svg and adds the frontend subdirectory even when building with `ENABLE_IBUS=ON`. The IBus executable itself links Qt5 Core, IBus, the shared library, the Rust `riti` library, zstd-related code, `dl`, and pthread. Consequently, an engine-only build still needs the full configure-time Qt development components unless the build system is deliberately refactored in a separate change.
+- The existing native staging install used an absolute staging prefix in its generated IBus descriptor. Do not copy that descriptor into a Flatpak build; configure the Flatpak build with `-DCMAKE_INSTALL_PREFIX=/app` and validate the generated descriptor and resource tree after installation.
+
+These findings narrow the next build check, but do not yet prove the runtime contains all required libraries, that the descriptor launches correctly, or that host IBus can communicate with the sandboxed engine.
+
+
 ### Completed
 
 - [x] Created the separate `experiment/flatpak-ibus` branch from the validated `develop` revision.
@@ -246,6 +260,7 @@ A checklist item should only be marked complete when there is concrete evidence,
 | 2026-10-11 | Added `tools/flatpak/permission-probe.yml`, a disposable sandbox-only file-permission probe and run instructions, plus `.github/workflows/flatpak-permission-probe.yml`. Static YAML-structure and POSIX shell syntax checks passed on local copies. The actual probe has not run here because Flatpak tooling is unavailable; no actual sandbox result has been verified yet. |
 | 2026-10-11 | Corrected the XDG mount model: write through sandbox `XDG_*_HOME/<granted-subpath>` paths while using `HOST_XDG_*` only to report host locations. Updated CI to use `actions/checkout@v7` and configure Ubuntu 24.04 user namespaces for Bubblewrap. Static checks passed; the push-triggered Actions result remains unverified in this session. |
 | 2026-10-11 | The developer's Fedora VM run of the installed disposable filesystem probe passed all four create/write/read checks. The updated IBus host-wrapper unit test also passed syntax, app-ID validation, missing-command handling, and Flatpak argument forwarding. Neither result proves real host IBus integration; the CI run still needs explicit verification. |
+| 2026-10-11 | Completed a source-level packaging-path review: confirmed the engine, generated IBus descriptor, bundled data/layout destinations, Linux relative-resource lookup, and unconditional top-level Qt GUI configure dependencies. Runtime validation is still pending KDE Platform/SDK installation. |
 
 ## 13. Related projects and implementation precedents
 
