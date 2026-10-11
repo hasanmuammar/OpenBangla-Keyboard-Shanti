@@ -117,7 +117,7 @@ This experiment does not currently aim to:
 - [ ] Clean installation, update, and removal tests.
 - [ ] Flatpak release publication.
 
-**Current evidence boundary:** A disposable permission-test manifest, an in-sandbox-only filesystem probe, and a GitHub Actions workflow now exist. The real manifest build and sandbox run are still unverified; the execution environment available here has no `flatpak` or `flatpak-builder` executable; no production path grants, modifying installer operation, Rust frontend, or host-typing test has been validated. The project remains experimental.
+**Current evidence boundary:** The disposable filesystem probe has passed locally on the developer's Fedora VM: all four test roots passed create/write/read checks inside the installed probe Flatpak. This validates only those disposable path grants in that environment. The GitHub Actions result has not been confirmed; the production manager manifest/build, production path grants, modifying installer operation, Rust frontend, and host-typing test remain unvalidated. The project remains experimental.
 
 ## 8. Work plan and checklist
 
@@ -136,7 +136,7 @@ Work through the stages in order. Complete and review one focused task at a time
 
 **Stage 1 exit condition:** A reviewed design that describes the package contents, host/sandbox responsibilities, required permissions, and a credible test for sending Bengali keystrokes into host applications.
 
-**Next task:** Check the GitHub Actions run for `tools/flatpak/permission-probe.yml`. The workflow must actually build the manifest and run the probe inside Flatpak; a local shell simulation is not evidence of sandbox permission behavior. Then use the observed results to refine the production path-grant list.
+**Next task:** Verify the GitHub Actions run for `tools/flatpak/permission-probe.yml`. The local Fedora VM run passed all four disposable sandbox path checks, but that does not replace CI verification. The workflow triggers on changes to the probe files/README/workflow or via manual dispatch; wrapper-only and PoC-log-only commits do not trigger it. After a confirmed CI run, use the results to refine the production path-grant list.
 
 ### Stage 2 — Minimal buildable proof of concept
 
@@ -245,6 +245,7 @@ A checklist item should only be marked complete when there is concrete evidence,
 | 2026-10-11 | Reassessed the host-command-first design. Narrow, predeclared home-relative filesystem grants are now the default for file placement; `flatpak-spawn --host` is an optional fallback only for a demonstrated host-only refresh/API gap. Updated the installer protocol and clarified the existing host-context probe is not an in-sandbox detector. |
 | 2026-10-11 | Added `tools/flatpak/permission-probe.yml`, a disposable sandbox-only file-permission probe and run instructions, plus `.github/workflows/flatpak-permission-probe.yml`. Static YAML-structure and POSIX shell syntax checks passed on local copies. The actual probe has not run here because Flatpak tooling is unavailable; no actual sandbox result has been verified yet. |
 | 2026-10-11 | Corrected the XDG mount model: write through sandbox `XDG_*_HOME/<granted-subpath>` paths while using `HOST_XDG_*` only to report host locations. Updated CI to use `actions/checkout@v7` and configure Ubuntu 24.04 user namespaces for Bubblewrap. Static checks passed; the push-triggered Actions result remains unverified in this session. |
+| 2026-10-11 | The developer's Fedora VM run of the installed disposable filesystem probe passed all four create/write/read checks. The updated IBus host-wrapper unit test also passed syntax, app-ID validation, missing-command handling, and Flatpak argument forwarding. Neither result proves real host IBus integration; the CI run still needs explicit verification. |
 
 ## 13. Related projects and implementation precedents
 
