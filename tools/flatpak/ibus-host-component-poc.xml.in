@@ -5,7 +5,7 @@
 <component>
     <name>org.freedesktop.IBus.OpenBangla</name>
     <description>OpenBangla Keyboard (experimental Flatpak engine POC)</description>
-    <exec>@SHANTI_POC_WRAPPER_PATH@ --ibus</exec>
+    <exec>@SHANTI_POC_WRAPPER_PATH@</exec>
     <version>0.0.0-poc</version>
     <author>OpenBangla Keyboard Shanti</author>
     <license>GPL-3.0-or-later</license>
