@@ -8,7 +8,7 @@ It does not install files, edit host IBus configuration, write component metadat
 
 ## Prototype launcher
 
-`ibus-flatpak-host-wrapper.sh` requires `SHANTI_FLATPAK_APP_ID` to be set explicitly. It launches the sandboxed `ibus-engine-openbangla` command with `--ibus` and requests only the `org.freedesktop.IBus` D-Bus name for that invocation.
+`ibus-flatpak-host-wrapper.sh` requires `SHANTI_FLATPAK_APP_ID` to be set explicitly. It launches the sandboxed `ibus-engine-openbangla` command with `--ibus`, requests permission to talk to `org.freedesktop.IBus`, and requests ownership of `org.freedesktop.IBus.OpenBangla`, which the engine asks the session bus to grant in `--ibus` mode. These narrow grants are a source-informed prototype adjustment; their effectiveness still requires a real end-to-end test.
 
 Example syntax (replace the placeholder with the actual installed app ID):
 
@@ -19,7 +19,7 @@ SHANTI_FLATPAK_APP_ID=org.example.Shanti bash tools/flatpak/ibus-flatpak-host-wr
 
 The second command is a direct engine launch smoke test, not a complete IBus integration test. Run it only in a disposable development session where an IBus daemon is active. It may remain running while the engine serves requests; stop it with Ctrl-C. The placeholder ID is not a declared Shanti app ID.
 
-The `--talk-name=org.freedesktop.IBus` option is deliberately narrow, but its effectiveness depends on the installed app's D-Bus policy and Flatpak version. Do not broaden it to the whole session bus to make a test pass. If Flatpak rejects the override or the engine cannot reach the intended IBus service, record the exact error and stop; do not change production permissions on that basis alone.
+The `--talk-name=org.freedesktop.IBus` and `--own-name=org.freedesktop.IBus.OpenBangla` options are deliberately narrow, but their effectiveness depends on the installed app's D-Bus policy and Flatpak version. Do not broaden them to the whole session bus to make a test pass. If Flatpak rejects either override or the engine cannot reach the intended IBus service, record the exact error and stop; do not change production permissions on that basis alone.
 
 ## Required end-to-end test
 
@@ -61,7 +61,7 @@ Test environment reported by the developer:
 Completed checks:
 
 - The disposable `io.github.hasanmuammar.ShantiFilesystemProbe` Flatpak built, installed, and ran after using `flatpak-builder --disable-rofiles-fuse --user --install --force-clean ...`. All four disposable test-path create/write/read checks passed. The XDG data/config/cache results were under the probe's private `~/.var/app/io.github.hasanmuammar.ShantiFilesystemProbe/` directories; they do not prove general host XDG directory access.
-- Wrapper validation rejected an unset `SHANTI_FLATPAK_APP_ID` and malformed value `invalid`, returning exit code 64 in both cases.
+- Wrapper validation rejected an unset `SHANTI_FLATPAK_APP_ID` and malformed value `invalid`, returning exit code 64 in both cases. The wrapper and its argument-forwarding test were subsequently updated to include the exact `--own-name=org.freedesktop.IBus.OpenBangla` permission identified from the engine source. The revised unit test has not yet been run in the developer's VM.
 - The native CMake configure completed successfully with IBus 1.5.34, Qt 5.15.18, and libzstd 1.5.7.
 - A native Release build completed successfully. The resulting executables were `$HOME/shanti-ibus-build/src/engine/ibus/ibus-engine-openbangla` and `$HOME/shanti-ibus-build/src/frontend/openbangla-gui`; CMake listed the `ibus-engine-openbangla` target.
 - `ldd` reported no missing shared libraries for the native engine.
@@ -79,4 +79,4 @@ Not yet completed:
 
 The initial probe build hit a stale `rofiles-fuse` mount/cleanup error. Unmounting the stale mount did not resolve it; disabling rofiles FUSE allowed the probe build to complete. This workaround was used for the probe only and is not a production build recommendation.
 
-Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. The next step is to prepare a disposable Flatpak build configured for `/app`, inspect the resulting component descriptor and resource layout, and only then attempt the host-wrapper/IBus tests in a disposable session.
+Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. The next step is to synchronize the updated wrapper and unit test into the development VM, run the unit test, then prepare a disposable Flatpak build configured for `/app` and inspect its component descriptor and resource layout. Only after that should host-wrapper/IBus testing begin in a disposable session.
