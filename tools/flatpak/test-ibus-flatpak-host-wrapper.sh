@@ -19,6 +19,12 @@ mkdir -p "$tmp/bin"
 cat > "$tmp/bin/flatpak" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$@" > "$FLATPAK_ARGS_FILE"
+if [[ "${MOCK_FLATPAK_HOLD:-0}" == 1 ]]; then
+    sleep 60 &
+    child_pid=$!
+    printf '%s %s\n' "$" "$child_pid" > "$FLATPAK_PIDS_FILE"
+    wait "$child_pid"
+fi
 MOCK
 cat > "$tmp/bin/ibus" <<'MOCK'
 #!/usr/bin/env bash
@@ -71,5 +77,31 @@ cmp -s "$expected" "$FLATPAK_ARGS_FILE" || {
     fail 'wrapper passed unexpected arguments to Flatpak'
 }
 
-printf 'PASS: wrapper syntax, input validation, missing-command handling, IBus address discovery, and Flatpak argument forwarding\n'
-printf 'NOTE: this test does not validate Flatpak permissions, D-Bus connectivity, IBus discovery, or text entry.\n'
+# Verify terminating the wrapper also terminates its isolated Flatpak process
+# group. This uses a sleeping mock, not a real Flatpak deployment.
+export FLATPAK_PIDS_FILE="$tmp/pids"
+MOCK_FLATPAK_HOLD=1 SHANTI_FLATPAK_APP_ID='org.example.Shanti' \
+    PATH="$tmp/bin:/usr/bin:/bin" bash "$wrapper" >"$tmp/lifecycle.out" 2>&1 &
+wrapper_pid=$!
+for _ in {1..50}; do
+    [[ -s "$FLATPAK_PIDS_FILE" ]] && break
+    sleep 0.1
+done
+[[ -s "$FLATPAK_PIDS_FILE" ]] || fail 'mock Flatpak did not start for lifecycle test'
+read -r mock_pid mock_child_pid < "$FLATPAK_PIDS_FILE"
+kill -TERM "$wrapper_pid" 2>/dev/null || true
+set +e
+wait "$wrapper_pid"
+wrapper_status=$?
+set -e
+[[ "$wrapper_status" -eq 143 ]] || fail "TERM returned wrapper status $wrapper_status, expected 143"
+for _ in {1..20}; do
+    kill -0 "$mock_pid" 2>/dev/null || break
+    sleep 0.1
+done
+if kill -0 "$mock_pid" 2>/dev/null; then
+    fail "mock Flatpak process $mock_pid survived wrapper termination"
+fi
+
+printf 'PASS: wrapper validation, address discovery, argument forwarding, and signal cleanup\n'
+printf 'NOTE: tests do not validate real Flatpak permissions, D-Bus connectivity, IBus discovery, or text entry.\n'
