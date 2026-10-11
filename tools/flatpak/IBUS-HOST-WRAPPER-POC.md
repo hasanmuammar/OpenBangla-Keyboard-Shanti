@@ -41,7 +41,7 @@ Keep logs and the exact Flatpak/IBus versions with the test result. Do not call 
 
 - No production app ID or Flatpak manifest is assumed by this script.
 - This repository change does not install a host wrapper or component XML.
-- The engine's data/config path behaviour inside the sandbox has not been validated.
+- The engine's data/config path behaviour at runtime inside the Flatpak has not been validated. The staged install layout is consistent with the engine's relative bundled-resource lookup by source inspection, but the staged engine has not been run.
 - The engine's D-Bus connection to host IBus has not been verified in a real desktop session.
 - Fcitx5 is a separate integration target: its host module ABI requirement is not addressed by this IBus prototype.
 - Do not add production filesystem grants, host session-bus permissions, automatic IBus restarts, or installer hooks as part of this experiment.
@@ -49,35 +49,34 @@ Keep logs and the exact Flatpak/IBus versions with the test result. Do not call 
 
 ## Development VM test log
 
-Last updated: 2026-10-11. These are environment-preparation results, not an end-to-end integration result.
+Last updated: 2026-10-11. These are build and staging results, not an end-to-end integration result.
 
 Test environment reported by the developer:
 
 - Fedora Workstation 44, GNOME Shell 50.5, Wayland.
 - IBus 1.5.34 and Flatpak 1.18.4.
 - GCC/G++ 16.2.1, CMake 4.3.0, Qt 5.15.18, Rust/Cargo 1.98.1, and libzstd 1.5.7.
-- The checkout is on `experiment/flatpak-ibus` at commit `3f7b705`.
+- The developer performed these tests on branch `experiment/flatpak-ibus`; the exact source revision used for the latest staged build was not captured in the supplied terminal output.
 
 Completed checks:
 
 - The disposable `io.github.hasanmuammar.ShantiFilesystemProbe` Flatpak built, installed, and ran after using `flatpak-builder --disable-rofiles-fuse --user --install --force-clean ...`. All four disposable test-path create/write/read checks passed. The XDG data/config/cache results were under the probe's private `~/.var/app/io.github.hasanmuammar.ShantiFilesystemProbe/` directories; they do not prove general host XDG directory access.
 - Wrapper validation rejected an unset `SHANTI_FLATPAK_APP_ID` and malformed value `invalid`, returning exit code 64 in both cases.
-- CMake configuration for a native IBus build completed successfully with:
-  ```sh
-  cmake -S . -B "$HOME/shanti-ibus-build" \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_IBUS=ON \
-    -DENABLE_FCITX=OFF
-  ```
-  The configured dependencies were IBus 1.5.34, Qt 5.15.18, and libzstd 1.5.7.
+- The native CMake configure completed successfully with IBus 1.5.34, Qt 5.15.18, and libzstd 1.5.7.
+- A native Release build completed successfully. The resulting executables were `$HOME/shanti-ibus-build/src/engine/ibus/ibus-engine-openbangla` and `$HOME/shanti-ibus-build/src/frontend/openbangla-gui`; CMake listed the `ibus-engine-openbangla` target.
+- `ldd` reported no missing shared libraries for the native engine.
+- A separate Release build and install completed under the non-system staging prefix `$HOME/shanti-ibus-stage`, using `-DCMAKE_INSTALL_PREFIX="$HOME/shanti-ibus-stage"`. The staged tree included `libexec/ibus-engine-openbangla`, `share/ibus/component/openbangla.xml`, the keyboard layouts, and dictionary/data files under `share/openbangla-keyboard/`. `ldd` also reported no missing shared libraries for the staged engine.
+- The generated staged component descriptor contains absolute paths rooted at `/home/hasan/shanti-ibus-stage`. This is expected for that staging prefix, but demonstrates that the package must be configured with the intended Flatpak prefix (normally `/app`) when building a Flatpak; the staged descriptor must not be copied unchanged into a Flatpak package.
+- Running the *build-tree* engine with `--help` did not display help: it entered normal startup and was terminated by the five-second timeout (exit status 124). It logged that `$HOME/.local/share/openbangla-keyboard/data` could not be set as the database directory because that directory did not exist. Source inspection shows Linux resource lookup first checks a bundled `../share/openbangla-keyboard` path relative to the executable and otherwise falls back to the user's generic data directory. The staging tree contains the bundled data in the expected relative layout, but runtime use of that staged layout remains unverified.
 
 Not yet completed:
 
-- The native engine has not yet been compiled, and no `ibus-engine-openbangla` executable has been located in the checkout.
-- There is no Shanti Flatpak manifest or confirmed production app ID in this checkout; the installed app is only the disposable filesystem probe.
+- No Shanti Flatpak manifest or confirmed production app ID has been identified in this checkout; the installed Flatpak is only the disposable filesystem probe.
 - The wrapper has not been launched against a real Shanti Flatpak deployment.
+- The staged engine has not been run, and its data/config behaviour at runtime has not been validated.
 - No temporary host IBus component has been registered, and Bangla typing in a host-native application has not been tested.
+- No login/session restart, upgrade/removal cleanup, or end-to-end IBus discovery test has been completed.
 
 The initial probe build hit a stale `rofiles-fuse` mount/cleanup error. Unmounting the stale mount did not resolve it; disabling rofiles FUSE allowed the probe build to complete. This workaround was used for the probe only and is not a production build recommendation.
 
-Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. Continue with native engine compilation, then build a disposable test deployment and complete the end-to-end checklist above.
+Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. The next step is to prepare a disposable Flatpak build configured for `/app`, inspect the resulting component descriptor and resource layout, and only then attempt the host-wrapper/IBus tests in a disposable session.
