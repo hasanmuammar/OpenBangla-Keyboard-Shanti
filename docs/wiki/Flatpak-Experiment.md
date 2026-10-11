@@ -103,6 +103,19 @@ The following paths and build constraints have been confirmed by source inspecti
 These findings narrow the next build check, but do not yet prove the runtime contains all required libraries, that the descriptor launches correctly, or that host IBus can communicate with the sandboxed engine.
 
 
+### KDE runtime/SDK probe for the IBus engine POC
+
+The developer checked the KDE 5.15-25.08 runtime and SDK as a candidate build/runtime pair for the separate IBus engine experiment. This is an engine-POC check; it does not select the runtime for the planned Rust + GTK4/libadwaita installer manager.
+
+- Both `org.kde.Platform//5.15-25.08` and `org.kde.Sdk//5.15-25.08` are installed in the user's Flatpak installation.
+- The Platform filesystem contains Qt 5 Core (`libQt5Core.so.5.15.18`) and IBus (`libibus-1.0.so.5.0.532`).
+- Inside the KDE SDK, CMake, Ninja, Make, and pkg-config are available. pkg-config reports Qt5Core, Qt5Widgets, Qt5Network, and Qt5Svg at 5.15.18, IBus at 1.5.32-rc2, and libzstd at 1.5.7.
+- Rust and Cargo were **not** available in the initial KDE SDK shell. Flathub search showed `org.freedesktop.Sdk.Extension.rust-stable//25.08` as an available extension, and installation/setup is being investigated. It has not yet been verified inside the KDE SDK.
+- No Flatpak build of the Shanti engine has yet been completed. The next engine-POC milestone is to verify Rust/Cargo availability in the SDK environment, then configure/build with `CMAKE_INSTALL_PREFIX=/app` and inspect the generated component descriptor and bundled resources.
+
+These are environment inventory results only. They do not prove the full project configures in the SDK, that the engine runs inside Flatpak, or that host IBus can discover it or accept Bangla text.
+
+
 ### Completed
 
 - [x] Created the separate `experiment/flatpak-ibus` branch from the validated `develop` revision.
