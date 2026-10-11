@@ -32,6 +32,17 @@ if SHANTI_FLATPAK_APP_ID='not valid' PATH="$tmp/bin:/usr/bin:/bin" bash "$wrappe
 fi
 grep -q 'not a valid reverse-DNS-style app ID' "$tmp/out" || fail 'malformed app ID error was not clear'
 
+# Invoke Bash by its absolute path while exposing an empty PATH to the wrapper,
+# so this check remains deterministic even on hosts where Flatpak is installed.
+bash_path="$(command -v bash)"
+mkdir -p "$tmp/empty-path"
+set +e
+SHANTI_FLATPAK_APP_ID='org.example.Shanti' PATH="$tmp/empty-path" "$bash_path" "$wrapper" >"$tmp/out" 2>&1
+missing_flatpak_status=$?
+set -e
+[[ "$missing_flatpak_status" -eq 69 ]] || fail "missing flatpak returned exit code $missing_flatpak_status, expected 69"
+grep -q 'flatpak command not found' "$tmp/out" || fail 'missing flatpak error was not clear'
+
 export FLATPAK_ARGS_FILE="$tmp/args"
 SHANTI_FLATPAK_APP_ID='org.example.Shanti' PATH="$tmp/bin:/usr/bin:/bin" bash "$wrapper" --probe-arg
 expected="$tmp/expected"
