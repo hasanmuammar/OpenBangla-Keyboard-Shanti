@@ -127,13 +127,13 @@ Launch test findings:
 - Running timeout 10s flatpak run io.github.hasanmuammar.ShantiIbusEngineProbe --help and again with --ibus emitted two Qt warnings: QCoreApplication::applicationDirPath: Please instantiate the QApplication object first.
 - Both runs logged that setting the database directory failed. The attempted path was the app-private ~/.var/app/io.github.hasanmuammar.ShantiIbusEngineProbe/data/openbangla-keyboard/data. Inspection confirmed that the app-private data/openbangla-keyboard parent existed and was writable, but its data subdirectory did not exist.
 - Both direct launches emitted IBus/GLib criticals because the IBus factory received a null/non-D-Bus connection and the bus was not connected. The --ibus run timed out after 10 seconds (exit status 124). This does not demonstrate a healthy engine startup.
-- Source inspection of src/shared/FileSystem.cpp shows that Linux bundled-resource lookup depends on QCoreApplication::applicationDirPath(), then checks the sibling ../share/openbangla-keyboard directory before falling back to the generic XDG data directory. The engine's main() calls update_with_settings() before constructing any QCoreApplication/QApplication object. The warnings and fallback path are consistent with this initialization-order defect; this is a source-based diagnosis, not yet a patched-and-retested fix.
+- Source inspection of src/shared/FileSystem.cpp shows that Linux bundled-resource lookup depends on QCoreApplication::applicationDirPath(), then checks the sibling ../share/openbangla-keyboard directory before falling back to the generic XDG data directory. The engine's main() called update_with_settings() before constructing any Qt application object. Commit `656f0944a26d778171a2f57e438219b7a33ea94f` on `experiment/flatpak-ibus` now constructs QCoreApplication at the start of main(), before settings and resource-path initialization. This is a source-level fix only; it has not yet been rebuilt and runtime-verified.
 - Do not treat clean ldd output or successful package installation as proof that bundled resources are found at runtime or that the engine can connect to host IBus.
 
 Next required work:
 
-1. Fix or validate executable-relative resource discovery without relying on QCoreApplication::applicationDirPath() before a Qt application object exists. A minimal QCoreApplication created before Settings/database initialization is one candidate; verify whether the engine's event-loop setup permits that cleanly.
-2. Rebuild and reinstall the disposable probe, then confirm the database path resolves to /app/share/openbangla-keyboard/data and the database initialization error disappears.
+1. Pull commit `656f0944a26d778171a2f57e438219b7a33ea94f`, rebuild the engine, and reinstall the disposable probe.
+2. Confirm the database path resolves to `/app/share/openbangla-keyboard/data` and the database initialization error disappears. If the Qt warnings remain, stop and inspect the actual binary/source revision.
 3. Separately diagnose the IBus connection under the intended host-wrapper/component launch path. Do not register a host component until the data-path issue is fixed and the exact D-Bus failure is understood.
 4. Do not broaden session-bus permissions, add host filesystem grants, or modify production installer behavior based only on this test.
 
