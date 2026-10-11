@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import subprocess
+import shlex
 import tempfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -47,7 +47,8 @@ def main() -> int:
     wrapper_template = (ROOT / "ibus-host-wrapper-poc.sh.in").read_text(encoding="utf-8")
     component_template = (ROOT / "ibus-host-component-poc.xml.in").read_text(encoding="utf-8")
     wrapper = wrapper_template.replace("@SHANTI_POC_APP_ID@", args.app_id)
-    component = component_template.replace("@SHANTI_POC_WRAPPER_PATH@", escape(str(wrapper_path)))
+    component_exec = shlex.quote(str(wrapper_path))
+    component = component_template.replace("@SHANTI_POC_WRAPPER_PATH@", escape(component_exec))
 
     if "@SHANTI_POC_APP_ID@" in wrapper or "@SHANTI_POC_WRAPPER_PATH@" in component:
         raise SystemExit("error: an unsubstituted template token remains")
@@ -62,10 +63,13 @@ def main() -> int:
     root = ET.parse(component_out).getroot()
     if root.findtext("name") != "org.freedesktop.IBus.OpenBangla":
         raise SystemExit("error: unexpected IBus component name")
-    if root.findtext("exec") != str(wrapper_path):
-        raise SystemExit("error: component exec does not exactly match wrapper path")
-    if "--ibus" in (root.findtext("exec") or ""):
-        raise SystemExit("error: component exec must not duplicate the wrapper's --ibus argument")
+    exec_text = root.findtext("exec") or ""
+    try:
+        exec_argv = shlex.split(exec_text)
+    except ValueError as exc:
+        raise SystemExit(f"error: invalid component exec quoting: {exc}") from exc
+    if exec_argv != [str(wrapper_path)]:
+        raise SystemExit("error: component exec must resolve to exactly the wrapper path with no extra arguments")
 
     print("Validated generated POC files (not installed or registered):")
     print(f"  wrapper:   {wrapper_out}")
