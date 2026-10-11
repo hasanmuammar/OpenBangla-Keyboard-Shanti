@@ -61,7 +61,7 @@ Test environment reported by the developer:
 Completed checks:
 
 - The disposable `io.github.hasanmuammar.ShantiFilesystemProbe` Flatpak built, installed, and ran after using `flatpak-builder --disable-rofiles-fuse --user --install --force-clean ...`. All four disposable test-path create/write/read checks passed. The XDG data/config/cache results were under the probe's private `~/.var/app/io.github.hasanmuammar.ShantiFilesystemProbe/` directories; they do not prove general host XDG directory access.
-- The developer reported that the wrapper unit test passed for syntax, app-ID input validation, and exact Flatpak argument forwarding. The test did not previously cover a missing `flatpak` executable. A deterministic missing-command case has now been added; its result is pending a test run. The test still does not validate sandbox permissions, D-Bus connectivity, IBus discovery, or text entry.
+- The developer pulled commit `e9aec69` and ran `bash tools/flatpak/test-ibus-flatpak-host-wrapper.sh`; it passed for syntax, app-ID input validation, missing-command handling, and exact Flatpak argument forwarding. The test still does not validate sandbox permissions, D-Bus connectivity, IBus discovery, or text entry.
 - The native CMake configure completed successfully with IBus 1.5.34, Qt 5.15.18, and libzstd 1.5.7.
 - A native Release build completed successfully. The resulting executables were `$HOME/shanti-ibus-build/src/engine/ibus/ibus-engine-openbangla` and `$HOME/shanti-ibus-build/src/frontend/openbangla-gui`; CMake listed the `ibus-engine-openbangla` target.
 - `ldd` reported no missing shared libraries for the native engine.
@@ -79,4 +79,4 @@ Not yet completed:
 
 The initial probe build hit a stale `rofiles-fuse` mount/cleanup error. Unmounting the stale mount did not resolve it; disabling rofiles FUSE allowed the probe build to complete. This workaround was used for the probe only and is not a production build recommendation.
 
-Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. The next step is to synchronize the updated wrapper and unit test into the development VM, run the unit test, then prepare a disposable Flatpak build configured for `/app` and inspect its component descriptor and resource layout. Only after that should host-wrapper/IBus testing begin in a disposable session.
+Do not interpret these results as proof of host IBus integration or as authorization to add production filesystem or D-Bus permissions. The wrapper unit test is now confirmed passing on the development VM. The next step is to verify the installed KDE Platform/SDK runtime, then prepare a disposable Flatpak build configured for `/app` and inspect its component descriptor and resource layout. Only after that should the engine be launched through the wrapper and host IBus discovery/text-entry testing begin in a disposable session.
