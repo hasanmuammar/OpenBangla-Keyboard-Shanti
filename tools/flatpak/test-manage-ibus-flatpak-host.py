@@ -75,7 +75,7 @@ class ManagerLifecycleTests(unittest.TestCase):
         self.assertEqual(tree.findtext("./exec"), str(launcher))
         unit = dropin.read_text(encoding="utf-8")
         self.assertIn('Environment="IBUS_COMPONENT_PATH=', unit)
-        self.assertIn(r'xdg \"config', unit)
+        self.assertIn(r'xdg \"data', unit)
         self.assertIn("%%", manager.systemd_escape("%"))
         manager.uninstall()
         self.assertFalse(any(path.exists() or path.is_symlink() for path in self.paths()))
