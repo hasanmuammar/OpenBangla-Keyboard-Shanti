@@ -58,11 +58,24 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 set -m
 
+# Expose only OpenBangla's host settings directory read-only. Qt normally
+# redirects XDG_CONFIG_HOME into the Flatpak app-private config tree, which
+# would make the engine miss settings written by the host GUI.
+host_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+openbangla_config_dir="$host_config_home/OpenBangla"
+
 # The engine is installed under /app/libexec, which is not on Flatpak's
-# default PATH (/app/bin:/usr/bin). Keep the D-Bus grants narrowly scoped.
-flatpak run \
-    "--filesystem=$ibus_socket_path:ro" \
-    "--env=IBUS_ADDRESS=$ibus_address" \
+# default PATH (/app/bin:/usr/bin). Keep filesystem and D-Bus grants narrow.
+flatpak_args=()
+if [[ -d "$openbangla_config_dir" ]]; then
+    flatpak_args+=("--filesystem=$openbangla_config_dir:ro")
+fi
+flatpak_args+=(
+    "--env=XDG_CONFIG_HOME=$host_config_home"
+    "--filesystem=$ibus_socket_path:ro"
+    "--env=IBUS_ADDRESS=$ibus_address"
+)
+flatpak run "${flatpak_args[@]}" \
     --talk-name=org.freedesktop.IBus \
     --own-name=org.freedesktop.IBus.OpenBangla \
     --command=/app/libexec/ibus-engine-openbangla \

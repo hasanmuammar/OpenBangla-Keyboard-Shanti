@@ -54,12 +54,16 @@ set -e
 [[ "$missing_flatpak_status" -eq 69 ]] || fail "missing flatpak returned exit code $missing_flatpak_status, expected 69"
 grep -q 'flatpak command not found' "$tmp/out" || fail 'missing flatpak error was not clear'
 
-# Verify explicit address discovery and exact Flatpak argument forwarding.
+# Verify explicit address discovery, narrowly scoped settings access, and argument forwarding.
+mkdir -p "$tmp/host-config/OpenBangla"
+export XDG_CONFIG_HOME="$tmp/host-config"
 export FLATPAK_ARGS_FILE="$tmp/args"
 SHANTI_FLATPAK_APP_ID='org.example.Shanti' PATH="$tmp/bin:/usr/bin:/bin" bash "$wrapper" --probe-arg
 expected="$tmp/expected"
 cat > "$expected" <<'EXPECTED'
 run
+--filesystem=$tmp/host-config/OpenBangla:ro
+--env=XDG_CONFIG_HOME=$tmp/host-config
 --filesystem=/tmp/ibus-test:ro
 --env=IBUS_ADDRESS=unix:path=/tmp/ibus-test,guid=0123456789abcdef
 --talk-name=org.freedesktop.IBus

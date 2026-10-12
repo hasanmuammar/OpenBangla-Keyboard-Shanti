@@ -1,6 +1,7 @@
 #include <ibus.h>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QFileInfo>
 #include <QStandardPaths>
 #include <filesystem>
 #include "riti.h"
@@ -20,8 +21,27 @@ static Suggestion *suggestion = nullptr;
 static bool altGr = false;
 
 void update_with_settings() {
-  if(!riti_config_set_layout_file(config, gSettings->getLayoutPath().toStdString().data())) {
-    LOG_ERROR("[IM:iBus]: Failed to set layout file: %s\n", gSettings->getLayoutPath().toStdString().data());
+  QString configuredLayoutPath = gSettings->getLayoutPath();
+  QString resolvedLayoutPath = configuredLayoutPath;
+
+  // The host GUI can save an absolute path to its layout file. When the
+  // engine runs in Flatpak, that host path may not exist inside the sandbox.
+  // Resolve bundled layouts by filename against the engine's own data tree.
+  if (!QFileInfo(resolvedLayoutPath).exists() &&
+      QFileInfo(resolvedLayoutPath).isAbsolute()) {
+    const QString bundledLayoutPath =
+        QDir(LayoutsFilePath()).filePath(QFileInfo(resolvedLayoutPath).fileName());
+    if (QFileInfo(bundledLayoutPath).isFile()) {
+      LOG_INFO("[IM:iBus]: Resolving inaccessible layout path to bundled file: %s\n",
+               bundledLayoutPath.toUtf8().constData());
+      resolvedLayoutPath = bundledLayoutPath;
+    }
+  }
+
+  const QByteArray layoutPathBytes = resolvedLayoutPath.toUtf8();
+  if (!riti_config_set_layout_file(config, layoutPathBytes.constData())) {
+    LOG_ERROR("[IM:iBus]: Failed to set layout file: %s\n",
+              resolvedLayoutPath.toUtf8().constData());
   }
 
   riti_config_set_suggestion_include_english(config, gSettings->getSuggestionIncludeEnglish());
