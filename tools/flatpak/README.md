@@ -61,3 +61,17 @@ systemctl --user restart org.freedesktop.IBus.session.GNOME.service
 
 The helper leaves empty parent directories in place. The service override and launcher behavior have only been manually verified on Fedora Workstation 44 / GNOME 50.5 / IBus 1.5.34. The production installer and production Flatpak manifest remain unchanged.
 
+
+
+### Run the host bridge manager tests
+
+The lifecycle tests use temporary directories and mocked host commands; they do not change the current user's IBus configuration:
+
+```sh
+python3 -m py_compile tools/flatpak/manage-ibus-flatpak-host.py tools/flatpak/test-manage-ibus-flatpak-host.py
+python3 tools/flatpak/test-manage-ibus-flatpak-host.py
+bash -n tools/flatpak/ibus-flatpak-host-wrapper.sh
+bash tools/flatpak/test-ibus-flatpak-host-wrapper.sh
+```
+
+The tests cover generated files and modes, component XML parsing, shell syntax, systemd escaping, overwrite protection, rollback after a simulated creation failure, and safe refusal to remove unmanaged files or symlinks. They are unit tests only; real IBus discovery and Bengali text entry still require manual integration testing on the target desktop.
