@@ -26,8 +26,8 @@ class ManagerLifecycleTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.home = self.root / "home"
-        self.data = self.root / "xdg data"
-        self.config = self.root / 'xdg "config'
+        self.data = self.root / 'xdg "data'
+        self.config = self.root / "xdg config"
         for path in (self.home, self.data, self.config):
             path.mkdir(parents=True)
         self.env = mock.patch.dict(os.environ, {
