@@ -2,55 +2,64 @@
 
 ## Status
 
-This is an investigation, not a working or supported production integration. Do not treat the wrapper or the disposable test descriptor as sufficient to make OpenBangla available in GNOME Settings. The production installer and production manifests must remain unchanged until end-to-end host registration and typing have been demonstrated.
+Host-side discovery and basic typing have now been verified on Fedora Workstation 44 with GNOME 50.5 (Wayland), IBus 1.5.34, and Flatpak 1.18.4. The setup remains experimental: it uses a disposable user component descriptor and a user-local launcher, neither installed by the production installer. Do not treat this as a production-ready installation path yet.
 
-The current prototype uses `tools/flatpak/ibus-flatpak-host-wrapper.sh` to launch the engine inside a Flatpak sandbox while connecting it to the host IBus bus. The wrapper is intentionally not installed by the production installer.
+## Working architecture
 
-## What has been verified
+The engine runs inside Flatpak, but host IBus needs a component descriptor to discover the engine. Starting the sandboxed process and owning `org.freedesktop.IBus.OpenBangla` alone is not sufficient.
 
-- The wrapper's shell tests pass for app-ID validation, host IBus address discovery, Flatpak argument forwarding, and process-group cleanup. These tests use a mock `flatpak` command; they do not exercise a real sandbox or IBus registry.
-- A direct Flatpak launch of `/app/libexec/ibus-engine-openbangla --ibus` can stay running and own `org.freedesktop.IBus.OpenBangla` while the process is alive.
-- A disposable host-side component descriptor can be parsed into an IBus registry cache when its directory is supplied through `IBUS_COMPONENT_PATH`.
-- On the investigated Fedora Workstation 44 / GNOME 50.5 / Wayland / IBus 1.5.34 / Flatpak 1.18.4 setup, `ibus list-engine --name-only` still did **not** list `OpenBangla`. GNOME Settings therefore did not offer it as an input source.
-- Adding `IBUS_COMPONENT_PATH` to a temporary user-level drop-in for `org.freedesktop.IBus.session.GNOME.service` did not make the engine appear. That drop-in was removed afterward.
+The working test used:
 
-## Current blocker and interpretation
+- `tools/flatpak/ibus-flatpak-host-wrapper.sh` to launch `/app/libexec/ibus-engine-openbangla --ibus` inside the selected Flatpak app.
+- A user-local launcher that exports `SHANTI_FLATPAK_APP_ID` and invokes the wrapper.
+- A user-local descriptor under `~/.local/share/ibus/component/` whose `<exec>` points to that launcher.
+- A GNOME-managed IBus service environment that includes the user component directory in `IBUS_COMPONENT_PATH`.
 
-The cache-generation test and the active daemon are not equivalent: `ibus write-cache --file=/tmp/...` writes a separate cache file, not the live daemon's registry, and seeing the component in that file does not prove that the running daemon has registered the engine. IBus documents `IBUS_COMPONENT_PATH` as a colon-delimited custom component path; when set, it replaces the default component search path, so any diagnostic value must explicitly include `/usr/share/ibus/component` if standard engines should remain available. The user-service environment override was tried and did not change discovery, so the environment variable alone is not an established fix. See the [IBusRegistry documentation](https://ibus.github.io/docs/ibus-1.5/IBusRegistry.html) and [ibus command manual](https://manpages.debian.org/testing/ibus-data/ibus.1.en.html).
+The wrapper discovers the host IBus address with `ibus address`, grants the sandbox read-only access to that specific socket, passes the address as `IBUS_ADDRESS`, and requests only the IBus D-Bus name permissions needed by the engine. It validates the app ID and cleans up its Flatpak process group when stopped.
 
-The temporary descriptor emitted GLib critical warnings from `g_variant_new_string` during `ibus write-cache`, and the decoded cache showed `[Invalid UTF-8]` for missing optional `homepage` and `textdomain` fields. This is a concrete warning worth eliminating in future test fixtures, but the investigation did not prove that these warnings explain the discovery failure. The production descriptor template, `data/openbangla.xml.in`, already supplies both fields.
+## IBus daemon discovery configuration
 
-In `src/engine/ibus/main.cpp`, the `--ibus` path requests the `org.freedesktop.IBus.OpenBangla` D-Bus name and provides the engine factory; it does not register the component with the host daemon. Host-side discovery must therefore be validated separately from starting the sandboxed process. Owning the D-Bus name is not evidence that IBus has discovered the engine.
+On the tested Fedora setup, the GNOME-managed service did not discover the user-local descriptor by default. Generating a cache with an explicit `IBUS_COMPONENT_PATH` was not enough; the environment must be present in the live GNOME IBus daemon.
+
+The temporary user service drop-in that made discovery work was:
+
+```ini
+[Service]
+Environment="IBUS_COMPONENT_PATH=/home/hasan/.local/share/ibus/component:/usr/share/ibus/component"
+ExecStart=
+ExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh
+```
+
+It was placed at:
+
+```text
+~/.config/systemd/user/org.freedesktop.IBus.session.GNOME.service.d/90-shanti-probe.conf
+```
+
+This is a test-specific configuration, not a general installation recipe. Replace the example home path with the actual home directory if reproducing the test. The standard component directory remains in the path so built-in and system engines are still discoverable. `--cache=refresh` refreshes the daemon's component cache at startup.
+
+After reloading the user systemd configuration and restarting `org.freedesktop.IBus.session.GNOME.service`, `ibus list-engine --name-only` listed `OpenBangla`, and GNOME Settings offered it as an input source. Selecting it and entering Bengali text worked. A later Bengali glyph-rendering problem disappeared after a full system reboot; no specific missing package or code defect was established as its cause.
+
+Useful verification commands:
+
+```sh
+systemctl --user show org.freedesktop.IBus.session.GNOME.service -p ExecStart -p Environment
+ibus list-engine --name-only | grep -i openbangla
+ibus engine
+```
+
+## Test coverage and limitations
+
+The wrapper's shell tests cover app-ID validation, host IBus address discovery, argument forwarding, and process-group cleanup using a mocked `flatpak` command. They do not test a real sandbox, daemon discovery, or typing.
+
+The manual Fedora test verifies that the engine appears in IBus, is selectable in GNOME Settings, and can enter text. It is not an automated end-to-end test and has not been validated across other distributions or desktop environments.
+
+The production installer and production Flatpak manifest have not been changed to install the descriptor, launcher, or systemd drop-in. Before production integration, design a maintainable install/uninstall flow for the host descriptor and launcher, derive paths dynamically rather than hard-coding a home directory, and test cleanup and engine discovery on a clean user session.
 
 ## Safe investigation rules
 
-- Keep all test descriptors and launchers disposable and user-scoped.
+- Keep test descriptors, launchers, and systemd overrides user-scoped and disposable.
 - Do not install the experimental component system-wide.
-- Do not modify the production installer or production Flatpak permissions based only on the current probe.
-- Do not leave a GNOME IBus systemd drop-in behind as a workaround; the tested override did not resolve discovery.
-- Do not describe the integration as working until the engine appears in `ibus list-engine`, can be selected in GNOME Settings, and successfully commits text in a real application.
-- Keep shell-wrapper tests and real integration tests clearly separate. A passing mock-based wrapper test is not an end-to-end IBus test.
-
-## Next engineering work
-
-1. Improve the disposable component fixture so it includes the metadata fields expected by IBus and produces no avoidable GLib warnings.
-2. Capture the GNOME-managed IBus daemon's logs and effective unit configuration, then determine which registry/cache path it actually consumes. Read-only baseline commands are:
-
-   ```sh
-   systemctl --user show org.freedesktop.IBus.session.GNOME.service -p ExecStart -p Environment
-   journalctl --user -u org.freedesktop.IBus.session.GNOME.service -b --no-pager
-   ibus list-engine --name-only | grep -i openbangla || true
-   ```
-3. Validate the component descriptor and launch semantics against the installed IBus version, including whether the host daemon attempts to execute the descriptor's `<exec>` command and how that command should bridge to Flatpak.
-4. Add an end-to-end test only once there is a repeatable, isolated test environment. It must assert engine discovery and text entry, not just process startup or D-Bus name ownership.
-
-## Local disposable artifacts
-
-The investigation used files outside the repository:
-
-- `~/.local/share/ibus/component/shanti-flatpak-probe.xml`
-- `~/.local/bin/shanti-flatpak-probe-launcher`
-- `/tmp/shanti-ibus-registry.xml`
-- `/tmp/shanti-ibus-registry-clean.xml`
-
-They are not production files and are not tracked here. Remove them only when no longer needed for diagnosis. The tested systemd drop-in under `~/.config/systemd/user/org.freedesktop.IBus.session.GNOME.service.d/10-shanti-flatpak.conf` was undone.
+- Do not copy filesystem-permission probe grants into a production manifest.
+- Keep mock wrapper tests distinct from real IBus integration tests.
+- Do not describe this experimental setup as production-supported until installation, removal, discovery, and text entry are covered by a repeatable test plan.
