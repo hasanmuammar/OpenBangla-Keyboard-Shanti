@@ -28,10 +28,10 @@ The probe prints sandbox XDG paths, host XDG locations reported by Flatpak, and 
 
 For a second test, use a disposable user account configured with non-default host `XDG_DATA_HOME`, `XDG_CONFIG_HOME`, and `XDG_CACHE_HOME` values **before installing this user-scoped probe app**. Then run the probe and confirm that writes through sandbox `XDG_*_HOME/shanti-flatpak-permission-probe` paths appear in the corresponding custom host XDG directories. Avoid changing XDG variables only for `flatpak run`: those variables can also affect the Flatpak client's user installation lookup. Use an account and scratch paths that contain no Shanti production data.
 
-## Current limitation
+## CI workflow
 
-The workflow [Flatpak filesystem permission probe](../../.github/workflows/flatpak-permission-probe.yml) builds and runs this test on an Ubuntu GitHub Actions runner when the probe files change on `experiment/flatpak-ibus` or when manually dispatched. The result must be checked in GitHub Actions; adding the workflow is not itself evidence that the sandbox test passed. A local host-shell run is explicitly refused by the probe.
+The workflow [Flatpak filesystem permission probe](../../.github/workflows/flatpak-permission-probe.yml) builds and runs this test on an Ubuntu GitHub Actions runner when the probe files change on `experiment/flatpak-ibus` or when manually dispatched. Check the GitHub Actions result to confirm execution; adding the workflow alone does not prove the probe passed. A local host-shell run is explicitly refused by the probe.
 
 ## Experimental IBus host integration
 
-Host IBus discovery and Bengali text entry have now been verified manually on one Fedora Workstation 44 / GNOME 50.5 setup. The experiment required a user-local component descriptor and launcher, plus `IBUS_COMPONENT_PATH` in the GNOME-managed IBus service environment. The production installer and manifest remain unchanged. See [Experimental host IBus integration](IBUS-HOST-INTEGRATION.md) for the working test configuration and remaining productionization work.
+Manual host IBus discovery and Bengali text entry have been verified on one Fedora Workstation 44 / GNOME 50.5 setup. The test needed a user-local component descriptor and launcher, plus `IBUS_COMPONENT_PATH` in the GNOME-managed IBus service environment. The production installer and manifest remain unchanged. See [Experimental host IBus integration](IBUS-HOST-INTEGRATION.md) for the working configuration and remaining production work.
