@@ -35,3 +35,29 @@ The workflow [Flatpak filesystem permission probe](../../.github/workflows/flatp
 ## Experimental IBus host integration
 
 Manual host IBus discovery and Bengali text entry have been verified on one Fedora Workstation 44 / GNOME 50.5 setup. The test needed a user-local component descriptor and launcher, plus `IBUS_COMPONENT_PATH` in the GNOME-managed IBus service environment. The production installer and manifest remain unchanged. See [Experimental host IBus integration](IBUS-HOST-INTEGRATION.md) for the working configuration and remaining production work.
+
+## Experimental host IBus bridge manager
+
+The manual setup can be created and removed with `manage-ibus-flatpak-host.py`. This is an opt-in development helper, not part of `tools/install.sh` and not a production-supported installation path. It targets the GNOME-managed IBus systemd user service used by the verified Fedora setup.
+
+Install for an already-installed Flatpak app:
+
+```sh
+python3 tools/flatpak/manage-ibus-flatpak-host.py install --app-id io.github.hasanmuammar.ShantiIbusEngineProbe
+systemctl --user daemon-reload
+systemctl --user restart org.freedesktop.IBus.session.GNOME.service
+ibus list-engine --name-only | grep -i openbangla
+```
+
+Use the actual installed app ID. The command refuses to overwrite existing target files and creates user-local wrapper, launcher, IBus component metadata, and a GNOME IBus service drop-in. Review the generated paths before restarting the service.
+
+Remove only files created by this helper:
+
+```sh
+python3 tools/flatpak/manage-ibus-flatpak-host.py uninstall
+systemctl --user daemon-reload
+systemctl --user restart org.freedesktop.IBus.session.GNOME.service
+```
+
+The helper leaves empty parent directories in place. The service override and launcher behavior have only been manually verified on Fedora Workstation 44 / GNOME 50.5 / IBus 1.5.34. The production installer and production Flatpak manifest remain unchanged.
+
