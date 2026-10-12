@@ -74,4 +74,4 @@ bash -n tools/flatpak/ibus-flatpak-host-wrapper.sh
 bash tools/flatpak/test-ibus-flatpak-host-wrapper.sh
 ```
 
-The tests cover generated files and modes, component XML parsing, shell syntax, systemd escaping, overwrite protection, rollback after a simulated creation failure, and safe refusal to remove unmanaged files or symlinks. They are unit tests only; real IBus discovery and Bengali text entry still require manual integration testing on the target desktop.
+The tests cover generated files and modes, component XML parsing, shell syntax, systemd escaping, overwrite protection, rollback after a simulated creation failure, and safe refusal to remove unmanaged files or symlinks. They are unit tests only. Manual integration testing has confirmed IBus discovery and Bengali text entry on one Fedora Workstation 44 / GNOME 50.5 / IBus 1.5.34 setup. A separate clean user account on the same machine passed manager install, IBus discovery, and uninstall/removal checks; Bengali text entry was not confirmed in that clean account. This does not establish portability to other distributions or desktop environments.
