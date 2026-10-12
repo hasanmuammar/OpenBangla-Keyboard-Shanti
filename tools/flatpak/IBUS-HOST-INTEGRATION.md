@@ -2,7 +2,7 @@
 
 ## Status
 
-Host-side engine discovery and Bengali text entry have been verified on Fedora Workstation 44, GNOME 50.5 (Wayland), IBus 1.5.34, and Flatpak 1.18.4 using the original manual setup and the experimental host-bridge manager in the primary account. A separate clean user account also passed manager install, live IBus discovery, managed-file removal, and post-uninstall checks. Bengali text entry in that clean account was not confirmed in the recorded test. This remains experimental and is not installed by the production installer.
+Host-side engine discovery and Bengali text entry have been verified on Fedora Workstation 44, GNOME 50.5 (Wayland), IBus 1.5.34, and Flatpak 1.18.4 using both the original manual setup and the experimental host-bridge manager in the primary account. A separate clean user account also passed manager install, Bengali text entry, live IBus discovery, managed-file removal, and post-uninstall checks. After uninstall, the IBus service remained active and `OpenBangla` was no longer registered. This remains experimental and is not installed by the production installer.
 
 ## Working architecture
 
@@ -70,7 +70,7 @@ A separate clean-account lifecycle test was then run on the same Fedora machine 
 4. The manager uninstall removed all four managed files. The service remained active, and `OpenBangla` was no longer registered.
 5. The probe app was uninstalled from that account, and the temporary unsigned local test remote was removed. Flathub remained configured.
 
-Bengali text entry was **not confirmed in the clean account** in the recorded output; its result establishes clean-account installation, discovery, and removal, not full text-entry behavior. This test also does not cover a different distribution or desktop environment.
+Bengali text entry was subsequently confirmed in the clean account using the disposable probe. After manager uninstall, the IBus service remained active and `OpenBangla` was no longer registered. The disposable app and temporary local test remote were removed. This validates the manager lifecycle and basic Bengali text entry in a clean user account on this Fedora/GNOME setup; it does not cover a different distribution or desktop environment or the full candidate/commit/backspace/focus workflow.
 
 Local automated validation passed Python compilation, all 7 manager lifecycle tests, and the host wrapper test. GitHub Actions workflows were green at merge time. The manager tests use temporary directories and mocked host commands; they do not themselves validate a real sandbox, D-Bus connection, IBus registration, or text entry.
 
