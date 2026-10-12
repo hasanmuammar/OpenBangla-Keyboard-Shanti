@@ -152,10 +152,10 @@ def install(app_id: str) -> None:
                 candidate_text = candidate.read_text(encoding="utf-8")
             except (OSError, UnicodeError):
                 continue
-            if "IBUS_COMPONENT_PATH" in candidate_text or re.search(r"(?m)^\\s*ExecStart\\s*=", candidate_text):
+            if "IBUS_COMPONENT_PATH" in candidate_text or re.search(r"(?m)^\s*ExecStart\s*=", candidate_text):
                 fail(
                     "found a potentially conflicting IBus service drop-in: "
-                    f"{candidate}\\n"
+                    f"{candidate}\n"
                     "Review or remove that configuration manually before installing; "
                     "this tool will not merge or overwrite existing service settings."
                 )
