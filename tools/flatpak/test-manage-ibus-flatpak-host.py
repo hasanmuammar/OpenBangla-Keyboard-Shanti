@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib.util
 import os
 import subprocess
+import contextlib
+import io
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -97,8 +99,12 @@ class ManagerLifecycleTests(unittest.TestCase):
             'ExecStart=\nExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh\n',
             encoding="utf-8",
         )
-        with self.assertRaisesRegex(SystemExit, "potentially conflicting IBus service drop-in"):
-            manager.install(APP_ID)
+        error_output = io.StringIO()
+        with contextlib.redirect_stderr(error_output):
+            with self.assertRaises(SystemExit) as raised:
+                manager.install(APP_ID)
+        self.assertEqual(raised.exception.code, 1)
+        self.assertIn("potentially conflicting IBus service drop-in", error_output.getvalue())
         self.assertTrue(conflict.exists())
         self.assertFalse(any(path.exists() or path.is_symlink() for path in self.paths()))
 
