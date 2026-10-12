@@ -89,6 +89,19 @@ class ManagerLifecycleTests(unittest.TestCase):
         self.assertEqual(wrapper.read_text(encoding="utf-8"), "user data\n")
         self.assertFalse(any(path.exists() for path in self.paths()[1:]))
 
+    def test_install_refuses_conflicting_manual_service_dropin(self) -> None:
+        conflict = self.config / "systemd/user/org.freedesktop.IBus.session.GNOME.service.d/90-shanti-probe.conf"
+        conflict.parent.mkdir(parents=True)
+        conflict.write_text(
+            '[Service]\\nEnvironment="IBUS_COMPONENT_PATH=/tmp/component:/usr/share/ibus/component"\\n'
+            'ExecStart=\\nExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh\\n',
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(SystemExit, "potentially conflicting IBus service drop-in"):
+            manager.install(APP_ID)
+        self.assertTrue(conflict.exists())
+        self.assertFalse(any(path.exists() or path.is_symlink() for path in self.paths()))
+
     def test_uninstall_refuses_unmanaged_file_and_leaves_everything(self) -> None:
         wrapper, launcher, _, _ = self.paths()
         wrapper.parent.mkdir(parents=True)
