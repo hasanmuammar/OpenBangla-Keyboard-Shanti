@@ -93,8 +93,8 @@ class ManagerLifecycleTests(unittest.TestCase):
         conflict = self.config / "systemd/user/org.freedesktop.IBus.session.GNOME.service.d/90-shanti-probe.conf"
         conflict.parent.mkdir(parents=True)
         conflict.write_text(
-            '[Service]\\nEnvironment="IBUS_COMPONENT_PATH=/tmp/component:/usr/share/ibus/component"\\n'
-            'ExecStart=\\nExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh\\n',
+            '[Service]\nEnvironment="IBUS_COMPONENT_PATH=/tmp/component:/usr/share/ibus/component"\n'
+            'ExecStart=\nExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh\n',
             encoding="utf-8",
         )
         with self.assertRaisesRegex(SystemExit, "potentially conflicting IBus service drop-in"):
