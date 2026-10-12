@@ -34,4 +34,4 @@ The workflow [Flatpak filesystem permission probe](../../.github/workflows/flatp
 
 ## Experimental IBus host integration
 
-The wrapper-based host IBus integration is separate from this filesystem-permission probe and is **not yet working end to end**. See [Experimental host IBus integration status](IBUS-HOST-INTEGRATION.md) for verified results, the current discovery blocker, safety constraints, and next investigation steps. Passing the filesystem probe or the wrapper's mock-based tests does not prove that GNOME can discover the engine or commit text.
+Host IBus discovery and manual text entry have now been verified on one Fedora Workstation 44 / GNOME 50.5 setup using a user-local component descriptor, launcher wrapper, and GNOME IBus service environment override. The production installer and manifest are unchanged; this remains an experimental manual setup. See [Experimental host IBus integration](IBUS-HOST-INTEGRATION.md) for the configuration that worked and the remaining productionization requirements.
