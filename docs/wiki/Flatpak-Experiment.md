@@ -433,3 +433,21 @@ Live disposable-probe observations:
 - These results support the socket-specific grant as the next experimental configuration, but the wrapper change has not yet been rerun on the VM with the unit test, nor has actual input processing been verified.
 
 No host IBus component has been registered. Engine discovery in the input-method selector, Bangla composition/candidate/commit behavior, focus changes, and session-restart behavior remain untested. Keep this work limited to the disposable probe and experimental wrapper; do not change production installer behavior or production permissions.
+
+
+### Clean-account host IBus bridge lifecycle — 2026-10-12
+
+This update supersedes earlier statements above that host component registration and live discovery had not yet been tested. The work remains an experimental Fedora-specific proof of concept; the production installer and production Flatpak manifest were not changed.
+
+On Fedora Workstation 44 with GNOME 50.5 (Wayland), IBus 1.5.34, and Flatpak 1.18.4, a separate `shanti-ibus-test` account was created without sudo access. Its user Flatpak installation was initially empty. The KDE 5.15-25.08 runtime was installed from Flathub with normal signature verification. The disposable engine probe was then installed from a copied local OSTree repository at commit `e998c18985bacf9cb64221dbf732412f11f5cb0c84b674bf5bb3912fa98bd3bc`. Because the local repository summary is unsigned, a temporary user-scoped remote with GPG verification disabled was used only for that local test repository; Flathub verification was not disabled.
+
+Confirmed in the clean account:
+
+- The manager installed its component descriptor, launcher, wrapper, and GNOME IBus service drop-in under the test account's home directory. All four files were owned by the test account with expected permissions.
+- After reloading and restarting the IBus user service from the test account's own GNOME session, the service was active and `ibus list-engine --name-only` returned `OpenBangla`.
+- Running manager uninstall removed all four managed files. The IBus service remained active, and `OpenBangla` was no longer registered.
+- The probe app was uninstalled and the temporary unsigned test remote was removed. The test account's remaining Flatpak remote list contained only `flathub`.
+
+The captured clean-account results do **not** confirm Bengali text entry in that account. Bengali typing was confirmed earlier in the primary account using both the manual setup and the manager-generated setup, and the original manual configuration was restored afterward. Thus, clean-account discovery/removal is verified, but clean-account text entry is not.
+
+The seven manager lifecycle unit tests also passed in the local checkout. This is still one Fedora/GNOME environment; clean-account coverage on another distribution or desktop, candidate selection/commit/backspace/focus testing, and a portable alternative to the GNOME-specific service drop-in remain open work. Do not integrate the manager into the production installer or broaden production Flatpak permissions based on this result alone.
