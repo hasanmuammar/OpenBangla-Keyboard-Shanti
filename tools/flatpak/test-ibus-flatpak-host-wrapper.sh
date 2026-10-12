@@ -60,7 +60,7 @@ export XDG_CONFIG_HOME="$tmp/host-config"
 export FLATPAK_ARGS_FILE="$tmp/args"
 SHANTI_FLATPAK_APP_ID='org.example.Shanti' PATH="$tmp/bin:/usr/bin:/bin" bash "$wrapper" --probe-arg
 expected="$tmp/expected"
-cat > "$expected" <<'EXPECTED'
+cat > "$expected" <<EXPECTED
 run
 --filesystem=$tmp/host-config/OpenBangla:ro
 --env=XDG_CONFIG_HOME=$tmp/host-config
