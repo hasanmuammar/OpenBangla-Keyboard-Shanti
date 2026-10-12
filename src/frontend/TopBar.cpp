@@ -67,6 +67,43 @@ TopBar::TopBar(bool darkIcon, QWidget *parent) :
     m_iconTheme = "black";
   }
 
+  // Keep the top-bar background, foreground, and icons in the same theme.
+  const QString backgroundColor = darkIcon ? "#202124" : "#f5f5f5";
+  const QString borderColor = darkIcon
+      ? "rgba(255, 255, 255, 0.16)"
+      : "rgba(0, 0, 0, 0.16)";
+  const QString foregroundColor = darkIcon ? "#f1f3f4" : "#202124";
+  const QString hoverColor = darkIcon
+      ? "rgba(255, 255, 255, 0.16)"
+      : "rgba(0, 0, 0, 0.08)";
+  const QString pressedColor = darkIcon
+      ? "rgba(255, 255, 255, 0.08)"
+      : "rgba(0, 0, 0, 0.05)";
+  const QString tooltipBackground = darkIcon ? "#303134" : "#ffffff";
+  const QString tooltipForeground = darkIcon ? "#f1f3f4" : "#202124";
+
+  setStyleSheet(QStringLiteral(
+      "QMainWindow { background-color: %1; border: 1px solid %2; border-radius: 10px; }"
+      "QWidget#centralwidget { background-color: %1; border-radius: 10px; }"
+      "QPushButton { background: transparent; border: none; border-radius: 10px; "
+      "padding: 12px; margin: 2px; color: %3; font-size: 18px; outline: none; }"
+      "QPushButton:focus { outline: none; }"
+      "QPushButton:hover { background: %4; }"
+      "QPushButton:pressed { background: %5; }"
+      "QPushButton#buttonSetLayout:checked { background: rgba(14, 165, 233, 0.15); "
+      "border: 1px solid rgba(14, 165, 233, 0.2); border-radius: 10px; }"
+      "QPushButton#buttonShutdown:hover { background: rgba(255, 0, 0, 0.55); "
+      "border-radius: 10px; }"
+      "QToolTip { background: %6; color: %7; border: 1px solid %2; "
+      "border-radius: 10px; padding: 8px 12px; }")
+      .arg(backgroundColor)
+      .arg(borderColor)
+      .arg(foregroundColor)
+      .arg(hoverColor)
+      .arg(pressedColor)
+      .arg(tooltipBackground)
+      .arg(tooltipForeground));
+
   /* Dialogs */
   aboutDialog = new AboutDialog(Q_NULLPTR);
   layoutViewer = new LayoutViewer(m_iconTheme, Q_NULLPTR);
@@ -79,8 +116,7 @@ TopBar::TopBar(bool darkIcon, QWidget *parent) :
   });
 
   auto set_icon = [&](QPushButton* obj, QString icon) {
-    // TODO: Change this logic if we ever have white theme for TopBar
-    obj->setIcon(QIcon(":/images/" + QString("white") + "/" + icon + ".svg"));
+    obj->setIcon(QIcon(":/images/" + m_iconTheme + "/" + icon + ".svg"));
   };
   set_icon(ui->buttonSetLayout, "layouts");
   set_icon(ui->buttonViewLayout, "layout");
