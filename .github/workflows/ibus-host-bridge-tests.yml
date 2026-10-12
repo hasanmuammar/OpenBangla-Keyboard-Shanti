@@ -1,0 +1,43 @@
+name: Experimental IBus host bridge tests
+
+on:
+  push:
+    branches:
+      - experiment/flatpak-ibus
+    paths:
+      - tools/flatpak/manage-ibus-flatpak-host.py
+      - tools/flatpak/test-manage-ibus-flatpak-host.py
+      - tools/flatpak/ibus-flatpak-host-wrapper.sh
+      - tools/flatpak/test-ibus-flatpak-host-wrapper.sh
+      - .github/workflows/ibus-host-bridge-tests.yml
+  pull_request:
+    paths:
+      - tools/flatpak/manage-ibus-flatpak-host.py
+      - tools/flatpak/test-manage-ibus-flatpak-host.py
+      - tools/flatpak/ibus-flatpak-host-wrapper.sh
+      - tools/flatpak/test-ibus-flatpak-host-wrapper.sh
+      - .github/workflows/ibus-host-bridge-tests.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile \
+            tools/flatpak/manage-ibus-flatpak-host.py \
+            tools/flatpak/test-manage-ibus-flatpak-host.py
+
+      - name: Test manager lifecycle in temporary directories
+        run: python3 tools/flatpak/test-manage-ibus-flatpak-host.py
+
+      - name: Test host wrapper
+        run: bash tools/flatpak/test-ibus-flatpak-host-wrapper.sh
