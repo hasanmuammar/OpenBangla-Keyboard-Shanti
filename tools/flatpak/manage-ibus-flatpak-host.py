@@ -53,10 +53,22 @@ def atomic_create(path: Path, content: str, mode: int = 0o644) -> None:
 
 
 def managed_file(path: Path) -> bool:
+    # Never follow symlinks when deciding whether a path is safe to remove.
     try:
-        return path.is_file() and MARKER_TEXT in path.read_text(encoding="utf-8")
+        return not path.is_symlink() and path.is_file() and MARKER_TEXT in path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return False
+
+
+def systemd_escape(value: str) -> str:
+    """Escape a value for a double-quoted systemd unit-file assignment."""
+    return value.replace("%", "%%").replace("\\", "\\\\").replace('"', '\\"')
+
+
+def validate_systemd_path(path: Path, label: str) -> None:
+    # Unit files cannot safely represent these characters in this generated form.
+    if any(c in str(path) for c in "\\n\\r\\0"):
+        fail(f"{label} contains a character unsupported by the systemd drop-in")
 
 
 def build_component(launcher: Path) -> str:
@@ -82,7 +94,7 @@ def build_component(launcher: Path) -> str:
         "language": "bn",
         "license": "GPL-3.0-or-later",
         "author": "OpenBangla Keyboard Shanti",
-        "layout": "us",
+        "layout": "default",
         "rank": "80",
         "symbol": "অ",
     }.items():
@@ -116,6 +128,8 @@ def install(app_id: str) -> None:
     # IBus component paths use ':' as a separator.
     if ":" in str(data_home):
         fail("XDG_DATA_HOME cannot contain ':' because IBus uses it as a path separator")
+    validate_systemd_path(data_home, "XDG_DATA_HOME")
+    validate_systemd_path(config_home, "XDG_CONFIG_HOME")
 
     libexec = home / ".local/libexec/shanti"
     wrapper = libexec / "ibus-flatpak-host-wrapper.sh"
@@ -145,9 +159,10 @@ exec {shlex_quote(str(wrapper))} "$@"
         created.append(launcher)
         atomic_create(component, build_component(launcher))
         created.append(component)
+        component_path = f"{component.parent}:{Path('/usr/share/ibus/component')}"
         dropin_text = f"""{MARKER}
 [Service]
-Environment="IBUS_COMPONENT_PATH={component.parent}:{Path('/usr/share/ibus/component')}"
+Environment="IBUS_COMPONENT_PATH={systemd_escape(str(component_path))}"
 ExecStart=
 ExecStart=/usr/bin/ibus-daemon --panel disable --cache=refresh
 """
