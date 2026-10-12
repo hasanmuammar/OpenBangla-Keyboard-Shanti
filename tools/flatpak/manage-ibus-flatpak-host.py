@@ -18,7 +18,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 WRAPPER_SOURCE = ROOT / "ibus-flatpak-host-wrapper.sh"
 APP_ID_RE = re.compile(r"^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$")
-MARKER = "# Managed by Shanti manage-ibus-flatpak-host.py; do not edit."
+MARKER_TEXT = "Managed by Shanti manage-ibus-flatpak-host.py; do not edit."
+MARKER = "# " + MARKER_TEXT
 
 
 def fail(message: str, status: int = 1) -> "NoReturn":
@@ -53,7 +54,7 @@ def atomic_create(path: Path, content: str, mode: int = 0o644) -> None:
 
 def managed_file(path: Path) -> bool:
     try:
-        return path.is_file() and MARKER in path.read_text(encoding="utf-8")
+        return path.is_file() and MARKER_TEXT in path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return False
 
@@ -87,7 +88,7 @@ def build_component(launcher: Path) -> str:
     }.items():
         ET.SubElement(engine, key).text = value
     ET.indent(component, space="    ")
-    return '<?xml version="1.0" encoding="UTF-8"?>\n' + MARKER + "\n" + ET.tostring(component, encoding="unicode") + "\n"
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<!-- ' + MARKER_TEXT + ' -->\n' + ET.tostring(component, encoding="unicode") + "\n"
 
 
 def install(app_id: str) -> None:
@@ -130,7 +131,10 @@ def install(app_id: str) -> None:
 
     created: list[Path] = []
     try:
-        atomic_create(wrapper, WRAPPER_SOURCE.read_text(encoding="utf-8"), 0o755)
+        wrapper_source = WRAPPER_SOURCE.read_text(encoding="utf-8")
+        first_line, separator, remainder = wrapper_source.partition("\n")
+        wrapper_text = first_line + "\n" + MARKER + "\n" + remainder if separator else wrapper_source + "\n" + MARKER + "\n"
+        atomic_create(wrapper, wrapper_text, 0o755)
         created.append(wrapper)
         launcher_text = f"""#!/usr/bin/env bash
 {MARKER}
