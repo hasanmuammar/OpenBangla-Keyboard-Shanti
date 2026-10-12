@@ -67,7 +67,7 @@ def systemd_escape(value: str) -> str:
 
 def validate_systemd_path(path: Path, label: str) -> None:
     # Unit files cannot safely represent these characters in this generated form.
-    if any(c in str(path) for c in "\\n\\r\\0"):
+    if any(c in str(path) for c in "\n\r\0"):
         fail(f"{label} contains a character unsupported by the systemd drop-in")
 
 
