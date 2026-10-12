@@ -40,7 +40,14 @@ class ManagerLifecycleTests(unittest.TestCase):
         self.which = mock.patch.object(manager.shutil, "which", side_effect=lambda name: f"/mock/bin/{name}")
         self.which.start()
         self.addCleanup(self.which.stop)
-        self.run_flatpak = mock.patch("subprocess.run", return_value=subprocess.CompletedProcess([], 0))
+        self.real_run = subprocess.run
+
+        def fake_flatpak(command, *args, **kwargs):
+            if command == ["flatpak", "info", APP_ID]:
+                return subprocess.CompletedProcess(command, 0)
+            return self.real_run(command, *args, **kwargs)
+
+        self.run_flatpak = mock.patch("subprocess.run", side_effect=fake_flatpak)
         self.run_flatpak.start()
         self.addCleanup(self.run_flatpak.stop)
 
