@@ -2,7 +2,7 @@
 
 ## Status
 
-Host-side engine discovery and Bengali text entry have been verified on Fedora Workstation 44, GNOME 50.5 (Wayland), IBus 1.5.34, and Flatpak 1.18.4 using both the original manual setup and the experimental host-bridge manager. The manager-generated configuration was installed, activated, used to type Bengali, then uninstalled; the original manual configuration was restored and Bengali typing was verified again. This remains experimental and is not installed by the production installer.
+Host-side engine discovery and Bengali text entry have been verified on Fedora Workstation 44, GNOME 50.5 (Wayland), IBus 1.5.34, and Flatpak 1.18.4 using the original manual setup and the experimental host-bridge manager in the primary account. A separate clean user account also passed manager install, live IBus discovery, managed-file removal, and post-uninstall checks. Bengali text entry in that clean account was not confirmed in the recorded test. This remains experimental and is not installed by the production installer.
 
 ## Working architecture
 
@@ -53,16 +53,26 @@ systemctl --user status org.freedesktop.IBus.session.GNOME.service --no-pager
 
 ## Test results
 
-On the single Fedora setup listed above, both the manual configuration and manager-generated configuration were tested:
+On the Fedora setup listed above, the primary-account manual and manager-generated configurations were tested:
 
 1. The live GNOME-managed IBus service restarted successfully with the manager-generated drop-in.
 2. The live IBus daemon discovered `OpenBangla`.
 3. OpenBangla was selectable as an input source.
-4. Bengali text entry worked.
+4. Bengali text entry worked with the manager-generated configuration.
 5. The manager refused installation when the original manual service drop-in was present.
 6. After uninstalling the manager-generated files and restoring the backed-up manual files, OpenBangla remained discoverable and Bengali typing worked.
 
-Local automated validation on the migration branch passed Python compilation, all 7 manager lifecycle tests, and the host wrapper test. GitHub Actions workflows were green at merge time. The manager tests use temporary directories and mocked host commands; they do not themselves validate a real sandbox, D-Bus connection, IBus registration, or text entry.
+A separate clean-account lifecycle test was then run on the same Fedora machine using a fresh `shanti-ibus-test` account and the exact disposable probe commit `e998c18985bacf9cb64221dbf732412f11f5cb0c84b674bf5bb3912fa98bd3bc`:
+
+1. The test account had no pre-existing IBus component descriptor or GNOME IBus service drop-in.
+2. The manager installed its four user-scoped files; all were owned by the test account with expected modes.
+3. After `systemctl --user daemon-reload` and restarting the GNOME-managed IBus service inside that account's graphical session, the service was `active` and `ibus list-engine --name-only` reported `OpenBangla`.
+4. The manager uninstall removed all four managed files. The service remained active, and `OpenBangla` was no longer registered.
+5. The probe app was uninstalled from that account, and the temporary unsigned local test remote was removed. Flathub remained configured.
+
+Bengali text entry was **not confirmed in the clean account** in the recorded output; its result establishes clean-account installation, discovery, and removal, not full text-entry behavior. This test also does not cover a different distribution or desktop environment.
+
+Local automated validation passed Python compilation, all 7 manager lifecycle tests, and the host wrapper test. GitHub Actions workflows were green at merge time. The manager tests use temporary directories and mocked host commands; they do not themselves validate a real sandbox, D-Bus connection, IBus registration, or text entry.
 
 A separate glyph-rendering issue disappeared after a full machine reboot during earlier testing; the exact cause was not established, and it is not considered an engine change.
 
