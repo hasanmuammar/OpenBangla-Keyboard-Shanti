@@ -139,6 +139,27 @@ def install(app_id: str) -> None:
 
     if not os.access(home, os.W_OK):
         fail(f"home directory is not writable: {home}")
+
+    # A second drop-in that resets ExecStart or changes IBus component discovery
+    # can silently override or conflict with this bridge. Refuse to layer over
+    # an existing manual/foreign integration; migration must be explicit.
+    service_dropin_dir = dropin.parent
+    if service_dropin_dir.is_dir():
+        for candidate in sorted(service_dropin_dir.glob("*.conf")):
+            if candidate == dropin or managed_file(candidate):
+                continue
+            try:
+                candidate_text = candidate.read_text(encoding="utf-8")
+            except (OSError, UnicodeError):
+                continue
+            if "IBUS_COMPONENT_PATH" in candidate_text or re.search(r"(?m)^\s*ExecStart\s*=", candidate_text):
+                fail(
+                    "found a potentially conflicting IBus service drop-in: "
+                    f"{candidate}\n"
+                    "Review or remove that configuration manually before installing; "
+                    "this tool will not merge or overwrite existing service settings."
+                )
+
     for path in (wrapper, launcher, component, dropin):
         if path.exists() or path.is_symlink():
             fail(f"refusing to overwrite existing path: {path}")
