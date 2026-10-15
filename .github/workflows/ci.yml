@@ -42,10 +42,12 @@ jobs:
       - name: Build Flatpak bundle
         run: |
           flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --default-branch=stable \
             --install-deps-from=flathub \
             --repo=flatpak-repo \
             build-dir tools/flatpak/shanti-ibus.yml
-          flatpak build-bundle flatpak-repo shanti-ibus-${{ matrix.arch }}.flatpak \
+          flatpak build-bundle --arch=${{ matrix.arch }} \
+            flatpak-repo shanti-ibus-${{ matrix.arch }}.flatpak \
             org.openbangla.Shanti.IBus stable
 
       - name: Upload Flatpak bundle
