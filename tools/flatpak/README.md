@@ -15,6 +15,8 @@ flatpak-builder --disable-rofiles-fuse --force-clean --user --install \
 
 The build downloads Cargo dependencies. This IBus-only package has been built, installed, and confirmed working by the developer. Flatpak Builder composes AppStream metadata after compilation using `appstreamcli` and its Compose addon. Install both on the build host if composition fails; on Ubuntu, the packages are `appstream` and `appstream-compose`. The failure occurs after the application payload has been compiled and staged.
 
+GitHub Actions builds this same manifest natively for `x86_64` and `aarch64`, then uploads separate architecture-specific bundles named `shanti-ibus-flatpak-x86_64` and `shanti-ibus-flatpak-aarch64`. Install the bundle matching the device architecture. Steam Deck is x86_64; ARM64 devices use aarch64. Flatpak bundles are architecture-specific, so a single install command that automatically selects either architecture requires publishing both builds in one OSTree repository.
+
 Run the installed application with:
 
 ```sh

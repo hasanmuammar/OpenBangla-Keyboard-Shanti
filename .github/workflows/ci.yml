@@ -12,7 +12,16 @@ on:
 
 jobs:
   build-flatpak:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout source
@@ -36,14 +45,14 @@ jobs:
             --install-deps-from=flathub \
             --repo=flatpak-repo \
             build-dir tools/flatpak/shanti-ibus.yml
-          flatpak build-bundle flatpak-repo shanti-ibus.flatpak \
+          flatpak build-bundle flatpak-repo shanti-ibus-${{ matrix.arch }}.flatpak \
             org.openbangla.Shanti.IBus stable
 
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v5
         with:
-          name: shanti-ibus-flatpak-x86_64
-          path: shanti-ibus.flatpak
+          name: shanti-ibus-flatpak-${{ matrix.arch }}
+          path: shanti-ibus-${{ matrix.arch }}.flatpak
           if-no-files-found: error
 
   build-linux:
