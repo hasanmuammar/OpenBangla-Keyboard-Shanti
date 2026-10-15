@@ -8,7 +8,7 @@ OpenBangla Keyboard Shanti is a Linux-focused fork of [OpenBangla Keyboard](http
 
 The primary target systems are Bluefin/Dakota, Bazzite, and similar modern atomic Linux distributions. Other Linux desktops may work, but compatibility should be treated as unverified unless supported by a documented test.
 
-The current distribution approach is a portable, user-local installation. Work on alternative package formats must not disrupt that path. Flatpak is being investigated as an optional distribution format; it is not the project's main objective and is not a replacement decision.
+The portable, user-local installation remains the main distribution approach. An experimental Flatpak build is also working under the Shanti app ID, with GUI behavior confirmed on Bluefin/GNOME. Flatpak repository publishing and broader platform coverage remain in progress; see the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## Project priorities
 

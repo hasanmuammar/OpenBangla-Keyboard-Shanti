@@ -13,7 +13,7 @@ flatpak-builder --disable-rofiles-fuse --force-clean --user --install \
   /tmp/openbangla-flatpak-build tools/flatpak/openbangla.yml
 ```
 
-The build downloads Cargo dependencies. The last successful complete build used the provisional ID `io.github.openbangla.keyboard` on Bluefin/GNOME. The Shanti ID and metadata changes have not yet been rebuilt; the attempt in the current restricted environment stopped because Bubblewrap could not create a `NETLINK_ROUTE` socket. Rebuild and inspect the exported launcher, icons, and AppStream metadata before publishing.
+The build downloads Cargo dependencies. The Shanti-ID package has now been built, installed, and confirmed working by the developer. If `flatpak-builder` fails during AppStream composition with `appstreamcli: No such file or directory`, install the host's AppStream CLI package and rerun the build; the error occurs after the application payload has been compiled and staged.
 
 Run the installed application with:
 
@@ -21,7 +21,7 @@ Run the installed application with:
 flatpak run io.github.hasanmuammar.Shanti
 ```
 
-The app's AppIndicator, layout changes, and settings changes were confirmed on Bluefin/GNOME under the provisional ID. Host IBus discovery and Bengali typing were separately confirmed on Fedora Workstation 44/GNOME 50.5 through the experimental bridge. This does not establish support across other desktops or distributions. Fcitx5 integration is not provided.
+The app's AppIndicator, layout changes, and settings changes are confirmed on Bluefin/GNOME with the Shanti app ID. Host IBus discovery and Bengali typing were separately confirmed on Fedora Workstation 44/GNOME 50.5 through the experimental bridge. These results do not establish support across other desktops or distributions. Fcitx5 integration is not provided.
 
 ## Optional GNOME IBus bridge
 

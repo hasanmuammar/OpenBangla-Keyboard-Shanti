@@ -85,6 +85,10 @@ To install a specific alpha build:
 bash tools/install.sh --version shanti-alpha.1
 ----
 
+=== Experimental Flatpak
+
+An experimental Flatpak build is available as `io.github.hasanmuammar.Shanti` (OpenBangla Keyboard Shanti). Its GUI, AppIndicator, layout changes and settings changes have been confirmed on Bluefin/GNOME. Hosted repository publishing is not configured yet, so this is currently a developer-built package rather than a published install option. See the link:tools/flatpak/README.md[Flatpak build and publishing guide] for instructions and status.
+
 === Build from source
 
 For development, local compilation, or release packaging, use the separate source-build script:

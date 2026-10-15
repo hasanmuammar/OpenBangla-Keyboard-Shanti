@@ -63,13 +63,12 @@ This section records source-level findings for the Flatpak feasibility assessmen
 
 ### Flatpak implementation and host integration
 
-- The experimental full GUI and IBus Flatpak manifest is `tools/flatpak/openbangla.yml`. A complete package was built and run on Bluefin/GNOME under the provisional ID `io.github.openbangla.keyboard`; the developer confirmed launch, AppIndicator display, layout changes, and settings changes.
-- The selected release identity is `io.github.hasanmuammar.Shanti`, displayed as **OpenBangla Keyboard Shanti**. The manifest now rewrites the desktop entry, icons, and AppStream metadata for that identity. A rebuild with those changes is still pending: the latest build attempt was blocked because this environment does not permit Bubblewrap to create a `NETLINK_ROUTE` socket. This is an environment limitation, not a successful verification of the changed package.
+- The experimental full GUI and IBus Flatpak manifest is `tools/flatpak/openbangla.yml`. The package has been built and run on Bluefin/GNOME as `io.github.hasanmuammar.Shanti`, displayed as **OpenBangla Keyboard Shanti**. The developer confirmed launch, AppIndicator display, layout changes, and settings changes.
 - Host IBus discovery and Bengali typing have also been verified through the experimental user-local bridge on Fedora Workstation 44/GNOME 50.5, including a clean test account. These results do not establish support on other desktops or distributions. Fcitx5 integration remains unverified.
 - The portable installer also handles XDG desktop/icon/metainfo resources and backend-specific integration files. A sandboxed package must not assume that placing these files inside its private app directory automatically registers the engine with the host.
-- Still to verify: published repository/signing and install-update-remove lifecycle; reproducible build of the Shanti-ID package; compatibility outside the tested environments; and Fcitx5 integration.
+- Still to verify: published repository/signing and install-update-remove lifecycle; compatibility outside the tested environments; and Fcitx5 integration.
 
 ### Evidence boundary
 
-The portable-build details above come from source review. Flatpak build instructions and current status are in the [Shanti Flatpak guide](../../tools/flatpak/README.md); host bridge behavior and platform limits are in the [experimental IBus integration report](../../tools/flatpak/IBUS-HOST-INTEGRATION.md). The release-ID transformation still needs a successful rebuild, and the environment-specific results do not establish broad platform support.
+The portable-build details above come from source review. Flatpak build instructions and current status are in the [Shanti Flatpak guide](../../tools/flatpak/README.md); host bridge behavior and platform limits are in the [experimental IBus integration report](../../tools/flatpak/IBUS-HOST-INTEGRATION.md). The environment-specific results do not establish broad platform support.
 
