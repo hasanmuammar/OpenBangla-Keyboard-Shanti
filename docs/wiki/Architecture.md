@@ -61,13 +61,15 @@ This section records source-level findings for the Flatpak feasibility assessmen
 - The portable installer relocates application resources to `$XDG_DATA_HOME/openbangla-keyboard` (normally `~/.local/share/openbangla-keyboard`). Its merge logic preserves existing custom layouts and autocorrect data; it backs up existing dictionary/suffix/regex files before replacing shipped versions.
 - GUI preferences use Qt `QSettings("OpenBangla", "Keyboard")` on Linux. The exact on-disk settings location depends on Qt's platform configuration and XDG environment and should be verified in a runtime test, not inferred solely from the constructor.
 
-### Host integration and unresolved questions
+### Flatpak implementation and host integration
 
-- IBus requires a component descriptor and an engine executable visible to the host session. Fcitx5 requires a loadable module and its addon/input-method metadata visible to the host framework.
-- The existing installer also handles XDG desktop/icon/metainfo resources and backend-specific integration files. A sandboxed package must not assume that placing these files inside its private app directory automatically registers the engine with the host.
-- Still to verify: exact runtime file inventory of a built archive; transitive runtime dependencies for both backends; actual Qt settings file path; IBus/Fcitx5 D-Bus and host-discovery behaviour; and whether either backend can be made to deliver Bengali input to ordinary host applications without excessive permissions.
+- The experimental full GUI and IBus Flatpak manifest is `tools/flatpak/openbangla.yml`. A complete package was built and run on Bluefin/GNOME under the provisional ID `io.github.openbangla.keyboard`; the developer confirmed launch, AppIndicator display, layout changes, and settings changes.
+- The selected release identity is `io.github.hasanmuammar.Shanti`, displayed as **OpenBangla Keyboard Shanti**. The manifest now rewrites the desktop entry, icons, and AppStream metadata for that identity. A rebuild with those changes is still pending: the latest build attempt was blocked because this environment does not permit Bubblewrap to create a `NETLINK_ROUTE` socket. This is an environment limitation, not a successful verification of the changed package.
+- Host IBus discovery and Bengali typing have also been verified through the experimental user-local bridge on Fedora Workstation 44/GNOME 50.5, including a clean test account. These results do not establish support on other desktops or distributions. Fcitx5 integration remains unverified.
+- The portable installer also handles XDG desktop/icon/metainfo resources and backend-specific integration files. A sandboxed package must not assume that placing these files inside its private app directory automatically registers the engine with the host.
+- Still to verify: published repository/signing and install-update-remove lifecycle; reproducible build of the Shanti-ID package; compatibility outside the tested environments; and Fcitx5 integration.
 
 ### Evidence boundary
 
-These findings come from the current CMake files, portable build/runtime scripts, resource-path implementation, and backend descriptors. They are a source review only: no Flatpak manifest has been created, no Flatpak build has been run, and host typing has not been tested.
+The portable-build details above come from source review. The Flatpak status reflects developer builds and tests recorded in [Flatpak Distribution Experiment](Flatpak-Experiment.md) and the [experimental IBus integration report](../../tools/flatpak/IBUS-HOST-INTEGRATION.md). The release-ID transformation still needs a successful rebuild, and the environment-specific results do not establish broad platform support.
 

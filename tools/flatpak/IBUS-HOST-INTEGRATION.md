@@ -17,7 +17,7 @@ The working setup uses:
 
 The wrapper obtains the host IBus address with `ibus address`, extracts the Unix socket path, grants read-only access to that specific socket, passes `IBUS_ADDRESS` into the sandbox, and requests the `org.freedesktop.IBus` talk permission plus ownership of `org.freedesktop.IBus.OpenBangla`. It validates the explicit Flatpak app ID and cleans up its process group on exit or signal.
 
-For layout/configuration synchronization, the wrapper also sets `XDG_CONFIG_HOME` to the host value and grants read-only access only to its `OpenBangla` settings directory when that directory exists. This lets the sandboxed engine read the same `Keyboard.conf` that the native GUI writes without exposing unrelated host configuration. The IBus engine additionally resolves a missing absolute layout path by filename against its own bundled layouts directory; this handles host paths that are not present in the sandbox. These changes are source-level fixes; verify them in a real installed Flatpak and host GUI before treating layout switching as runtime-tested.
+For layout/configuration synchronization, the wrapper also sets `XDG_CONFIG_HOME` to the host value and grants read-only access only to its `OpenBangla` settings directory when that directory exists. This lets the sandboxed engine read the same `Keyboard.conf` that the GUI writes without exposing unrelated host configuration. The IBus engine additionally resolves a missing absolute layout path by filename against its own bundled layouts directory. The developer has confirmed that layout and settings changes work in the installed Bluefin/GNOME Flatpak. That verification used the provisional app ID; the Shanti-ID metadata rebuild remains pending.
 
 ## Host IBus discovery configuration
 

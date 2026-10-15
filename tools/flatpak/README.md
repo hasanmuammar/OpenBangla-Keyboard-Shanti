@@ -41,7 +41,7 @@ systemctl --user daemon-reload
 systemctl --user restart org.freedesktop.IBus.session.GNOME.service
 ```
 
-Launch **OpenBangla Keyboard Shanti** from GNOME's overview or run `flatpak run io.github.hasanmuammar.Shanti`; select OpenBangla as the GNOME input source to type. The previous provisional-ID build's package, IBus discovery, AppIndicator, layout changes, and settings changes were confirmed working in the developer's Bluefin/GNOME environment. The Shanti-specific ID and metadata transformation have not yet been rebuilt and verified. The bridge and packaging remain experimental and have not been validated across other distributions or desktop environments.
+Launch **OpenBangla Keyboard Shanti** from GNOME's overview or run `flatpak run io.github.hasanmuammar.Shanti`; select OpenBangla as the GNOME input source to type. The previous provisional-ID build's package, IBus discovery, AppIndicator, layout changes, and settings changes were confirmed working in the developer's Bluefin/GNOME environment. The Shanti-specific ID and metadata transformation have not yet been rebuilt and verified; the latest rebuild attempt was blocked before compilation because this environment denied Bubblewrap's `NETLINK_ROUTE` socket creation. The bridge and packaging remain experimental and have not been validated across other distributions or desktop environments.
 
 This is a disposable test application, not the Shanti manager and not a production manifest. It tests four narrowly scoped, Shanti-specific permission aliases:
 

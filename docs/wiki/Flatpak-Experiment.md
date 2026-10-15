@@ -2,11 +2,15 @@
 
 ## Current status — 2026-10-15
 
-The complete Flatpak was built and run in the developer's Bluefin/GNOME environment under the provisional app ID `io.github.openbangla.keyboard`. The developer confirms the app launches, the AppIndicator appears, layouts can be changed, and settings changes work as expected. The release app ID is now `io.github.hasanmuammar.Shanti`, with the display name **OpenBangla Keyboard Shanti**; the updated manifest metadata has not yet been rebuilt and verified. The work remains experimental: broader desktop/distribution coverage, release publishing, and install/update/removal lifecycle validation are still outstanding.
+The current implementation packages the Qt keyboard GUI and IBus engine in `tools/flatpak/openbangla.yml`. A complete Flatpak was built and run in the developer's Bluefin/GNOME environment under the provisional ID `io.github.openbangla.keyboard`; the developer confirmed launch, AppIndicator display, layout changes, and settings changes. Host IBus discovery and Bengali typing were separately verified through the experimental bridge on Fedora Workstation 44/GNOME 50.5, including a clean test account.
+
+The selected release ID is `io.github.hasanmuammar.Shanti`, with display name **OpenBangla Keyboard Shanti**. The manifest now rewrites the launcher, icons, and AppStream identity, but this changed package has not yet been rebuilt. The rebuild attempt in this environment failed before compilation because Bubblewrap could not create a `NETLINK_ROUTE` socket (`Operation not permitted`). This does not indicate a manifest build failure. The new identity still needs a successful build and package inspection. A signed hosted repository, release installation/update/removal checks, broader desktop coverage, and Fcitx5 support remain outstanding.
+
+The Rust + GTK4/libadwaita installer manager described below is a separate proposed product direction; it is not the current Qt keyboard Flatpak.
 
 > **Project status:** Highly Experimental · Vibe-Coded  
-> **Phase:** Planning and feasibility assessment  
-> **Working branch:** `experiment/flatpak-ibus`  
+> **Phase:** Experimental implementation and single-environment validation
+> **Status branch at last update:** `develop`
 > **Project goal:** Easy, reliable, safe installation and maintenance of Shanti on its target Linux systems  
 > **Experiment:** Evaluate Flatpak as one possible distribution format  
 > **Flathub:** Out of scope
@@ -104,7 +108,7 @@ The following paths and build constraints have been confirmed by source inspecti
 - The top-level CMake configuration unconditionally requires Qt5 Widgets, Network, and Svg and adds the frontend subdirectory even when building with `ENABLE_IBUS=ON`. It also always adds `src/platform`, whose CMake file imports a separate Rust `platform` crate, while `src/engine/CMakeLists.txt` imports the Rust `riti` crate. Thus Rust/Cargo must be available at configure time for the project’s Corrosion integration, even if the intended build target is only `ibus-engine-openbangla`. A target-only build may avoid compiling unrelated targets, but the ordinary project install rules cover the GUI as well; do not assume a partial target build followed by a whole-project install is a valid packaging flow without testing it.
 - The existing native staging install used an absolute staging prefix in its generated IBus descriptor. Do not copy that descriptor into a Flatpak build; configure the Flatpak build with `-DCMAKE_INSTALL_PREFIX=/app` and validate the generated descriptor and resource tree after installation.
 
-These findings narrow the next build check, but do not yet prove the runtime contains all required libraries, that the descriptor launches correctly, or that host IBus can communicate with the sandboxed engine.
+These findings were the initial source-level assessment. Later sections record successful complete-package builds, runtime resource checks, and host IBus tests; see the current-status summary above and the dated test results below.
 
 
 ### Proposed disposable IBus engine probe boundary
@@ -130,10 +134,10 @@ The developer checked the KDE 5.15-25.08 runtime and SDK as a candidate build/ru
 - Both `org.kde.Platform//5.15-25.08` and `org.kde.Sdk//5.15-25.08` are installed in the user's Flatpak installation.
 - The Platform filesystem contains Qt 5 Core (`libQt5Core.so.5.15.18`) and IBus (`libibus-1.0.so.5.0.532`).
 - Inside the KDE SDK, CMake, Ninja, Make, and pkg-config are available. pkg-config reports Qt5Core, Qt5Widgets, Qt5Network, and Qt5Svg at 5.15.18, IBus at 1.5.32-rc2, and libzstd at 1.5.7.
-- Rust and Cargo were **not** available in the initial KDE SDK shell. Flathub search showed `org.freedesktop.Sdk.Extension.rust-stable//25.08` as an available extension, and installation/setup is being investigated. It has not yet been verified inside the KDE SDK.
-- No Flatpak build of the Shanti engine has yet been completed. The next engine-POC milestone is to verify Rust/Cargo availability in the SDK environment, then configure/build with `CMAKE_INSTALL_PREFIX=/app` and inspect the generated component descriptor and bundled resources.
+- Rust and Cargo were **not** available in the initial KDE SDK shell. A later build used the Rust stable 1.98.1 SDK extension successfully.
+- The engine and complete GUI Flatpak were subsequently built with `CMAKE_INSTALL_PREFIX=/app`; the full package was installed and its data check passed. The Shanti release-ID transformation is the outstanding rebuild, as described in the current-status summary.
 
-These are environment inventory results only. They do not prove the full project configures in the SDK, that the engine runs inside Flatpak, or that host IBus can discover it or accept Bangla text.
+The first bullets above are historical environment inventory. Later build and host-integration results supersede the initial “not yet built” statements, but only for the tested KDE runtime and Fedora/Bluefin environments.
 
 
 ### Completed
@@ -143,9 +147,9 @@ These are environment inventory results only. They do not prove the full project
 - [x] Recorded that Flathub submission is out of scope.
 - [x] Established a staged plan so feasibility is assessed before implementation.
 
-### Not started or not yet verified
+### Remaining or not yet verified
 
-- [ ] Source/runtime/resource/configuration path mapping.
+- [x] Map source/runtime/resource paths and verify packaged data lookup for the complete Qt/IBus build.
 - [x] Review the existing installer/uninstaller CLI, its TTY-only choices, release pinning, and host dependencies.
 - [x] Review `pmim-ibus` as an input-method packaging precedent and distinguish its Flatpak-contained process from its separately installed host IBus adapter.
 - [x] Draft a versioned GUI-to-host-operation contract in [Flatpak-Installer-Protocol.md](./Flatpak-Installer-Protocol.md); it remains a proposal until implemented and tested.
@@ -158,15 +162,17 @@ These are environment inventory results only. They do not prove the full project
 - [ ] Decide and test production path grants based on the actual installer target list.
 - [ ] Build the production Rust + GTK4/libadwaita manager manifest.
 - [ ] Sandboxed production-manager smoke test.
-- [ ] Host IBus integration test.
+- [x] Host IBus discovery and Bengali typing in tested Fedora/GNOME accounts; broader portability remains unverified.
 - [ ] Host Fcitx5 integration test.
 - [ ] GitHub-hosted Flatpak repository, signing, and `.flatpakref`.
 - [ ] Clean installation, update, and removal tests.
 - [ ] Flatpak release publication.
 
-**Current evidence boundary:** The disposable filesystem probe has passed locally on the developer's Fedora VM: all four test roots passed create/write/read checks inside the installed probe Flatpak. This validates only those disposable path grants in that environment. The GitHub Actions result has not been confirmed; the production manager manifest/build, production path grants, modifying installer operation, Rust frontend, and host-typing test remain unvalidated. The project remains experimental.
+**Current evidence boundary:** The disposable filesystem probe passed locally on the developer's Fedora VM, and host IBus discovery and Bengali typing were verified there through the experimental bridge. The complete Qt/IBus package and GUI behavior were also verified on Bluefin/GNOME under the provisional ID. The GitHub Actions result for the disposable permission probe is not confirmed here. The Shanti-ID package rebuild, hosted repository/signing, release lifecycle, Fcitx5, and the separate Rust installer-manager proposal remain unverified. The project remains experimental.
 
 ## 8. Work plan and checklist
+
+The original staged checklist below tracks the separate Rust + GTK installer-manager proposal. The current Qt keyboard GUI/IBus package has its own status above; its remaining release blockers are the Shanti-ID rebuild, signed repository hosting, published install/update/removal checks, broader desktop coverage, and Fcitx5 evaluation.
 
 Work through the stages in order. Complete and review one focused task at a time; do not treat the checklist as permission to implement every stage at once.
 

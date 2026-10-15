@@ -1,6 +1,8 @@
 # Experimental IBus-to-Flatpak host-wrapper proof of concept
 
-Status: **prototype only; not production-ready and not end-to-end verified**.
+> **Status note (2026-10-15):** This file is a dated development log; its early “not tested” and “next” statements describe the state at those dates. Later sections in this file record successful host discovery and typing tests. For the current summary, see [Experimental host IBus integration](IBUS-HOST-INTEGRATION.md). The full Qt/IBus app was also verified on Bluefin/GNOME under its provisional ID; the selected Shanti-ID package still needs a successful rebuild.
+
+Status: **prototype only; basic host discovery and Bengali typing were later verified, but it is not production-ready**.
 
 This experiment tests one narrow hypothesis: can host IBus launch Shanti's engine inside an installed Flatpak while the engine connects back to the host IBus session?
 
@@ -77,7 +79,7 @@ Keep logs and the exact Flatpak/IBus versions with the test result. Do not call 
 
 ## Development VM test log
 
-Last updated: 2026-10-11. These are build and staging results, not an end-to-end integration result.
+Historical snapshot last updated: 2026-10-11. Later sections in this file supersede its initial build and integration status.
 
 Test environment reported by the developer:
 
@@ -127,7 +129,7 @@ Launch test findings:
 - Running timeout 10s flatpak run io.github.hasanmuammar.ShantiIbusEngineProbe --help and again with --ibus emitted two Qt warnings: QCoreApplication::applicationDirPath: Please instantiate the QApplication object first.
 - Both runs logged that setting the database directory failed. The attempted path was the app-private ~/.var/app/io.github.hasanmuammar.ShantiIbusEngineProbe/data/openbangla-keyboard/data. Inspection confirmed that the app-private data/openbangla-keyboard parent existed and was writable, but its data subdirectory did not exist.
 - Both direct launches emitted IBus/GLib criticals because the IBus factory received a null/non-D-Bus connection and the bus was not connected. The --ibus run timed out after 10 seconds (exit status 124). This does not demonstrate a healthy engine startup.
-- Source inspection of src/shared/FileSystem.cpp shows that Linux bundled-resource lookup depends on QCoreApplication::applicationDirPath(), then checks the sibling ../share/openbangla-keyboard directory before falling back to the generic XDG data directory. The engine's main() called update_with_settings() before constructing any Qt application object. Commit `656f0944a26d778171a2f57e438219b7a33ea94f` on `experiment/flatpak-ibus` now constructs QCoreApplication at the start of main(), before settings and resource-path initialization. This is a source-level fix only; it has not yet been rebuilt and runtime-verified.
+- Source inspection of `src/shared/FileSystem.cpp` showed that Linux bundled-resource lookup depends on `QCoreApplication::applicationDirPath()`, then checks the sibling `../share/openbangla-keyboard` directory before falling back to generic XDG data. The engine's `main()` initially called `update_with_settings()` before constructing any Qt application object. Commit `656f0944a26d778171a2f57e438219b7a33ea94f` on `experiment/flatpak-ibus` moved `QCoreApplication` construction to the start of `main()`. This fix was later included in the built disposable probe and complete GUI/IBus Flatpak; resource lookup and `--check-data` succeeded there.
 - Do not treat clean ldd output or successful package installation as proof that bundled resources are found at runtime or that the engine can connect to host IBus.
 
 Next required work:
