@@ -62,12 +62,13 @@ These statuses describe the runs observed on the review date. Check the [Actions
 - [x] Workflow is configured to build four portable artifacts: x86_64/IBus, x86_64/Fcitx5, aarch64/IBus, and aarch64/Fcitx5.
 - [x] Workflow is configured to create a prerelease and upload archives/checksums.
 - [x] Workflow is configured to create build-provenance attestations.
-- [ ] Verify a successful tagged release run and inspect all four archives/checksums/attestations.
+- [x] Release workflow builds x86_64 and aarch64 IBus Flatpak bundles with checksums and provenance attestations and attaches them to the prerelease.
+- [ ] Verify a successful tagged release run and inspect all portable archives and Flatpak bundles/checksums/attestations.
 - [ ] Publish the first Shanti GitHub Release.
 - [ ] Test the normal installer against the published release assets.
-- [ ] Publish the Flatpak through a hosted OSTree repository before describing it as installable through a `.flatpakref`.
+- [ ] Publish the Flatpak through a hosted OSTree repository before describing remote/`.flatpakref` installation as available.
 
-**Current distribution state:** the GitHub Releases endpoint was empty when checked on 2026-10-15. CI workflow artifacts are available for testing, but they are not a published GitHub Release. The portable installer's configured release tag is in `release-tag.txt`; the CMake project version is in `version.txt`.
+**Current distribution state:** the first alpha release has not been published yet. The tagged release workflow is configured to attach portable archives and direct-download Flatpak bundles. The portable installer's configured release tag is in `release-tag.txt`; the CMake project version is in `version.txt`.
 
 ## 6. Documentation
 

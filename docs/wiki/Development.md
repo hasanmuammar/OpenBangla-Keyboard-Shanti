@@ -50,4 +50,4 @@ For Flatpak work, follow [the IBus Flatpak guide](../../tools/flatpak/README.md)
 
 ## Release workflow
 
-The release workflow is configured for tags matching `shanti-alpha.*`. It builds separate IBus and Fcitx5 archives for x86_64 and aarch64, generates provenance attestations, and creates a prerelease. No GitHub release is currently published, so verify the first tagged run and all release assets before describing the installer as ready for general use.
+The release workflow is configured for tags matching `shanti-alpha.*`. It builds separate IBus and Fcitx5 portable archives for x86_64 and aarch64, plus IBus-only Flatpak bundles for both architectures. It generates checksums and provenance attestations, then attaches all assets to a GitHub prerelease. The workflow is ready, but the first tagged run still needs to complete successfully before the release is considered published.

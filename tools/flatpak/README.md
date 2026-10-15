@@ -5,9 +5,10 @@ The manifest `shanti-ibus.yml` builds the Qt keyboard GUI and IBus engine as `or
 ## Current status
 
 - GitHub Actions builds architecture-specific Flatpak bundles for x86_64 and aarch64.
+- The `shanti-alpha.*` release workflow builds both bundles, creates checksums and provenance attestations, and attaches the assets to the GitHub prerelease. Until the first tagged run succeeds, use workflow artifacts for testing.
 - The latest CI run on 2026-10-15 succeeded for both Flatpak architectures; the same run also passed the configured portable source-build matrix.
 - The GUI and in-app host-IBus registration have been confirmed working in a GNOME session. Conflict handling, recovery, removal and session persistence still need broader testing.
-- No hosted OSTree repository or public signing key is configured. There is no published Flatpak install option yet.
+- No hosted OSTree repository or public signing key is configured. The alpha bundles are direct-download Flatpak bundles; users install the file for their architecture rather than adding a Shanti Flatpak remote.
 - The repository currently has no published GitHub release for the portable installer either.
 
 ## Build and install locally
@@ -37,6 +38,8 @@ flatpak install --user ./shanti-ibus-x86_64.flatpak
 
 Use the aarch64 filename on ARM64 systems. Do not use the x86_64 bundle on ARM64 or vice versa.
 
+After a `shanti-alpha.*` release completes, the same `.flatpak` bundles and `.sha256` checksum files are attached directly to the GitHub prerelease. Check the checksum after downloading. Flatpak bundles may fetch their runtime from the Flathub remote, which must be configured on the system.
+
 ## GNOME IBus registration
 
 This host integration is available only when the app detects both a GNOME session and the Flatpak app ID `org.openbangla.Shanti.IBus`. It does not apply to the portable install or other Flatpak builds.
@@ -64,4 +67,4 @@ Further validation should cover a clean GNOME account and an account with existi
 
 ## Publishing
 
-A `.flatpakref` template is not an installable published reference by itself. Publishing requires a hosted OSTree repository, an exported public signing key, and a generated `.flatpakref` with the real repository URL and key. None is currently configured.
+A `.flatpakref` template is not an installable published reference by itself. A hosted Flatpak remote still requires an OSTree repository, an exported public signing key, and a generated `.flatpakref` with the real repository URL and key. This is separate from the alpha release's direct-download `.flatpak` bundles.

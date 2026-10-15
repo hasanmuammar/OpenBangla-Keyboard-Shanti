@@ -9,6 +9,68 @@ permissions:
   contents: read
 
 jobs:
+  build-flatpak:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
+
+      - name: Configure Flathub remote
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build Flatpak bundle
+        env:
+          FLATPAK_ARCH: ${{ matrix.arch }}
+        run: |
+          flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --default-branch=stable \
+            --install-deps-from=flathub \
+            --repo=flatpak-repo \
+            build-dir tools/flatpak/shanti-ibus.yml
+          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+            flatpak-repo "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
+            org.openbangla.Shanti.IBus stable
+          sha256sum "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
+            > "shanti-ibus-${FLATPAK_ARCH}.flatpak.sha256"
+
+      - name: Attest Flatpak bundle and checksum
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            shanti-ibus-${{ matrix.arch }}.flatpak
+            shanti-ibus-${{ matrix.arch }}.flatpak.sha256
+
+      - name: Upload Flatpak release assets
+        uses: actions/upload-artifact@v5
+        with:
+          name: flatpak-${{ matrix.arch }}
+          path: |
+            shanti-ibus-${{ matrix.arch }}.flatpak
+            shanti-ibus-${{ matrix.arch }}.flatpak.sha256
+          if-no-files-found: error
+
   build:
     strategy:
       fail-fast: false
@@ -79,11 +141,14 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: build
+    needs: [build, build-flatpak]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
     steps:
+      - name: Checkout release source
+        uses: actions/checkout@v5
+
       - name: Download build artifacts
         uses: actions/download-artifact@v5
         with:
@@ -97,9 +162,9 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --title "OpenBangla Keyboard ${GITHUB_REF_NAME}" \
             --prerelease \
-            --generate-notes
+            --notes-file .github/release-notes.md
 
-      - name: Upload Linux releases
+      - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "$GITHUB_REF_NAME" dist/*
