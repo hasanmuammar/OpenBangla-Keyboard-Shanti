@@ -11,15 +11,7 @@ KDE Plasma automatically selects Fcitx5. Other desktop environments select IBus.
 
 ## Install
 
-Clone this fork and run the prebuilt installer:
-
-```bash
-git clone https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti.git
-cd OpenBangla-Keyboard-Shanti
-bash tools/install.sh
-```
-
-The installer needs Bash, Python 3, GNU tar, `sha256sum`, `realpath`, `find`, `mktemp`, and either `curl` or `wget`. It installs for the current user and does not require compiler, CMake, Rust, Qt development packages, or a build container.
+The installer needs Bash, Python 3, GNU tar, `sha256sum`, `realpath`, `find`, `mktemp`, and either `curl` or `wget`. It installs for the current user and does not require compiler, CMake, Rust, Qt development packages, or a build container. Since no Shanti release is currently published, use the source-build instructions below for now; running the installer now will fail because its release archive and checksum do not exist yet.
 
 The installer uses the release tag in `release-tag.txt`. To select a different published release:
 

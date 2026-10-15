@@ -27,7 +27,7 @@ On GNOME, the app can offer to register the Flatpak engine with the host IBus se
 
 The integration is deliberately limited to GNOME and the IBus Flatpak app ID. It does not install system-wide files. It checks for existing drop-ins that change `IBUS_COMPONENT_PATH` or `ExecStart` and refuses to proceed when it detects a potential conflict. The app checks registration/service health while open; it does not continuously prove that the engine process is running or that text input works.
 
-The Flatpak manifest grants access to the user IBus component directory, helper directory, GNOME IBus service drop-in directory and user systemd D-Bus service. Treat this as experimental host integration: inspect permissions and test setup, conflict handling, removal and actual Bengali input on the target desktop before relying on it.
+The Flatpak manifest grants access to the user IBus component directory, helper directory, GNOME IBus service drop-in directory and user systemd D-Bus service. Setup and input-source discovery have been confirmed working in a GNOME session. Conflict handling, recovery, removal, persistence and actual Bengali input still need broader testing before assuming the same behavior on other accounts or desktops.
 
 ## Build and validation boundaries
 

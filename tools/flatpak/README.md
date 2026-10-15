@@ -6,7 +6,7 @@ The manifest `shanti-ibus.yml` builds the Qt keyboard GUI and IBus engine as `or
 
 - GitHub Actions builds architecture-specific Flatpak bundles for x86_64 and aarch64.
 - The latest CI run on 2026-10-15 succeeded for both Flatpak architectures; the same run also passed the configured portable source-build matrix.
-- The app's GUI, AppIndicator, layout changes and settings changes have been confirmed on Bluefin/GNOME. The new in-app host-IBus setup flow still requires deliberate end-to-end testing on real GNOME sessions, including conflicts and removal.
+- The GUI and in-app host-IBus registration have been confirmed working in a GNOME session. Conflict handling, recovery, removal and session persistence still need broader testing.
 - No hosted OSTree repository or public signing key is configured. There is no published Flatpak install option yet.
 - The repository currently has no published GitHub release for the portable installer either.
 
@@ -39,7 +39,7 @@ Use the aarch64 filename on ARM64 systems. Do not use the x86_64 bundle on ARM64
 
 ## GNOME IBus registration
 
-The app offers this integration only when it detects the GNOME desktop and its own Flatpak app ID. If the host IBus registration is missing, the app offers **Set up integration**. While the GUI remains open, it checks every five minutes and can prompt again if a previously healthy registration/service state becomes unhealthy. This is a registration/service health check; it does not continuously test the idle engine process or prove that typing works.
+The app offers this integration only when it detects the GNOME desktop and its own Flatpak app ID. If the host IBus registration is missing, the app offers **Set up integration**. This setup and GNOME input-source discovery have been confirmed working in a GNOME session. While the GUI remains open, it checks every five minutes and can prompt again if a previously healthy registration/service state becomes unhealthy. The periodic check monitors registration and service health; it does not continuously test the idle engine process or typing.
 
 Setup writes three user-scoped files:
 
@@ -51,7 +51,7 @@ The app then reloads the user systemd manager and restarts `org.freedesktop.IBus
 
 The integration does not install system-wide files. It requires access to the component, helper and systemd drop-in directories, plus the user systemd D-Bus service. If another user drop-in changes `IBUS_COMPONENT_PATH` or `ExecStart`, setup refuses to proceed rather than overwriting that file. Use the tray menu's **GNOME IBus Integration…** action to retry setup or remove the app-managed registration.
 
-Before relying on this integration, test on a clean GNOME account and on an account with existing IBus overrides. Verify setup, input-source discovery, Bengali typing in a host application, logout/login persistence, conflict refusal, failed restart recovery and removal. The app's health check does not replace those tests.
+Further validation should cover a clean GNOME account and an account with existing IBus overrides. Also verify Bengali typing in a host application, logout/login persistence, conflict refusal, failed-restart recovery and removal. The app's health check does not replace those tests.
 
 ## Publishing
 

@@ -3,13 +3,13 @@
 **Shanti — Highly Experimental, Vibe-Coded Fork of OpenBangla Keyboard for Modern Linux Operating Systems, including Bazzite, Bluefin and similar atomic/image-based systems.**
 
 
-### ⚠️ STATUS : HIGHLY EXPERIMENTAL & CAN DAMAGE YOUR SYSTEM 
+### ⚠️ HIGHLY EXPERIMENTAL FORK
 
 image:https://img.shields.io/badge/platform-Linux-333333?logo=linux&logoColor=white[Linux] image:https://img.shields.io/badge/input%20method-IBus%20%7C%20Fcitx5-0F6CBD[Input methods] image:https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white[CMake] image:https://img.shields.io/badge/UI-Qt5-41CD52?logo=qt&logoColor=white[Qt5] image:https://img.shields.io/badge/C%2B%2B%20%7C%20Rust-00599C?logo=rust&logoColor=white[C++ and Rust]
 
 This repository is a **Linux-focused fork of OpenBangla Keyboard created to make OpenBangla easy to install on modern Linux operating systems such as Bazzite and Bluefin**. It keeps the OpenBangla Keyboard codebase while adding a simpler prebuilt installation and runtime-bundling workflow for conventional Linux systems and modern atomic/image-based systems.
 
-The main purpose of this fork is to make OpenBangla practical on modern Linux operating systems such as Bazzite and Bluefin, using a user-local installer and bundled runtime libraries. The prebuilt release workflow is implemented, but **no Shanti GitHub Release is currently published**, so the normal download-based installer is not ready for general use. Until release assets are published, use `tools/build.sh` for a source build or the experimental IBus Flatpak described below. Source building remains available for development and release packaging.
+The main purpose of this fork is to make OpenBangla practical on modern Linux operating systems such as Bazzite and Bluefin, using user-local installation and bundled runtime libraries. Source building and release packaging are available through `tools/build.sh`.
 
 OpenBangla Keyboard is an open-source, Unicode-compliant **Bangla (Bengali) keyboard and input method for Linux**. It provides phonetic and fixed keyboard layouts, typing automation, dictionary support and autocorrection.
 
@@ -17,7 +17,7 @@ OpenBangla Keyboard is an open-source, Unicode-compliant **Bangla (Bengali) keyb
 ====
 **EXPERIMENTAL • VIBE-CODED • FORK-SPECIFIC**
 
-This is an experimental fork and significant portions of the fork-specific installation, packaging, runtime-bundling and integration work are **vibe-coded / AI-assisted**. Regressions, incomplete behaviour and Linux-specific integration problems are possible.
+This is an experimental fork. Some fork-specific installation, packaging, runtime-bundling and integration work is AI-assisted. Regressions, incomplete behaviour and Linux-specific integration problems are possible.
 
 **Do not report problems caused by this fork to the upstream OpenBangla Keyboard project.** Please report fork-specific bugs, installation failures and integration issues in this repository instead.
 ====
@@ -58,7 +58,7 @@ For bugs or installation/integration problems introduced by this fork, use this 
 
 === Prebuilt installation
 
-The installer is designed for users who do not want to install a compiler, CMake, Rust, Qt development packages, or a build container. It downloads the matching prebuilt Linux release, verifies its checksum, and installs it for the current user. **No GitHub Release is currently published**, so this download path will not work until the first Shanti release and its assets are available. For now, build from source or use the experimental IBus Flatpak described below.
+The installer downloads a matching prebuilt Linux release, verifies its checksum, and installs it for the current user. **There is no Shanti GitHub Release yet, so this download path currently cannot install the app.** For current use, build from source with `tools/build.sh` or install the experimental IBus Flatpak from a GitHub Actions artifact as described in the link:tools/flatpak/README.md[Flatpak guide].
 
 Supported architectures:
 
@@ -67,27 +67,11 @@ Supported architectures:
 
 KDE Plasma automatically uses Fcitx5. Other desktop environments automatically use IBus.
 
-Install:
-
-[source,bash]
-----
-git clone https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti.git
-cd OpenBangla-Keyboard-Shanti
-bash tools/install.sh
-----
-
-This fork does not follow the upstream OpenBangla release cycle. Alpha builds are fork-specific and use tags such as `shanti-alpha.1`. The CMake project version is kept separately in `version.txt`, while the default installer follows the release tag in `release-tag.txt`; `--version` can override it.
-
-To install a specific alpha build:
-
-[source,bash]
-----
-bash tools/install.sh --version shanti-alpha.1
-----
+When a Shanti release is published, the installer can be run from a source checkout with `bash tools/install.sh`. Alpha release tags use names such as `shanti-alpha.1`; the configured default tag is in `release-tag.txt`, and `--version TAG` selects another published release. The CMake project version is tracked separately in `version.txt`.
 
 === Experimental IBus-only Flatpak
 
-The experimental IBus-only Flatpak uses app ID `org.openbangla.Shanti.IBus` and does not include the Fcitx5 engine. GitHub Actions builds architecture-specific bundles for x86_64 and aarch64; users must install the bundle matching their device. The GUI, AppIndicator, layout changes and settings changes have been confirmed on Bluefin/GNOME. The app now offers an in-app GNOME IBus registration flow, but that host integration still needs end-to-end testing on real GNOME sessions, especially conflicts, recovery and removal. A hosted OSTree repository and signing key are not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide].
+The experimental IBus-only Flatpak uses app ID `org.openbangla.Shanti.IBus` and does not include the Fcitx5 engine. GitHub Actions builds architecture-specific bundles for x86_64 and aarch64; users must install the bundle matching their device. The GUI and GNOME IBus registration have been confirmed working in a GNOME session. Conflict handling, recovery, removal and persistence still need broader testing. A hosted OSTree repository and signing key are not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide].
 
 === Build from source
 
@@ -117,7 +101,7 @@ GitHub Actions currently tests source builds across:
 
 A separate prebuilt-package test workflow builds release archives for x86_64 and ARM64 with both IBus and Fcitx5, verifies their SHA-256 checksums, inspects the archive contents, checks the bundled runtime and backend metadata, and runs `openbangla-gui --version` plus `openbangla-gui --check-data`. The data check verifies that layout and dictionary files can be found relative to the installed executable, not the CI builder's home directory.
 
-After installation, `bash tools/install.sh` also runs the data-file check. You can repeat it with `~/.local/bin/openbangla-gui --check-data` after a release is available and installed. These workflows validate build and package structure. They do not replace functional testing of actual Bangla input or the Flatpak's host-IBus setup on a user's desktop.
+After installation, `bash tools/install.sh` also runs the data-file check. You can repeat it with `~/.local/bin/openbangla-gui --check-data` after a release is available and installed. CI validates build and package structure; it does not replace testing Bengali input or checking host integration on other GNOME sessions and systems.
 
 == Related projects and technologies
 

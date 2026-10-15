@@ -2,8 +2,6 @@
 
 **Status last reviewed:** 2026-10-15  
 **Development branch:** `develop`  
-**Latest reviewed commit:** `f91018f05a547b21c2dc9b504c6f425732e7f7f4` — Add in-app GNOME IBus Flatpak setup
-
 This checklist distinguishes repository implementation, CI evidence, real-desktop validation, and publication. A green build does not imply that the input method has been functionally tested.
 
 ## 1. Project scope
@@ -34,7 +32,8 @@ This checklist distinguishes repository implementation, CI evidence, real-deskto
 - [x] App includes a GNOME-only prompt and tray-menu action for managing host IBus registration.
 - [x] Setup writes a component descriptor, Flatpak launcher and GNOME IBus user-service drop-in.
 - [x] Setup checks for certain conflicting user drop-ins and refuses to overwrite unmanaged files.
-- [ ] End-to-end test of setup and input-source discovery on a clean GNOME account.
+- [x] Setup and GNOME input-source discovery confirmed working in a GNOME session.
+- [ ] Repeat setup and input-source discovery on a clean GNOME account.
 - [ ] Test existing/conflicting IBus service drop-ins.
 - [ ] Test failure recovery if the systemd reload or IBus service restart fails partway through setup/removal.
 - [ ] Verify actual Bengali typing in host applications through the Flatpak engine.
@@ -52,7 +51,7 @@ Latest observed workflow runs for commit `f91018f0` on 2026-10-15:
 - [x] All configured portable source-build jobs passed.
 - [x] [Prebuilt package test run #139](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/actions/runs/38758748633) passed.
 - [x] Package tests passed for IBus and Fcitx5 on x86_64 and aarch64.
-- [ ] Real-desktop input and GNOME host-IBus integration tests are not proven by these CI runs.
+- [ ] Bengali input and additional GNOME host-integration cases are not proven by these CI runs.
 
 These statuses describe the runs observed on the review date. Check the [Actions page](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/actions) for newer results.
 
@@ -84,5 +83,5 @@ Do not describe Shanti as generally released until:
 - [ ] The installer succeeds against published assets on x86_64 and aarch64.
 - [ ] GUI startup and actual Bengali input are verified through IBus and Fcitx5.
 - [ ] Uninstallation preserves unrelated files and handles the intended data/cache choices.
-- [ ] Flatpak GNOME registration is tested for setup, conflicts, recovery, session persistence and removal.
+- [ ] Flatpak GNOME registration is tested for conflicts, recovery, session persistence and removal.
 - [ ] User-facing installation instructions match the actual published artifacts and supported environments.
