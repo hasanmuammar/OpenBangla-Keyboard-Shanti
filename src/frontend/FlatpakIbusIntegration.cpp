@@ -227,6 +227,11 @@ bool setupNeeded() {
     return !serviceActive(&active) || !active;
 }
 
+bool hasManagedFiles() {
+    const Paths p = paths();
+    return hasMarker(p.component) || hasMarker(p.launcher) || hasMarker(p.dropIn);
+}
+
 bool hasConflictingDropIn(const Paths &p, QString *conflict) {
     const QDir dir(QFileInfo(p.dropIn).absolutePath());
     const QStringList files = dir.entryList({"*.conf"}, QDir::Files | QDir::NoSymLinks);
@@ -357,12 +362,62 @@ void showManagementPrompt(QWidget *parent) {
     QMessageBox::information(parent, "OpenBangla integration removed",
                              "The user-level IBus registration was removed and GNOME's IBus service restarted.");
 }
+
+void showSetupOrRepair(QWidget *parent) {
+    QMessageBox box(QMessageBox::Question, "Set up OpenBangla for GNOME",
+                    "Set up or repair this user's GNOME IBus registration? This writes the managed IBus files and restarts GNOME's IBus service.",
+                    QMessageBox::Cancel, parent);
+    QPushButton *setup = box.addButton("Set up / repair", QMessageBox::AcceptRole);
+    box.setDefaultButton(setup);
+    box.exec();
+    if (box.clickedButton() != setup)
+        return;
+
+    QString error;
+    if (!installIntegration(&error)) {
+        QMessageBox::critical(parent, "Could not set up OpenBangla", error);
+        return;
+    }
+    QMessageBox::information(parent, "OpenBangla is registered",
+                             "GNOME's IBus service has been restarted. Open Settings → Keyboard → Input Sources and select OpenBangla.");
+}
+
+void showRemoveConfirmation(QWidget *parent) {
+    QMessageBox box(QMessageBox::Warning, "Remove GNOME IBus integration",
+                    "Remove OpenBangla's managed GNOME IBus registration for this user? GNOME's IBus service will be restarted.",
+                    QMessageBox::Cancel, parent);
+    QPushButton *remove = box.addButton("Remove integration", QMessageBox::DestructiveRole);
+    box.setDefaultButton(box.button(QMessageBox::Cancel));
+    box.exec();
+    if (box.clickedButton() != remove)
+        return;
+
+    QString error;
+    if (!removeIntegration(&error)) {
+        QMessageBox::critical(parent, "Could not remove OpenBangla integration", error);
+        return;
+    }
+    QMessageBox::information(parent, "OpenBangla integration removed",
+                             "The user-level IBus registration was removed and GNOME's IBus service restarted.");
+}
 }
 
 namespace FlatpakIbusIntegration {
 bool isApplicable() {
     const auto env = QProcessEnvironment::systemEnvironment();
     return env.value("FLATPAK_ID") == kAppId && detectDesktopEnvironment() == DesktopEnvironment::GNOME;
+}
+
+QString statusText() {
+    if (!isApplicable())
+        return {};
+    if (setupNeeded())
+        return "Not configured, or the GNOME IBus service is unavailable.";
+    return "Configured. The GNOME IBus service is active.";
+}
+
+bool canRemove() {
+    return isApplicable() && hasManagedFiles();
 }
 
 void checkAndPrompt(QWidget *parent) {
@@ -385,5 +440,18 @@ void checkAndPrompt(QWidget *parent) {
 
 void showManagementDialog(QWidget *parent) {
     showManagementPrompt(parent);
+}
+
+void setupOrRepair(QWidget *parent) {
+    if (isApplicable())
+        showSetupOrRepair(parent);
+}
+
+void remove(QWidget *parent) {
+    if (canRemove())
+        showRemoveConfirmation(parent);
+    else if (isApplicable())
+        QMessageBox::information(parent, "OpenBangla integration",
+                                 "No app-managed GNOME IBus files were found to remove.");
 }
 }

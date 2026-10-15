@@ -71,7 +71,7 @@ When a Shanti release is published, the installer can be run from a source check
 
 === Experimental IBus-only Flatpak
 
-The experimental IBus-only Flatpak uses app ID `org.openbangla.Shanti.IBus` and does not include the Fcitx5 engine. GitHub Actions builds architecture-specific bundles for x86_64 and aarch64; users must install the bundle matching their device. The GUI and GNOME IBus registration have been confirmed working in a GNOME session. Conflict handling, recovery, removal and persistence still need broader testing. A hosted OSTree repository and signing key are not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide].
+The experimental IBus-only Flatpak uses app ID `org.openbangla.Shanti.IBus` and does not include the Fcitx5 engine. GitHub Actions builds architecture-specific bundles for x86_64 and aarch64; users must install the bundle matching their device. The GUI and GNOME IBus registration have been confirmed working in a GNOME session. Its Settings panel shows integration status and provides setup/repair and removal actions. Conflict handling, recovery, removal and persistence still need broader testing. A hosted OSTree repository and signing key are not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide] for the setup process.
 
 === Build from source
 

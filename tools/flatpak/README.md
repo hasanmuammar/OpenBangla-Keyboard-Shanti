@@ -39,7 +39,16 @@ Use the aarch64 filename on ARM64 systems. Do not use the x86_64 bundle on ARM64
 
 ## GNOME IBus registration
 
-The app offers this integration only when it detects the GNOME desktop and its own Flatpak app ID. If the host IBus registration is missing, the app offers **Set up integration**. This setup and GNOME input-source discovery have been confirmed working in a GNOME session. While the GUI remains open, it checks every five minutes and can prompt again if a previously healthy registration/service state becomes unhealthy. The periodic check monitors registration and service health; it does not continuously test the idle engine process or typing.
+This host integration is available only when the app detects both a GNOME session and the Flatpak app ID `org.openbangla.Shanti.IBus`. It does not apply to the portable install or other Flatpak builds.
+
+### Set up and use the input source
+
+1. Launch the Flatpak GUI. If its GNOME registration is missing or incomplete, the app offers **Set up integration**. You can also open the app's **Settings** panel and use the **GNOME IBus Integration** section.
+2. In Settings, check the status. **Configured. The GNOME IBus service is active** means the managed registration files are present and the GNOME IBus service is active. Otherwise, use **Set up / repair** and confirm the action.
+3. Setup creates or updates the three app-managed files listed below, reloads the user systemd manager, and restarts GNOME's IBus service. It refuses to replace unmanaged files and reports a conflict if another drop-in changes `IBUS_COMPONENT_PATH` or `ExecStart`.
+4. Open GNOME Settings → Keyboard → Input Sources, choose **Add Input Source**, and add **OpenBangla**. Select it to start the engine on demand, then type in a host application.
+
+The GUI, registration and input-source discovery have been confirmed working in a GNOME session. While the GUI is open, the app checks registration and IBus service health every five minutes. If a setup that was healthy becomes unhealthy, it can offer setup again. This does not monitor the on-demand engine process while idle and does not prove that typing is working.
 
 Setup writes three user-scoped files:
 
@@ -47,9 +56,9 @@ Setup writes three user-scoped files:
 - `~/.local/share/shanti-ibus/ibus-flatpak-host-wrapper.sh` — launcher that invokes the engine inside the Flatpak.
 - `~/.config/systemd/user/org.freedesktop.IBus.session.GNOME.service.d/90-shanti-flatpak-ibus.conf` — user-service drop-in that makes the component visible to GNOME's IBus service.
 
-The app then reloads the user systemd manager and restarts `org.freedesktop.IBus.session.GNOME.service`. After setup, open Settings → Keyboard → Input Sources and add **OpenBangla**. The engine is launched on demand when that input source is selected.
+The host wrapper obtains the current host IBus address and starts the engine inside the Flatpak with access to that IBus socket. It also passes the host OpenBangla configuration directory when present. The engine runs on demand when GNOME selects the input source.
 
-The integration does not install system-wide files. It requires access to the component, helper and systemd drop-in directories, plus the user systemd D-Bus service. If another user drop-in changes `IBUS_COMPONENT_PATH` or `ExecStart`, setup refuses to proceed rather than overwriting that file. Use the tray menu's **GNOME IBus Integration…** action to retry setup or remove the app-managed registration.
+The integration does not install system-wide files. It requires access to the component, helper and systemd drop-in directories, plus the user systemd D-Bus service. In the GUI Settings panel, **Set up / repair** re-creates or updates the app-managed registration after confirmation. **Remove integration** is enabled when app-managed files are found; it asks for confirmation, removes only files containing the Shanti ownership marker, then reloads systemd and restarts GNOME IBus. It does not uninstall the Flatpak or remove the OpenBangla entry from GNOME's saved Input Sources list. The tray menu's **GNOME IBus Integration…** action remains available as a shortcut.
 
 Further validation should cover a clean GNOME account and an account with existing IBus overrides. Also verify Bengali typing in a host application, logout/login persistence, conflict refusal, failed-restart recovery and removal. The app's health check does not replace those tests.
 

@@ -21,7 +21,7 @@ OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Ba
 
 `tools/install.sh` প্রকাশিত Shanti GitHub Release থেকে prebuilt package ডাউনলোড করে; বর্তমানে এমন release নেই, তাই installer এখনো app install করতে পারবে না। আপাতত `bash tools/build.sh` দিয়ে source build করুন, অথবা GitHub Actions artifact থেকে experimental IBus Flatpak ইনস্টল করার নির্দেশনা link:tools/flatpak/README.md[Flatpak guide]-এ দেখুন।
 
-Experimental IBus-only Flatpak-এর app ID হলো `org.openbangla.Shanti.IBus`; এতে Fcitx5 engine নেই। GitHub Actions x86_64 ও aarch64-এর জন্য আলাদা bundle তৈরি করে। GNOME session-এ app এবং IBus registration কাজ করছে বলে পরীক্ষা করা হয়েছে। Conflict handling, recovery, removal ও session persistence-এর আরও পরীক্ষা বাকি। Hosted Flatpak repository ও signing key এখনো configured নয়। বিস্তারিত: `tools/flatpak/README.md` এবং `docs/wiki/Installation.md`।
+Experimental IBus-only Flatpak-এর app ID হলো `org.openbangla.Shanti.IBus`; এতে Fcitx5 engine নেই। GitHub Actions x86_64 ও aarch64-এর জন্য আলাদা bundle তৈরি করে। GNOME session-এ app এবং IBus registration কাজ করছে বলে পরীক্ষা করা হয়েছে। App-এর Settings panel-এ integration status দেখা যায় এবং setup/repair ও removal করা যায়। Conflict handling, recovery, removal ও session persistence-এর আরও পরীক্ষা বাকি। Hosted Flatpak repository ও signing key এখনো configured নয়। বিস্তারিত: `tools/flatpak/README.md`।
 
 == এই fork-এর বৈশিষ্ট্য
 

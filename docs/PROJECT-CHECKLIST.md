@@ -30,6 +30,7 @@ This checklist distinguishes repository implementation, CI evidence, real-deskto
 - [x] GitHub Actions builds architecture-specific Flatpak bundles for x86_64 and aarch64.
 - [x] Flatpak build is included in the main CI workflow.
 - [x] App includes a GNOME-only prompt and tray-menu action for managing host IBus registration.
+- [x] Settings panel shows GNOME IBus registration status and offers setup/repair and removal actions.
 - [x] Setup writes a component descriptor, Flatpak launcher and GNOME IBus user-service drop-in.
 - [x] Setup checks for certain conflicting user drop-ins and refuses to overwrite unmanaged files.
 - [x] Setup and GNOME input-source discovery confirmed working in a GNOME session.

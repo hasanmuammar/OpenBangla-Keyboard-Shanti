@@ -21,7 +21,7 @@ Use the purge options only when you intend to remove the corresponding user data
 
 ## IBus-only Flatpak
 
-The Flatpak's GNOME IBus integration is separate from the portable installer. Before uninstalling the Flatpak, open its tray menu and choose **GNOME IBus Integration…**, then remove the app-managed registration. This removes the integration's component descriptor, launcher and GNOME IBus service drop-in, and restarts the user IBus service.
+The Flatpak's GNOME IBus integration is separate from the portable installer. In the app's **Settings** panel, open **GNOME IBus Integration** and choose **Remove integration**. Confirm the action. This removes the app-managed component descriptor, launcher and GNOME IBus service drop-in, then reloads systemd and restarts GNOME IBus. You can also use the tray menu's **GNOME IBus Integration…** action. Remove the **OpenBangla** entry from GNOME Settings → Keyboard → Input Sources if it remains in the saved list. Then uninstall the Flatpak separately using your software manager or `flatpak uninstall --user org.openbangla.Shanti.IBus`.
 
 If the GUI is no longer available, inspect these paths before manually removing anything:
 

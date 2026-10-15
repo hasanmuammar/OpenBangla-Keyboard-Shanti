@@ -17,16 +17,49 @@
  */
 
 #include <QCloseEvent>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
 #include "SettingsDialog.h"
 #include "ui_SettingsDialog.h"
 #include "Settings.h"
 #include "AutoCorrectDialog.h"
+#include "FlatpakIbusIntegration.h"
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::SettingsDialog) {
+    ui(new Ui::SettingsDialog),
+    autoCorrectDialog(nullptr),
+    ibusIntegrationStatus(nullptr),
+    ibusIntegrationRemoveButton(nullptr) {
   ui->setupUi(this);
   autoCorrectDialog = new AutoCorrectDialog(this);
+
+  if (FlatpakIbusIntegration::isApplicable()) {
+    auto *integrationGroup = new QGroupBox("GNOME IBus Integration", this);
+    auto *integrationLayout = new QHBoxLayout(integrationGroup);
+    ibusIntegrationStatus = new QLabel(integrationGroup);
+    ibusIntegrationStatus->setWordWrap(true);
+    auto *setupButton = new QPushButton("Set up / repair", integrationGroup);
+    ibusIntegrationRemoveButton = new QPushButton("Remove integration", integrationGroup);
+    integrationLayout->addWidget(ibusIntegrationStatus, 1);
+    integrationLayout->addWidget(setupButton);
+    integrationLayout->addWidget(ibusIntegrationRemoveButton);
+    integrationGroup->setMinimumHeight(78);
+    ui->verticalLayout_2->insertWidget(1, integrationGroup);
+    resize(width(), height() + 88);
+
+    connect(setupButton, &QPushButton::clicked, this, [this]() {
+      FlatpakIbusIntegration::setupOrRepair(this);
+      updateIbusIntegrationStatus();
+    });
+    connect(ibusIntegrationRemoveButton, &QPushButton::clicked, this, [this]() {
+      FlatpakIbusIntegration::remove(this);
+      updateIbusIntegrationStatus();
+    });
+  }
 
   ui->cmbOrientation->insertItems(0, {"Horizontal", "Vertical"});
   ui->cmbEncoding->insertItems(0, {"Unicode", "ANSI"});
@@ -113,6 +146,15 @@ void SettingsDialog::updateSettings() {
   ui->btnOldReph->setChecked(gSettings->getOldReph());
   ui->btnKarJoining->setChecked(gSettings->getTraditionalKarFixed());
   ui->btnNumberpad->setChecked(gSettings->getNumberPadFixed());
+
+  updateIbusIntegrationStatus();
+}
+
+void SettingsDialog::updateIbusIntegrationStatus() {
+  if (!ibusIntegrationStatus)
+    return;
+  ibusIntegrationStatus->setText(FlatpakIbusIntegration::statusText());
+  ibusIntegrationRemoveButton->setEnabled(FlatpakIbusIntegration::canRemove());
 }
 
 void SettingsDialog::saveSettings() {

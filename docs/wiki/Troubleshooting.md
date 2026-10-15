@@ -23,9 +23,9 @@ Warnings about unrelated engines such as Anthy, libpinyin or typing-booster can 
 
 ## Flatpak: OpenBangla missing from GNOME Input Sources
 
-The IBus-only Flatpak app ID is `org.openbangla.Shanti.IBus`. On GNOME, launch the app and use its **Set up integration** prompt, or open the tray menu and choose **GNOME IBus Integration…**. After successful setup, open Settings → Keyboard → Input Sources and add **OpenBangla**.
+The IBus-only Flatpak app ID is `org.openbangla.Shanti.IBus`. This integration appears only in GNOME. Launch the app and accept its **Set up integration** prompt, or open the app's **Settings** panel and use **GNOME IBus Integration → Set up / repair**. Confirm the action; the app writes its managed host files, reloads the user systemd manager and restarts GNOME IBus. Then open GNOME Settings → Keyboard → Input Sources → **Add Input Source** and choose **OpenBangla**.
 
-If setup refuses to continue, inspect the conflicting user service drop-in reported by the app. The integration intentionally refuses to overwrite an unmanaged drop-in that changes `IBUS_COMPONENT_PATH` or `ExecStart`. Do not remove or edit that file without understanding what created it. The app-managed files are under the user's `~/.local/share` and `~/.config/systemd/user` trees; the integration does not install system-wide files.
+The OpenBangla Settings panel reports whether its registration files are present and the GNOME IBus service is active. If the status says setup is needed or the service is unavailable, choose **Set up / repair** and read any error shown. Setup refuses to overwrite unmanaged files, including other service drop-ins that change `IBUS_COMPONENT_PATH` or `ExecStart`. If it reports a conflict, inspect the reported file before changing it. The integration manages files only under the user's `~/.local/share` and `~/.config/systemd/user` directories; it does not install system-wide files. Its five-minute health check monitors registration and service status, not the idle engine process or successful text entry.
 
 For build, permissions, publishing and cleanup details, see [the IBus Flatpak guide](../../tools/flatpak/README.md). A successful CI bundle build alone does not prove that the GNOME IBus setup or Bengali text entry works.
 

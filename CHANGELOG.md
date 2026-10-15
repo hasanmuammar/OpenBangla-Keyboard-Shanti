@@ -4,7 +4,7 @@
 Shanti fork changes (not part of the inherited upstream 3.0.0 release):
 
 * Add an experimental IBus-only Flatpak with separate app ID `org.openbangla.Shanti.IBus` and x86_64/aarch64 CI bundles.
-* Add an in-app GNOME IBus registration and management flow for the Flatpak, including managed user-level component, launcher and systemd drop-in files.
+* Add an in-app GNOME IBus registration and management flow for the Flatpak, including Settings panel controls and managed user-level component, launcher and systemd drop-in files.
 * Add CI coverage for Flatpak bundle builds alongside portable IBus/Fcitx5 builds and package validation.
 * Publication is not complete: no GitHub Release or hosted Flatpak OSTree repository is currently configured.
 

@@ -26,6 +26,8 @@ class SettingsDialog;
 }
 
 class AutoCorrectDialog;
+class QLabel;
+class QPushButton;
 
 class SettingsDialog : public QDialog {
 Q_OBJECT
@@ -43,9 +45,12 @@ protected:
 private:
   Ui::SettingsDialog *ui;
   AutoCorrectDialog *autoCorrectDialog;
+  QLabel *ibusIntegrationStatus;
+  QPushButton *ibusIntegrationRemoveButton;
 
   void implementSignals();
   void saveSettings();
+  void updateIbusIntegrationStatus();
 };
 
 #endif // SETTINGSDIALOG_H
