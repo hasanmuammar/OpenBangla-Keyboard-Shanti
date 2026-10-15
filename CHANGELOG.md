@@ -1,6 +1,13 @@
 # Change Log
 ## Unreleased
 
+## shanti-alpha.1.1
+
+* Offer a confirmed backup-and-update flow when an existing IBus service override blocks GNOME integration setup.
+* Clarify Flatpak runtime installation and matching Flathub installation scope.
+
+## shanti-alpha.1
+
 Shanti fork changes (not part of the inherited upstream 3.0.0 release):
 
 * Add an experimental IBus-only Flatpak with separate app ID `org.openbangla.Shanti.IBus` and x86_64/aarch64 CI bundles.
