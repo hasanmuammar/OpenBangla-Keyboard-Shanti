@@ -10,6 +10,41 @@ on:
     paths-ignore: ["**.md", "**.adoc"]
 
 jobs:
+  build-flatpak:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y flatpak flatpak-builder appstream
+
+      - name: Configure Flathub remote
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build Flatpak bundle
+        run: |
+          flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --install-deps-from=flathub \
+            --repo=flatpak-repo \
+            build-dir tools/flatpak/openbangla.yml
+          flatpak build-bundle flatpak-repo shanti.flatpak \
+            io.github.hasanmuammar.Shanti stable
+
+      - name: Upload Flatpak bundle
+        uses: actions/upload-artifact@v5
+        with:
+          name: shanti-flatpak-x86_64
+          path: shanti.flatpak
+          if-no-files-found: error
+
   build-linux:
     strategy:
       fail-fast: false
@@ -53,9 +88,6 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: recursive
-
-      - name: Test experimental IBus Flatpak wrapper
-        run: bash tools/flatpak/test-ibus-flatpak-host-wrapper.sh
 
       - name: Install dependencies
         run: |
