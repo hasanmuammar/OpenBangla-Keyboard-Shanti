@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-This is an experimental, Linux-focused fork of OpenBangla Keyboard. C++ application code is organized under `src/`: `engine/` contains common, IBus, Fcitx5, and Rust (`riti`) components; `frontend/` contains the Qt interface; `shared/` contains shared utilities; and `platform/` contains platform support. Keyboard layouts and language data live in `data/`. User-local installation scripts are in `tools/`, fork-specific documentation belongs in `docs/wiki/`, and CI workflows are in `.github/workflows/`. The current experimental Flatpak manifest, build guide, and optional GNOME IBus bridge are in `tools/flatpak/`.
+This is an experimental, Linux-focused fork of OpenBangla Keyboard. C++ application code is organized under `src/`: `engine/` contains common, IBus, Fcitx5, and Rust (`riti`) components; `frontend/` contains the Qt interface; `shared/` contains shared utilities; and `platform/` contains platform support. Keyboard layouts and language data live in `data/`. User-local installation scripts are in `tools/`, fork-specific documentation belongs in `docs/wiki/`, and CI workflows are in `.github/workflows/`. The experimental Flatpak manifest and build guide are in `tools/flatpak/`.
 
 ## Build and Development
 

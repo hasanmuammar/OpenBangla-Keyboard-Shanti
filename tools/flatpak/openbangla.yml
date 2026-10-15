@@ -7,8 +7,7 @@ sdk-extensions:
 command: openbangla-gui
 separate-locales: false
 
-# The GUI writes its layout and tweak settings here. The experimental host
-# IBus bridge exposes this same directory read-only to the engine process.
+# The GUI writes its layout and tweak settings here.
 finish-args:
   - --share=ipc
   - --socket=wayland

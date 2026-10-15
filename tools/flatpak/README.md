@@ -21,28 +21,7 @@ Run the installed application with:
 flatpak run io.github.hasanmuammar.Shanti
 ```
 
-The app's AppIndicator, layout changes, and settings changes are confirmed on Bluefin/GNOME with the Shanti app ID. Host IBus discovery and Bengali typing were separately confirmed on Fedora Workstation 44/GNOME 50.5 through the experimental bridge. These results do not establish support across other desktops or distributions. Fcitx5 integration is not provided.
-
-## Optional GNOME IBus bridge
-
-The host bridge is separate from the Flatpak package and targets the GNOME-managed IBus service. It has been tested on Fedora Workstation 44/GNOME 50.5. After installing the Shanti Flatpak, register the host-side component:
-
-```sh
-python3 tools/flatpak/manage-ibus-flatpak-host.py install \
-  --app-id io.github.hasanmuammar.Shanti
-systemctl --user daemon-reload
-systemctl --user restart org.freedesktop.IBus.session.GNOME.service
-```
-
-Remove the bridge's managed files with:
-
-```sh
-python3 tools/flatpak/manage-ibus-flatpak-host.py uninstall
-systemctl --user daemon-reload
-systemctl --user restart org.freedesktop.IBus.session.GNOME.service
-```
-
-This bridge is opt-in and is not part of the production installer. Its scope and platform limits are documented in [Experimental host IBus integration](IBUS-HOST-INTEGRATION.md).
+The app's AppIndicator, layout changes, and settings changes are confirmed on Bluefin/GNOME with the Shanti app ID. Fcitx5 integration is not provided.
 
 ## Publishing
 
