@@ -387,7 +387,7 @@ void showRemoveConfirmation(QWidget *parent) {
                     "Remove OpenBangla's managed GNOME IBus registration for this user? GNOME's IBus service will be restarted.",
                     QMessageBox::Cancel, parent);
     QPushButton *remove = box.addButton("Remove integration", QMessageBox::DestructiveRole);
-    box.setDefaultButton(box.button(QMessageBox::Cancel));
+    box.setDefaultButton(QMessageBox::Cancel);
     box.exec();
     if (box.clickedButton() != remove)
         return;
