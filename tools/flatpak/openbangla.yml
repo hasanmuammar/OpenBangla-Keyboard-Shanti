@@ -1,4 +1,4 @@
-app-id: io.github.openbangla.keyboard
+app-id: io.github.hasanmuammar.Shanti
 runtime: org.kde.Platform
 runtime-version: '5.15-25.08'
 sdk: org.kde.Sdk
@@ -34,13 +34,17 @@ modules:
       - -DENABLE_IBUS=ON
       - -DENABLE_FCITX=OFF
     post-install:
-      - install -Dm644 /app/share/applications/openbangla-keyboard.desktop /app/share/applications/io.github.openbangla.keyboard.desktop
-      - sed -i 's/^Icon=openbangla-keyboard$/Icon=io.github.openbangla.keyboard/' /app/share/applications/io.github.openbangla.keyboard.desktop
-      - install -Dm644 /app/share/icons/hicolor/16x16/apps/openbangla-keyboard.png /app/share/icons/hicolor/16x16/apps/io.github.openbangla.keyboard.png
-      - install -Dm644 /app/share/icons/hicolor/32x32/apps/openbangla-keyboard.png /app/share/icons/hicolor/32x32/apps/io.github.openbangla.keyboard.png
-      - install -Dm644 /app/share/icons/hicolor/48x48/apps/openbangla-keyboard.png /app/share/icons/hicolor/48x48/apps/io.github.openbangla.keyboard.png
-      - install -Dm644 /app/share/icons/hicolor/128x128/apps/openbangla-keyboard.png /app/share/icons/hicolor/128x128/apps/io.github.openbangla.keyboard.png
-      - install -Dm644 /app/share/icons/hicolor/512x512/apps/openbangla-keyboard.png /app/share/icons/hicolor/512x512/apps/io.github.openbangla.keyboard.png
+      - install -Dm644 /app/share/applications/openbangla-keyboard.desktop /app/share/applications/io.github.hasanmuammar.Shanti.desktop
+      - sed -i 's/^Name=OpenBangla Keyboard$/Name=OpenBangla Keyboard Shanti/; s/^Icon=openbangla-keyboard$/Icon=io.github.hasanmuammar.Shanti/' /app/share/applications/io.github.hasanmuammar.Shanti.desktop
+      - rm /app/share/applications/openbangla-keyboard.desktop
+      - install -Dm644 /app/share/icons/hicolor/16x16/apps/openbangla-keyboard.png /app/share/icons/hicolor/16x16/apps/io.github.hasanmuammar.Shanti.png
+      - install -Dm644 /app/share/icons/hicolor/32x32/apps/openbangla-keyboard.png /app/share/icons/hicolor/32x32/apps/io.github.hasanmuammar.Shanti.png
+      - install -Dm644 /app/share/icons/hicolor/48x48/apps/openbangla-keyboard.png /app/share/icons/hicolor/48x48/apps/io.github.hasanmuammar.Shanti.png
+      - install -Dm644 /app/share/icons/hicolor/128x128/apps/openbangla-keyboard.png /app/share/icons/hicolor/128x128/apps/io.github.hasanmuammar.Shanti.png
+      - install -Dm644 /app/share/icons/hicolor/512x512/apps/openbangla-keyboard.png /app/share/icons/hicolor/512x512/apps/io.github.hasanmuammar.Shanti.png
+      - install -Dm644 /app/share/metainfo/io.github.openbangla.keyboard.metainfo.xml /app/share/metainfo/io.github.hasanmuammar.Shanti.metainfo.xml
+      - sed -i 's#<id>io.github.openbangla.keyboard</id>#<id>io.github.hasanmuammar.Shanti</id>#; s#<name>OpenBangla Keyboard</name>#<name>OpenBangla Keyboard Shanti</name>#; s#https://github.com/hasanmuammar/OpenBangla-Keyboard#https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti#g; s#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard/#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard-Shanti/#g' /app/share/metainfo/io.github.hasanmuammar.Shanti.metainfo.xml
+      - rm /app/share/metainfo/io.github.openbangla.keyboard.metainfo.xml
     sources:
       - type: dir
         path: ../..

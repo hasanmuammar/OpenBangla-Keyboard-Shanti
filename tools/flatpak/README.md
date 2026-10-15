@@ -2,13 +2,13 @@
 
 ## Full GUI and IBus Flatpak
 
-`openbangla.yml` packages the complete Qt application, IBus engine, seven bundled layouts, and dictionary/autocorrect data under the AppStream ID `io.github.openbangla.keyboard`. Its desktop launcher and icons use app-ID-matching export names so GNOME can show OpenBangla in the app overview.
+`openbangla.yml` packages the complete Qt application, IBus engine, seven bundled layouts, and dictionary/autocorrect data under the Shanti-specific AppStream ID `io.github.hasanmuammar.Shanti`. The sandboxed app metadata, desktop launcher, and icons use the fork's identity; the visible app name is **OpenBangla Keyboard Shanti**. The native installer and its metadata paths are unchanged.
 
-The GUI shares layout and tweak settings with the host-launched engine through `~/.config/OpenBangla`: the manifest grants the GUI write access to that directory, and `manage-ibus-flatpak-host.py` grants the engine read-only access. Launching **OpenBangla Keyboard** opens the application's GUI and top bar. It is separate from GNOME's IBus input-source indicator.
+The GUI shares layout and tweak settings with the host-launched engine through `~/.config/OpenBangla`: the manifest grants the GUI write access to that directory, and `manage-ibus-flatpak-host.py` grants the engine read-only access. Launching **OpenBangla Keyboard Shanti** opens the application's GUI and top bar. It is separate from GNOME's IBus input-source indicator.
 
-The manifest also grants session-bus access to `org.kde.StatusNotifierWatcher`, which Qt needs to register the GNOME AppIndicator/status icon. For an already-installed build created before this permission was added, apply it with `flatpak override --user --talk-name=org.kde.StatusNotifierWatcher io.github.openbangla.keyboard`.
+The manifest also grants session-bus access to `org.kde.StatusNotifierWatcher`, which Qt needs to register the GNOME AppIndicator/status icon. For an already-installed Shanti build created before this permission was added, apply it with `flatpak override --user --talk-name=org.kde.StatusNotifierWatcher io.github.hasanmuammar.Shanti`.
 
-The release reference template is [`openbangla.flatpakref.in`](openbangla.flatpakref.in). Replace `@FLATPAK_REPO_URL@` with the published OSTree repository URL and `@FLATPAK_REPO_GPG_KEY_BASE64@` with that repository's exported public GPG key (base64 encoded), then publish the generated `io.github.openbangla.keyboard.flatpakref` beside the release instructions. The template is not installable as-is; no repository URL or signing key has been published yet.
+The release reference template is [`openbangla.flatpakref.in`](openbangla.flatpakref.in). Replace `@FLATPAK_REPO_URL@` with the published OSTree repository URL and `@FLATPAK_REPO_GPG_KEY_BASE64@` with that repository's exported public GPG key (base64 encoded), then publish the generated `io.github.hasanmuammar.Shanti.flatpakref` beside the release instructions. The template is not installable as-is; no repository URL or signing key has been published yet.
 
 Build from the repository root using new build and state paths:
 
@@ -23,24 +23,25 @@ The build needs network access for Cargo dependencies. If `flatpak-builder` repo
 ```sh
 flatpak build-finish --command=openbangla-gui \
   --share=ipc --socket=wayland --socket=fallback-x11 --device=dri \
-  --filesystem=xdg-config/OpenBangla:create /tmp/openbangla-flatpak-build
+  --filesystem=xdg-config/OpenBangla:create \
+  --talk-name=org.kde.StatusNotifierWatcher /tmp/openbangla-flatpak-build
 flatpak build-export --disable-sandbox --no-update-summary \
-  /tmp/openbangla-flatpak-repo /tmp/openbangla-flatpak-build master
+  /tmp/openbangla-flatpak-repo /tmp/openbangla-flatpak-build stable
 flatpak build-update-repo --no-update-appstream /tmp/openbangla-flatpak-repo
 flatpak --user install --assumeyes /tmp/openbangla-flatpak-repo \
-  io.github.openbangla.keyboard
+  io.github.hasanmuammar.Shanti
 ```
 
 After installing the app, register its engine with the experimental GNOME IBus bridge:
 
 ```sh
 python3 tools/flatpak/manage-ibus-flatpak-host.py install \
-  --app-id io.github.openbangla.keyboard
+  --app-id io.github.hasanmuammar.Shanti
 systemctl --user daemon-reload
 systemctl --user restart org.freedesktop.IBus.session.GNOME.service
 ```
 
-Launch the app from GNOME's overview or run `flatpak run io.github.openbangla.keyboard`; select OpenBangla as the GNOME input source to type. The full-app package, IBus discovery, AppIndicator, layout changes, and settings changes have been confirmed working in the developer's Bluefin/GNOME environment. The bridge and packaging remain experimental and have not been validated across other distributions or desktop environments.
+Launch **OpenBangla Keyboard Shanti** from GNOME's overview or run `flatpak run io.github.hasanmuammar.Shanti`; select OpenBangla as the GNOME input source to type. The previous provisional-ID build's package, IBus discovery, AppIndicator, layout changes, and settings changes were confirmed working in the developer's Bluefin/GNOME environment. The Shanti-specific ID and metadata transformation have not yet been rebuilt and verified. The bridge and packaging remain experimental and have not been validated across other distributions or desktop environments.
 
 This is a disposable test application, not the Shanti manager and not a production manifest. It tests four narrowly scoped, Shanti-specific permission aliases:
 

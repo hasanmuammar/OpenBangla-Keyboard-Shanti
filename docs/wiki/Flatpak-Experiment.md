@@ -2,7 +2,7 @@
 
 ## Current status — 2026-10-15
 
-The complete `io.github.openbangla.keyboard` Flatpak has been built and run in the developer's Bluefin/GNOME environment. The developer confirms the app launches, the AppIndicator appears, layouts can be changed, and settings changes work as expected. This updates the earlier investigation notes below wherever they describe Flatpak packaging or these behaviors as unverified. The work remains experimental: broader desktop/distribution coverage, release publishing, and install/update/removal lifecycle validation are still outstanding.
+The complete Flatpak was built and run in the developer's Bluefin/GNOME environment under the provisional app ID `io.github.openbangla.keyboard`. The developer confirms the app launches, the AppIndicator appears, layouts can be changed, and settings changes work as expected. The release app ID is now `io.github.hasanmuammar.Shanti`, with the display name **OpenBangla Keyboard Shanti**; the updated manifest metadata has not yet been rebuilt and verified. The work remains experimental: broader desktop/distribution coverage, release publishing, and install/update/removal lifecycle validation are still outstanding.
 
 > **Project status:** Highly Experimental · Vibe-Coded  
 > **Phase:** Planning and feasibility assessment  

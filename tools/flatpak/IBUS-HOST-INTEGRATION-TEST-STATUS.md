@@ -10,6 +10,7 @@ The wrapper requires `SHANTI_FLATPAK_APP_ID`, obtains the host IBus address with
 
 ## Verified so far
 
+- The verified full-app build used the provisional app ID `io.github.openbangla.keyboard`. For publication, the chosen Shanti ID is `io.github.hasanmuammar.Shanti` with display name **OpenBangla Keyboard Shanti**. The manifest now rewrites the sandboxed AppStream metadata and desktop exports for that identity; it must be rebuilt and rechecked before release.
 - Latest developer verification (2026-10-15): the complete Flatpak is working in the Bluefin/GNOME environment. The AppIndicator appears, the layout can be changed, and settings changes work as expected. This supersedes the earlier entries below that described GUI settings synchronization and visible AppIndicator behavior as unverified. The result is specific to this environment; cross-desktop compatibility has not been established.
 
 - The wrapper unit test passes for validation, address discovery, argument forwarding, and signal cleanup.
