@@ -8,6 +8,8 @@ The GUI shares layout and tweak settings with the host-launched engine through `
 
 The manifest also grants session-bus access to `org.kde.StatusNotifierWatcher`, which Qt needs to register the GNOME AppIndicator/status icon. For an already-installed build created before this permission was added, apply it with `flatpak override --user --talk-name=org.kde.StatusNotifierWatcher io.github.openbangla.keyboard`.
 
+The release reference template is [`openbangla.flatpakref.in`](openbangla.flatpakref.in). Replace `@FLATPAK_REPO_URL@` with the published OSTree repository URL and `@FLATPAK_REPO_GPG_KEY_BASE64@` with that repository's exported public GPG key (base64 encoded), then publish the generated `io.github.openbangla.keyboard.flatpakref` beside the release instructions. The template is not installable as-is; no repository URL or signing key has been published yet.
+
 Build from the repository root using new build and state paths:
 
 ```sh
