@@ -35,15 +35,15 @@ jobs:
           flatpak-builder --disable-rofiles-fuse --force-clean --user \
             --install-deps-from=flathub \
             --repo=flatpak-repo \
-            build-dir tools/flatpak/openbangla.yml
-          flatpak build-bundle flatpak-repo shanti.flatpak \
-            io.github.hasanmuammar.Shanti stable
+            build-dir tools/flatpak/shanti-ibus.yml
+          flatpak build-bundle flatpak-repo shanti-ibus.flatpak \
+            org.openbangla.Shanti.IBus stable
 
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v5
         with:
-          name: shanti-flatpak-x86_64
-          path: shanti.flatpak
+          name: shanti-ibus-flatpak-x86_64
+          path: shanti-ibus.flatpak
           if-no-files-found: error
 
   build-linux:

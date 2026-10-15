@@ -85,9 +85,9 @@ To install a specific alpha build:
 bash tools/install.sh --version shanti-alpha.1
 ----
 
-=== Experimental Flatpak
+=== Experimental IBus-only Flatpak
 
-A developer-built Flatpak is available as `io.github.hasanmuammar.Shanti` (OpenBangla Keyboard Shanti) and has been confirmed working on Bluefin/GNOME, including its GUI, AppIndicator, layout changes and settings changes. A hosted repository is not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[Flatpak build guide] for build instructions and publishing status.
+A developer-built IBus-only Flatpak is available as `org.openbangla.Shanti.IBus` (OpenBangla Keyboard Shanti (IBus)) and does not include the Fcitx5 engine. It has been confirmed working on Bluefin/GNOME, including its GUI, AppIndicator, layout changes and settings changes. A hosted repository is not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide] for build instructions and publishing status.
 
 === Build from source
 

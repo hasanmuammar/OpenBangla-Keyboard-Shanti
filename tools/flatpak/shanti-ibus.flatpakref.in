@@ -1,14 +1,14 @@
 # Release template. Replace both @...@ values before distributing.
 [Flatpak Ref]
 Version=1
-Name=io.github.hasanmuammar.Shanti
+Name=org.openbangla.Shanti.IBus
 Branch=stable
-Title=OpenBangla Keyboard Shanti
+Title=OpenBangla Keyboard Shanti (IBus)
 Comment=Bengali input method for Linux desktops
-Description=OpenBangla Keyboard Shanti Flatpak.
+Description=OpenBangla Keyboard Shanti IBus Flatpak. Fcitx5 is not included.
 Url=@FLATPAK_REPO_URL@
 RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
 IsRuntime=false
 GPGKey=@FLATPAK_REPO_GPG_KEY_BASE64@
-SuggestRemoteName=shanti
+SuggestRemoteName=shanti-ibus
 Homepage=https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti

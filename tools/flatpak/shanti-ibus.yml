@@ -1,0 +1,50 @@
+app-id: org.openbangla.Shanti.IBus
+runtime: org.kde.Platform
+runtime-version: '5.15-25.08'
+sdk: org.kde.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: openbangla-gui
+separate-locales: false
+
+# IBus-only Flatpak; a future Fcitx build must use its own app ID.
+# The GUI writes its layout and tweak settings here.
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=xdg-config/OpenBangla:create
+  - --talk-name=org.kde.StatusNotifierWatcher
+
+modules:
+  - name: openbangla-keyboard
+    buildsystem: cmake-ninja
+    builddir: true
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      build-args:
+        - --share=network
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DBIN_DIR=/app/bin
+      - -DDATADIR=/app/share
+      - -DLIBEXECDIR=/app/libexec
+      - -DENABLE_IBUS=ON
+      - -DENABLE_FCITX=OFF
+    post-install:
+      - install -Dm644 /app/share/applications/openbangla-keyboard.desktop /app/share/applications/org.openbangla.Shanti.IBus.desktop
+      - sed -i 's/^Name=OpenBangla Keyboard$/Name=OpenBangla Keyboard Shanti (IBus)/; s/^Icon=openbangla-keyboard$/Icon=org.openbangla.Shanti.IBus/' /app/share/applications/org.openbangla.Shanti.IBus.desktop
+      - rm /app/share/applications/openbangla-keyboard.desktop
+      - install -Dm644 /app/share/icons/hicolor/16x16/apps/openbangla-keyboard.png /app/share/icons/hicolor/16x16/apps/org.openbangla.Shanti.IBus.png
+      - install -Dm644 /app/share/icons/hicolor/32x32/apps/openbangla-keyboard.png /app/share/icons/hicolor/32x32/apps/org.openbangla.Shanti.IBus.png
+      - install -Dm644 /app/share/icons/hicolor/48x48/apps/openbangla-keyboard.png /app/share/icons/hicolor/48x48/apps/org.openbangla.Shanti.IBus.png
+      - install -Dm644 /app/share/icons/hicolor/128x128/apps/openbangla-keyboard.png /app/share/icons/hicolor/128x128/apps/org.openbangla.Shanti.IBus.png
+      - install -Dm644 /app/share/icons/hicolor/512x512/apps/openbangla-keyboard.png /app/share/icons/hicolor/512x512/apps/org.openbangla.Shanti.IBus.png
+      - install -Dm644 /app/share/metainfo/io.github.openbangla.keyboard.metainfo.xml /app/share/metainfo/org.openbangla.Shanti.IBus.metainfo.xml
+      - sed -i 's#<id>io.github.openbangla.keyboard</id>#<id>org.openbangla.Shanti.IBus</id>#; s#<name>OpenBangla Keyboard</name>#<name>OpenBangla Keyboard Shanti (IBus)</name>#; s#https://github.com/hasanmuammar/OpenBangla-Keyboard#https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti#g; s#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard/#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard-Shanti/#g' /app/share/metainfo/org.openbangla.Shanti.IBus.metainfo.xml
+      - rm /app/share/metainfo/io.github.openbangla.keyboard.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..
