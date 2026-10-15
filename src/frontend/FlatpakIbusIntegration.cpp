@@ -1,6 +1,7 @@
 #include "FlatpakIbusIntegration.h"
 
 #include <QCoreApplication>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -9,6 +10,7 @@
 #include <QPushButton>
 #include <QSaveFile>
 #include <QTimer>
+#include <QUrl>
 #include <QWidget>
 #include <QXmlStreamWriter>
 #include <QDBusConnection>
@@ -251,7 +253,27 @@ bool hasConflictingDropIn(const Paths &p, QString *conflict) {
     return false;
 }
 
-bool installIntegration(QString *error) {
+bool moveDropInToBackup(const QString &path, QString *backupPath, QString *error) {
+    const QString base = path + ".openbangla-backup";
+    QString candidate = base;
+    for (int suffix = 2; QFileInfo(candidate).exists(); ++suffix)
+        candidate = base + QString("-%1").arg(suffix);
+
+    QFile file(path);
+    if (!file.rename(candidate)) {
+        *error = QString("Could not preserve the previous Shanti configuration at %1.").arg(candidate);
+        return false;
+    }
+    *backupPath = candidate;
+    return true;
+}
+
+void restoreLegacyDropIn(const QString &backupPath, const QString &originalPath) {
+    if (!backupPath.isEmpty() && !QFileInfo(originalPath).exists())
+        QFile::rename(backupPath, originalPath);
+}
+
+bool installIntegration(QString *error, QString *conflictPath = nullptr) {
     const Paths p = paths();
     if (p.dataHome.contains(':') || p.dataHome.contains('\n') || p.dataHome.contains('\r') ||
         p.configHome.contains('\n') || p.configHome.contains('\r')) {
@@ -265,8 +287,17 @@ bool installIntegration(QString *error) {
         return false;
     }
 
+    if ((QFileInfo(p.dropIn).exists() || QFileInfo(p.dropIn).isSymLink()) && !hasMarker(p.dropIn)) {
+        if (conflictPath)
+            *conflictPath = p.dropIn;
+        *error = QString("An existing IBus service override may conflict with this setup: %1").arg(p.dropIn);
+        return false;
+    }
+
     QString conflict;
     if (hasConflictingDropIn(p, &conflict)) {
+        if (conflictPath)
+            *conflictPath = conflict;
         *error = QString("A different IBus service override may conflict with this setup: %1").arg(conflict);
         return false;
     }
@@ -286,6 +317,70 @@ bool installIntegration(QString *error) {
         return false;
     gPromptSuppressedUntilHealthy = false;
     return true;
+}
+
+void showSetupError(QWidget *parent, const QString &title, const QString &error, const QString &conflictPath) {
+    QString message = error;
+    if (!conflictPath.isEmpty()) {
+        message += "\n\nSelect Open override folder to review this file. If it is an old Shanti setup you want to replace, use Back up and continue to retry setup. Do not change overrides you still use.";
+    }
+
+    QMessageBox box(QMessageBox::Critical, title, message, QMessageBox::NoButton, parent);
+    QPushButton *openFolder = nullptr;
+    if (!conflictPath.isEmpty())
+        openFolder = box.addButton("Open override folder", QMessageBox::ActionRole);
+    box.addButton(QMessageBox::Ok);
+    box.setDefaultButton(QMessageBox::Ok);
+    box.exec();
+
+    if (box.clickedButton() == openFolder &&
+        !QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(conflictPath).absolutePath()))) {
+        QMessageBox::warning(parent, title,
+                             QString("Could not open the folder. You can find the conflicting file here:\n%1")
+                                 .arg(QFileInfo(conflictPath).absolutePath()));
+    }
+}
+
+void showSetupFailure(QWidget *parent, const QString &error, const QString &conflictPath) {
+    if (!conflictPath.isEmpty()) {
+        QMessageBox box(QMessageBox::Question, "Update OpenBangla integration",
+                        QString("An IBus service override is blocking setup:\n%1\n\nIf this is an old Shanti setup you want to replace, choose Back up and continue. The file will be preserved as a backup before the current integration is installed. If you do not recognize it, cancel and leave it unchanged.")
+                            .arg(conflictPath),
+                        QMessageBox::NoButton, parent);
+        QPushButton *update = box.addButton("Back up and continue", QMessageBox::AcceptRole);
+        QPushButton *openFolder = box.addButton("Open override folder", QMessageBox::ActionRole);
+        box.addButton("Cancel", QMessageBox::RejectRole);
+        box.setDefaultButton(update);
+        box.exec();
+        if (box.clickedButton() == openFolder) {
+            if (!QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(conflictPath).absolutePath())))
+                QMessageBox::warning(parent, "Could not open override folder", QFileInfo(conflictPath).absolutePath());
+            return;
+        }
+        if (box.clickedButton() != update)
+            return;
+
+        QString backupPath;
+        QString backupError;
+        if (!moveDropInToBackup(conflictPath, &backupPath, &backupError)) {
+            QMessageBox::critical(parent, "Could not update OpenBangla integration", backupError);
+            return;
+        }
+
+        QString installError;
+        QString nextConflict;
+        if (!installIntegration(&installError, &nextConflict)) {
+            restoreLegacyDropIn(backupPath, conflictPath);
+            showSetupError(parent, "Could not update OpenBangla integration", installError, nextConflict);
+            return;
+        }
+
+        QMessageBox::information(parent, "OpenBangla integration updated",
+                                 QString("The current GNOME IBus integration is set up. The previous configuration was saved as:\n%1")
+                                     .arg(backupPath));
+        return;
+    }
+    showSetupError(parent, "Could not set up OpenBangla", error, conflictPath);
 }
 
 bool removeIntegration(QString *error) {
@@ -327,8 +422,9 @@ void showSetupPrompt(QWidget *parent) {
         return;
 
     QString error;
-    if (!installIntegration(&error)) {
-        QMessageBox::critical(parent, "Could not set up OpenBangla", error);
+    QString conflictPath;
+    if (!installIntegration(&error, &conflictPath)) {
+        showSetupFailure(parent, error, conflictPath);
         return;
     }
     QMessageBox::information(parent, "OpenBangla is registered",
@@ -374,8 +470,9 @@ void showSetupOrRepair(QWidget *parent) {
         return;
 
     QString error;
-    if (!installIntegration(&error)) {
-        QMessageBox::critical(parent, "Could not set up OpenBangla", error);
+    QString conflictPath;
+    if (!installIntegration(&error, &conflictPath)) {
+        showSetupFailure(parent, error, conflictPath);
         return;
     }
     QMessageBox::information(parent, "OpenBangla is registered",

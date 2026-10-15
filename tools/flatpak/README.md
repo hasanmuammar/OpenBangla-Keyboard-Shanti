@@ -33,7 +33,7 @@ The Shanti Flatpak packages the OpenBangla GUI and IBus engine as `org.openbangl
 5. Open **GNOME Settings → Keyboard → Input Sources → Add Input Source**, then select **OpenBangla**.
 6. Select OpenBangla from the input menu and try typing Bangla in another app.
 
-The app's Settings panel reports whether its registration is present and GNOME's IBus service is active. If setup reports a conflict or error, read the message before continuing. The integration manages user-level files; it does not modify system files.
+The app's Settings panel reports whether its registration is present and GNOME's IBus service is active. If an unmanaged IBus override blocks setup, the app shows its path and offers **Back up and continue**. Choose this only if you recognize the file as an old Shanti setup you want to replace; the app preserves it as a backup before installing the current integration. Choose **Cancel** if you do not recognize it. The integration manages user-level files; it does not modify system files.
 
 ## Remove
 
