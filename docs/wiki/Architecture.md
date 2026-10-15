@@ -33,7 +33,7 @@ The Flatpak manifest grants access to the user IBus component directory, helper 
 
 CI builds portable packages for x86_64 and aarch64 and tests IBus/Fcitx5 package structure. Tagged alpha releases also build and attach direct-download IBus Flatpak bundles for both architectures, with checksums and provenance attestations. Passing build/package workflows do not prove real desktop input, setup recovery, reboot persistence or cross-distribution compatibility.
 
-No Flatpak OSTree repository is configured, and the repository currently has no published GitHub release. Therefore, the portable installer cannot yet be assumed to download a published release. See [Installation](Installation.md), [Development](Development.md), and the [Flatpak guide](../../tools/flatpak/README.md).
+The Flatpak is distributed as downloadable bundles rather than through an OSTree remote. Portable packages and Flatpak bundles are listed on the [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) page. See [Installation](Installation.md), [Development](Development.md), and the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## External projects
 

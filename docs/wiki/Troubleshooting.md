@@ -29,6 +29,18 @@ The OpenBangla Settings panel reports whether its registration files are present
 
 For build, permissions, publishing and cleanup details, see [the IBus Flatpak guide](../../tools/flatpak/README.md). A successful CI bundle build alone does not prove that the GNOME IBus setup or Bengali text entry works.
 
+## Flatpak install says the KDE runtime was not found
+
+The Flatpak bundle does not include its KDE runtime. Flatpak normally fetches it from Flathub when installing the app, provided the Flathub remote and app are in the same scope. For a per-user install, add the user Flathub remote and retry the app install:
+
+```bash
+flatpak remote-add --user --if-not-exists flathub \
+  https://flathub.org/repo/flathub.flatpakrepo
+flatpak install --user ./shanti-ibus-x86_64.flatpak
+```
+
+For ARM64, use `shanti-ibus-aarch64.flatpak`. If the runtime still cannot be found, install it explicitly with `flatpak install --user flathub org.kde.Platform//5.15-25.08`. For a system-wide install, omit `--user` from all commands and make sure Flathub is configured system-wide. See the [Flatpak install guide](../../tools/flatpak/README.md) for the complete flow.
+
 ## GUI reports a missing shared library
 
 The portable installer bundles Qt and required runtime libraries under `~/.local/lib/openbangla`. Re-run `bash tools/install.sh` after changing portable runtime-bundling code, once a matching published release is available. For development builds, use `bash tools/build.sh`.

@@ -25,7 +25,7 @@ This is an experimental fork. Some fork-specific installation, packaging, runtim
 
 == What this fork provides
 
-* **Prebuilt Linux release workflow** for x86_64 and ARM64; published release assets are not available yet.
+* **Prebuilt Linux releases** for x86_64 and ARM64.
 * **Automatic backend selection:** KDE Plasma uses Fcitx5; other desktop environments use IBus.
 * **User-local installation** under `~/.local` without a system-wide package install.
 * **Source builds** remain available through `tools/build.sh`.
@@ -58,7 +58,7 @@ For bugs or installation/integration problems introduced by this fork, use this 
 
 === Prebuilt installation
 
-The installer downloads a matching prebuilt Linux release, verifies its checksum, and installs it for the current user. **There is no Shanti GitHub Release yet, so this download path currently cannot install the app.** For current use, build from source with `tools/build.sh` or install the experimental IBus Flatpak from a GitHub Actions artifact as described in the link:tools/flatpak/README.md[Flatpak guide].
+The installer downloads the configured Shanti release, verifies its checksum, and installs it for the current user. See the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page for available versions.
 
 Supported architectures:
 
@@ -67,11 +67,11 @@ Supported architectures:
 
 KDE Plasma automatically uses Fcitx5. Other desktop environments automatically use IBus.
 
-When a Shanti release is published, the installer can be run from a source checkout with `bash tools/install.sh`. Alpha release tags use names such as `shanti-alpha.1`; the configured default tag is in `release-tag.txt`, and `--version TAG` selects another published release. The CMake project version is tracked separately in `version.txt`.
+From a source checkout, install with `bash tools/install.sh`. The default release tag is in `release-tag.txt`; use `bash tools/install.sh --version TAG` to choose another release. The CMake project version is tracked separately in `version.txt`.
 
 === Experimental IBus-only Flatpak
 
-The experimental IBus-only Flatpak uses app ID `org.openbangla.Shanti.IBus` and does not include the Fcitx5 engine. The `shanti-alpha.*` release workflow builds x86_64 and aarch64 bundles and attaches them with checksums and build-provenance attestations; users must install the bundle matching their device. The GUI and GNOME IBus registration have been confirmed working in a GNOME session. Its Settings panel shows integration status and provides setup/repair and removal actions. Conflict handling, recovery, removal and persistence still need broader testing. No OSTree repository is configured, so the Flatpak is distributed as direct-download bundles rather than through a Flatpak remote. See the link:tools/flatpak/README.md[IBus Flatpak build guide] for the setup process.
+The IBus-only Flatpak (`org.openbangla.Shanti.IBus`) is available as architecture-specific bundles on the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. It requires the separate Flathub runtime `org.kde.Platform//5.15-25.08`; add Flathub in the same install scope and Flatpak normally downloads the runtime with the app. It supports GNOME host input sources through the app's Settings panel. See the link:tools/flatpak/README.md[Flatpak guide] for commands and setup.
 
 === Build from source
 
@@ -101,7 +101,7 @@ GitHub Actions currently tests source builds across:
 
 A separate prebuilt-package test workflow builds release archives for x86_64 and ARM64 with both IBus and Fcitx5, verifies their SHA-256 checksums, inspects the archive contents, checks the bundled runtime and backend metadata, and runs `openbangla-gui --version` plus `openbangla-gui --check-data`. The data check verifies that layout and dictionary files can be found relative to the installed executable, not the CI builder's home directory.
 
-After installation, `bash tools/install.sh` also runs the data-file check. You can repeat it with `~/.local/bin/openbangla-gui --check-data` after a release is available and installed. CI validates build and package structure; it does not replace testing Bengali input or checking host integration on other GNOME sessions and systems.
+The installer checks that the required data files are present. You can repeat the check with `~/.local/bin/openbangla-gui --check-data`. CI validates builds and package contents; it does not replace testing Bangla input on your desktop.
 
 == Related projects and technologies
 

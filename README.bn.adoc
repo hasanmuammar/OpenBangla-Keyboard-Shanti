@@ -4,7 +4,7 @@
 
 এই repository-টি **OpenBangla Keyboard-এর একটি Linux-focused fork**। মূল OpenBangla Keyboard codebase বজায় রেখে এই fork-এর উদ্দেশ্য হলো **সাধারণ Linux desktop এবং immutable বা image-based Linux system-এ OpenBangla সহজে install ও ব্যবহারযোগ্য করা**।
 
-এই fork-এর লক্ষ্য হলো **Bazzite ও Bluefin-এর মতো আধুনিক Linux operating system-এ সহজ installation** দেওয়া। Prebuilt release তৈরির workflow আছে, কিন্তু কোনো Shanti GitHub Release প্রকাশিত হয়নি; তাই release asset দিয়ে installation এখনো সম্ভব নয়। আপাতত source build অথবা experimental IBus Flatpak ব্যবহার করুন।
+এই fork-এর লক্ষ্য হলো **Bazzite, Bluefin এবং অন্যান্য Linux desktop-এ Bangla input সহজে ব্যবহার করা**। GitHub Releases পেজে portable package ও IBus Flatpak পাওয়া যায়।
 
 OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Bangla (Bengali) keyboard ও input method for Linux**। এতে phonetic ও fixed keyboard layout, typing automation, dictionary এবং autocorrection সুবিধা রয়েছে।
 
@@ -19,13 +19,17 @@ OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Ba
 
 == Installation status and Flatpak
 
-`tools/install.sh` প্রকাশিত Shanti GitHub Release থেকে prebuilt package ডাউনলোড করে; বর্তমানে এমন release নেই, তাই installer এখনো app install করতে পারবে না। আপাতত `bash tools/build.sh` দিয়ে source build করুন, অথবা GitHub Actions artifact থেকে experimental IBus Flatpak ইনস্টল করার নির্দেশনা link:tools/flatpak/README.md[Flatpak guide]-এ দেখুন।
+ইনস্টল করার পদ্ধতি:
 
-Experimental IBus-only Flatpak-এর app ID হলো `org.openbangla.Shanti.IBus`; এতে Fcitx5 engine নেই। `shanti-alpha.*` release workflow x86_64 ও aarch64-এর জন্য bundle তৈরি করে checksum ও build-provenance attestation-সহ GitHub prerelease-এ যুক্ত করবে। নিজের architecture-এর bundle ইনস্টল করতে হবে। GNOME session-এ app এবং IBus registration কাজ করছে বলে পরীক্ষা করা হয়েছে। App-এর Settings panel-এ integration status দেখা যায় এবং setup/repair ও removal করা যায়। Conflict handling, recovery, removal ও session persistence-এর আরও পরীক্ষা বাকি। OSTree repository নেই, তাই Flatpak remote নয়; সরাসরি bundle ডাউনলোড করে ইনস্টল করতে হবে। বিস্তারিত: `tools/flatpak/README.md`।
+* **GNOME:** GitHub Releases থেকে নিজের architecture-এর IBus Flatpak ডাউনলোড করুন। একই user বা system scope-এ Flathub remote থাকতে হবে; Flatpak সাধারণত app ইনস্টলের সময় `org.kde.Platform//5.15-25.08` runtime ডাউনলোড করে। তারপর app চালু করে integration setup করুন এবং GNOME Settings → Keyboard → Input Sources থেকে **OpenBangla** যোগ করুন। command-সহ বিস্তারিত: link:tools/flatpak/README.md[Flatpak guide]।
+* **Portable install:** source checkout থেকে `bash tools/install.sh` চালান। এটি `release-tag.txt`-এ থাকা release ইনস্টল করে।
+* **Source build:** development-এর জন্য `bash tools/build.sh` চালান।
+
+Release: https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases
 
 == এই fork-এর বৈশিষ্ট্য
 
-এই fork upstream-এর release cycle অনুসরণ করে না। Alpha build-এর জন্য fork-specific tag ব্যবহার করা হয়, যেমন `shanti-alpha.1`। CMake project version `version.txt`-এ আলাদাভাবে রাখা হয় এবং installer-এর release tag `release-tag.txt`-এ রাখা হয়।
+এই fork upstream-এর release cycle অনুসরণ করে না। CMake project version `version.txt`-এ এবং portable installer-এর default release tag `release-tag.txt`-এ রাখা হয়।
 
 * x86_64 ও ARM64-এর জন্য **prebuilt Linux release workflow**; প্রকাশিত release asset এখনো নেই।
 * **Automatic backend selection:** KDE Plasma-তে Fcitx5 এবং অন্যান্য desktop environment-এ IBus।
