@@ -8,7 +8,7 @@ OpenBangla Keyboard Shanti is a Linux-focused fork of [OpenBangla Keyboard](http
 
 The primary target systems are Bluefin/Dakota, Bazzite, and similar modern atomic Linux distributions. Other Linux desktops may work, but compatibility should be treated as unverified unless supported by a documented test.
 
-The portable, user-local installation remains the main distribution approach. The developer-built Flatpak contains the IBus engine only under its IBus-specific app ID; its GUI behavior has been confirmed on Bluefin/GNOME. Hosted repository publishing is not configured. See the [IBus Flatpak build guide](../../tools/flatpak/README.md).
+The portable, user-local installation remains the main intended distribution approach, but no GitHub Release is published yet; the installer cannot download release assets until one exists. The developer-built Flatpak contains the IBus engine only under app ID `org.openbangla.Shanti.IBus`. Its GUI behavior has been confirmed on Bluefin/GNOME, while the new in-app GNOME host-IBus setup still needs end-to-end testing. Hosted Flatpak repository publishing is not configured. See the [IBus Flatpak build guide](../../tools/flatpak/README.md).
 
 ## Project priorities
 

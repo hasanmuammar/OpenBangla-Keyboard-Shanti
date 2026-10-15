@@ -1,6 +1,6 @@
 # Installation — OpenBangla Keyboard for Linux
 
-The normal installer uses prebuilt Linux releases. It does not require a compiler, CMake, Rust, Qt development packages, or a build container.
+The normal installer is designed to use prebuilt Linux releases. It does not require a compiler, CMake, Rust, Qt development packages, or a build container. **However, no Shanti GitHub Release is currently published**, so the normal download-and-install path is not yet available from release assets. Use the source-build workflow below for local use, or the developer-built IBus Flatpak described in the [Flatpak guide](../../tools/flatpak/README.md).
 
 Supported architectures:
 
@@ -27,7 +27,7 @@ The installer uses the release tag in `release-tag.txt`. To select a different p
 bash tools/install.sh --version TAG
 ```
 
-Replace `TAG` with an actual published Shanti release tag. The installer downloads the archive and its SHA-256 checksum, validates that the checksum names the expected archive and contains exactly one digest, and compares the digest with the downloaded bytes. It also rejects archive paths outside the expected `bin/`, `lib/`, `libexec/`, and `share/` trees, duplicate archive paths, absolute symbolic links, and extracted symbolic links that escape the staging directory. Installation only proceeds after the staged payload passes backend-specific completeness checks.
+Replace `TAG` with an actual published Shanti release tag. This option works only after that tag has a GitHub Release with the expected archive and checksum assets. The installer downloads the archive and its SHA-256 checksum, validates that the checksum names the expected archive and contains exactly one digest, and compares the digest with the downloaded bytes. It also rejects archive paths outside the expected `bin/`, `lib/`, `libexec/`, and `share/` trees, duplicate archive paths, absolute symbolic links, and extracted symbolic links that escape the staging directory. Installation only proceeds after the staged payload passes backend-specific completeness checks.
 
 **Checksum limitation:** the checksum is published alongside the archive, so SHA-256 detects corruption or a mismatched file but does not independently authenticate the publisher if both assets are replaced.
 

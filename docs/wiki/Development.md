@@ -1,53 +1,53 @@
-# Development — OpenBangla Keyboard Linux Fork
+# Development — OpenBangla Keyboard Shanti
 
-Use the develop branch for fork development.
+Use the `develop` branch for fork development. The preferred entry point for source builds and package generation is `tools/build.sh`; avoid duplicating manual CMake instructions unless diagnosing the build system itself.
 
-## Update and rebuild
+## Update and build
 
 ```bash
 git pull --recurse-submodules
 bash tools/build.sh
 ```
 
-The installer uses a persistent build cache. For a clean CMake configuration, remove the cached build directory.
+Select a backend explicitly when needed:
 
 ```bash
-rm -rf "$HOME/.cache/openbangla-keyboard/build"
+bash tools/build.sh --backend ibus
+bash tools/build.sh --backend fcitx
 ```
 
-## Manual CMake build
-
-Configure exactly one backend.
-
-```bash
-cmake -S . -B build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
-  -DENABLE_IBUS=ON \
-  -DENABLE_FCITX=OFF
-
-cmake --build build --parallel 2
-cmake --install build
-```
-
-For Fcitx5, switch the two backend options accordingly.
-
-## Installer code
-
-Main components are `tools/install.sh`, `tools/uninstall.sh` and `tools/portable/`.
-
-The source-build workflow integrates with Toolbx, Distrobox, Podman or Docker for isolated builds, CMake for configuration, Qt5 for the GUI, Corrosion for Rust/CMake integration, and either IBus or Fcitx5 for Linux input-method integration.
-
-## Testing
-
-For IBus installations, verify OpenBangla with ibus list-engine. The installer also verifies that openbangla-gui --version starts with the bundled runtime.
-## Release builds
-
-The GitHub Actions release workflow builds prebuilt Linux archives for x86_64 and ARM64, with separate IBus and Fcitx5 builds.
-
-Test local release packaging with:
+Build a release archive locally:
 
 ```bash
 bash tools/build.sh --backend ibus --package
 bash tools/build.sh --backend fcitx --package
 ```
+
+The build script can use Toolbx, Distrobox, Podman or Docker to isolate dependencies. Host builds are available for CI/release packaging. Build and staging state uses the XDG cache directory; if `XDG_CACHE_HOME` is unset, the default is `~/.cache`. To force a clean CMake configuration, remove only the project's build cache, not the installed application or user data:
+
+```bash
+rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/openbangla-keyboard/build"
+```
+
+## Testing
+
+The CI workflow builds the Flatpak on x86_64 and aarch64 and compiles portable IBus/Fcitx5 variants across its configured compiler/architecture matrix. The package-test workflow checks shell syntax, archive/checksum integrity, archive paths and symlink containment, package contents, GUI startup with the offscreen Qt platform, data discovery, and uninstaller safety.
+
+These are build and packaging checks. They do not replace testing on a real desktop. For input-method changes, test at minimum:
+- GUI startup and settings persistence.
+- IBus registration and actual Bengali typing in a host application.
+- Fcitx5 registration and actual Bengali typing when that backend is affected.
+- Logout/login or reboot persistence where user-service configuration changes.
+- Setup, conflict refusal, recovery and removal for the GNOME IBus Flatpak integration.
+
+For portable IBus installations, inspect registration with:
+
+```bash
+ibus list-engine | grep -i -A3 -B2 openbangla
+```
+
+For Flatpak work, follow [the IBus Flatpak guide](../../tools/flatpak/README.md). Do not treat a successful bundle build as proof that host IBus integration works.
+
+## Release workflow
+
+The release workflow is configured for tags matching `shanti-alpha.*`. It builds separate IBus and Fcitx5 archives for x86_64 and aarch64, generates provenance attestations, and creates a prerelease. No GitHub release is currently published, so verify the first tagged run and all release assets before describing the installer as ready for general use.

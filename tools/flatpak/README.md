@@ -1,10 +1,18 @@
 # Shanti IBus Flatpak
 
-`shanti-ibus.yml` builds the Qt keyboard application and IBus engine as `org.openbangla.Shanti.IBus`, displayed as **OpenBangla Keyboard Shanti (IBus)**. It does not include the Fcitx5 engine. The app ID is specific to IBus so a future Fcitx5 Flatpak can use a separate identity. The separate user-local installer remains unchanged.
+The manifest `shanti-ibus.yml` builds the Qt keyboard GUI and IBus engine as `org.openbangla.Shanti.IBus`, displayed as **OpenBangla Keyboard Shanti (IBus)**. It does not include the Fcitx5 engine. The portable user-local installer is a separate delivery path and is not modified by this Flatpak.
 
-## Build and install
+## Current status
 
-Build from the repository root on a Linux host where Flatpak's Bubblewrap sandbox can create its required namespaces:
+- GitHub Actions builds architecture-specific Flatpak bundles for x86_64 and aarch64.
+- The latest CI run on 2026-10-15 succeeded for both Flatpak architectures; the same run also passed the configured portable source-build matrix.
+- The app's GUI, AppIndicator, layout changes and settings changes have been confirmed on Bluefin/GNOME. The new in-app host-IBus setup flow still requires deliberate end-to-end testing on real GNOME sessions, including conflicts and removal.
+- No hosted OSTree repository or public signing key is configured. There is no published Flatpak install option yet.
+- The repository currently has no published GitHub release for the portable installer either.
+
+## Build and install locally
+
+Run from the repository root on a Linux host where Flatpak Builder and Bubblewrap can create the required namespaces:
 
 ```sh
 flatpak-builder --disable-rofiles-fuse --force-clean --user --install \
@@ -13,24 +21,38 @@ flatpak-builder --disable-rofiles-fuse --force-clean --user --install \
   /tmp/shanti-ibus-flatpak-build tools/flatpak/shanti-ibus.yml
 ```
 
-The build downloads Cargo dependencies. This IBus-only package has been built, installed, and confirmed working by the developer. Flatpak Builder composes AppStream metadata after compilation using `appstreamcli` and its Compose addon. Install both on the build host if composition fails; on Ubuntu, the packages are `appstream` and `appstream-compose`. The failure occurs after the application payload has been compiled and staged.
+The build downloads Cargo dependencies. Flatpak Builder composes AppStream metadata after compilation using `appstreamcli` and its Compose addon. If composition fails on Ubuntu, install both `appstream` and `appstream-compose`; this can fail after the application payload has already compiled and staged.
 
-GitHub Actions builds this same manifest natively for `x86_64` and `aarch64`, then uploads separate architecture-specific bundles named `shanti-ibus-flatpak-x86_64` and `shanti-ibus-flatpak-aarch64`. Install the bundle matching the device architecture. Steam Deck is x86_64; ARM64 devices use aarch64. Flatpak bundles are architecture-specific, so a single install command that automatically selects either architecture requires publishing both builds in one OSTree repository.
-
-Run the installed application with:
+Launch the installed app:
 
 ```sh
 flatpak run org.openbangla.Shanti.IBus
 ```
 
-The app's AppIndicator, layout changes, and settings changes are confirmed on Bluefin/GNOME with the Shanti app ID. Fcitx5 integration is not provided.
+GitHub Actions also creates downloadable workflow artifacts. The artifact names are `shanti-ibus-flatpak-x86_64` and `shanti-ibus-flatpak-aarch64`; each contains an architecture-specific bundle named `shanti-ibus-x86_64.flatpak` or `shanti-ibus-aarch64.flatpak`. Download the artifact from the [CI workflow run](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/actions), extract it, then install the matching bundle:
+
+```sh
+flatpak install --user ./shanti-ibus-x86_64.flatpak
+```
+
+Use the aarch64 filename on ARM64 systems. Do not use the x86_64 bundle on ARM64 or vice versa.
 
 ## GNOME IBus registration
 
-On a GNOME session, the Flatpak checks whether its user-scoped IBus registration is present and the GNOME IBus service is active. If registration is missing, the app offers **Set up integration** at launch. While open, it checks every five minutes and prompts again if a previously healthy integration stops working. Setup writes a user component descriptor and Flatpak launcher, then adds a user-level systemd drop-in so GNOME's IBus service scans the component directory. It restarts that user service. After setup, add **OpenBangla** from Settings → Keyboard → Input Sources. IBus starts the engine on demand when that input source is selected; the periodic check monitors registration and the IBus service, not the idle engine process.
+The app offers this integration only when it detects the GNOME desktop and its own Flatpak app ID. If the host IBus registration is missing, the app offers **Set up integration**. While the GUI remains open, it checks every five minutes and can prompt again if a previously healthy registration/service state becomes unhealthy. This is a registration/service health check; it does not continuously test the idle engine process or prove that typing works.
 
-The prompt is limited to the GNOME IBus Flatpak app ID. It does not install system-wide files. If another user drop-in already changes `IBUS_COMPONENT_PATH` or `ExecStart`, setup stops and reports the conflicting file instead of replacing it. The tray menu also includes **GNOME IBus Integration…** to retry setup or remove the app-managed registration before uninstalling. The app needs access to the user IBus component directory, its own helper directory, the GNOME IBus service drop-in directory, and the user systemd D-Bus service to offer this action.
+Setup writes three user-scoped files:
+
+- `~/.local/share/ibus/component/shanti-flatpak-openbangla.xml` — host IBus component descriptor.
+- `~/.local/share/shanti-ibus/ibus-flatpak-host-wrapper.sh` — launcher that invokes the engine inside the Flatpak.
+- `~/.config/systemd/user/org.freedesktop.IBus.session.GNOME.service.d/90-shanti-flatpak-ibus.conf` — user-service drop-in that makes the component visible to GNOME's IBus service.
+
+The app then reloads the user systemd manager and restarts `org.freedesktop.IBus.session.GNOME.service`. After setup, open Settings → Keyboard → Input Sources and add **OpenBangla**. The engine is launched on demand when that input source is selected.
+
+The integration does not install system-wide files. It requires access to the component, helper and systemd drop-in directories, plus the user systemd D-Bus service. If another user drop-in changes `IBUS_COMPONENT_PATH` or `ExecStart`, setup refuses to proceed rather than overwriting that file. Use the tray menu's **GNOME IBus Integration…** action to retry setup or remove the app-managed registration.
+
+Before relying on this integration, test on a clean GNOME account and on an account with existing IBus overrides. Verify setup, input-source discovery, Bengali typing in a host application, logout/login persistence, conflict refusal, failed restart recovery and removal. The app's health check does not replace those tests.
 
 ## Publishing
 
-[`shanti-ibus.flatpakref.in`](shanti-ibus.flatpakref.in) is a template only. Publishing still requires a hosted OSTree repository, its exported public signing key, and a generated `.flatpakref` with those values. No repository URL or signing key is currently configured.
+A `.flatpakref` template is not an installable published reference by itself. Publishing requires a hosted OSTree repository, an exported public signing key, and a generated `.flatpakref` with the real repository URL and key. None is currently configured.

@@ -4,7 +4,7 @@
 
 এই repository-টি **OpenBangla Keyboard-এর একটি Linux-focused fork**। মূল OpenBangla Keyboard codebase বজায় রেখে এই fork-এর উদ্দেশ্য হলো **সাধারণ Linux desktop এবং immutable বা image-based Linux system-এ OpenBangla সহজে install ও ব্যবহারযোগ্য করা**।
 
-এই fork-এর মূল লক্ষ্য হলো **Bazzite ও Bluefin-এর মতো আধুনিক Linux operating system-এ সহজ installation** দেওয়া, যেখানে prebuilt Linux release, bundled runtime library এবং user-local installer ব্যবহার করা হয়। সাধারণ user-কে compiler, CMake, Rust, Qt development package বা build container প্রস্তুত করতে হয় না। Development এবং release packaging-এর জন্য source build-ও রাখা হয়েছে।
+এই fork-এর লক্ষ্য হলো **Bazzite ও Bluefin-এর মতো আধুনিক Linux operating system-এ সহজ installation** দেওয়া। Prebuilt release installer প্রস্তুত আছে, কিন্তু বর্তমানে কোনো Shanti GitHub Release প্রকাশিত হয়নি; তাই release asset দিয়ে স্বাভাবিক installation এখনো সম্ভব নয়। আপাতত source build অথবা experimental IBus Flatpak ব্যবহার করুন। Development এবং release packaging-এর জন্য source build রাখা হয়েছে।
 
 OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Bangla (Bengali) keyboard ও input method for Linux**। এতে phonetic ও fixed keyboard layout, typing automation, dictionary এবং autocorrection সুবিধা রয়েছে।
 
@@ -15,14 +15,19 @@ OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Ba
 এটি একটি experimental fork এবং এই fork-এর installation, packaging, runtime-bundling ও integration-এর গুরুত্বপূর্ণ অংশ **vibe-coded / AI-assisted**। তাই regression, অসম্পূর্ণ behaviour এবং Linux-specific integration সমস্যা হতে পারে।
 
 **এই fork-এর কারণে হওয়া সমস্যা upstream OpenBangla Keyboard project-এ report করবেন না।** Fork-specific bug, installation failure এবং integration issue এই repository-তেই report করুন।
-====
+==== 
 
+== Installation status and Flatpak
+
+সাধারণ installer-এর জন্য প্রকাশিত Shanti GitHub Release এবং release asset প্রয়োজন। প্রথম release প্রকাশিত না হওয়া পর্যন্ত `tools/install.sh`-এর download path ব্যবহারযোগ্য নয়। Local build-এর জন্য `bash tools/build.sh` চালান।
+
+Experimental IBus-only Flatpak-এর app ID হলো `org.openbangla.Shanti.IBus`; এতে Fcitx5 engine নেই। GitHub Actions x86_64 ও aarch64-এর জন্য আলাদা bundle তৈরি করে। GNOME-এ app-এর নতুন IBus registration flow বাস্তব session-এ setup, conflict, recovery ও removal-সহ পরীক্ষা করা বাকি। Hosted Flatpak repository ও signing key-ও এখনো configured নয়। বিস্তারিত: `tools/flatpak/README.md` এবং `docs/wiki/Installation.md`।
 
 == এই fork-এর বৈশিষ্ট্য
 
 এই fork upstream-এর release cycle অনুসরণ করে না। Alpha build-এর জন্য fork-specific tag ব্যবহার করা হয়, যেমন `shanti-alpha.1`। CMake project version `version.txt`-এ আলাদাভাবে রাখা হয় এবং installer-এর release tag `release-tag.txt`-এ রাখা হয়।
 
-* x86_64 ও ARM64-এর জন্য **prebuilt Linux release**।
+* x86_64 ও ARM64-এর জন্য **prebuilt Linux release workflow**; প্রকাশিত release asset এখনো নেই।
 * **Automatic backend selection:** KDE Plasma-তে Fcitx5 এবং অন্যান্য desktop environment-এ IBus।
 * বর্তমান user-এর জন্য `~/.local`-এ installation।
 * Source build-এর জন্য `tools/build.sh`।

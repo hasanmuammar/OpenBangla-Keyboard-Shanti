@@ -9,7 +9,7 @@ image:https://img.shields.io/badge/platform-Linux-333333?logo=linux&logoColor=wh
 
 This repository is a **Linux-focused fork of OpenBangla Keyboard created to make OpenBangla easy to install on modern Linux operating systems such as Bazzite and Bluefin**. It keeps the OpenBangla Keyboard codebase while adding a simpler prebuilt installation and runtime-bundling workflow for conventional Linux systems and modern atomic/image-based systems.
 
-The main purpose of this fork is to provide **easy installation on modern Linux operating systems such as Bazzite and Bluefin**, using prebuilt Linux releases, bundled runtime libraries, and a user-local installer. Normal users do not need to set up a compiler, CMake, Rust, Qt development packages, or a build container. Source building remains available for development and release packaging.
+The main purpose of this fork is to make OpenBangla practical on modern Linux operating systems such as Bazzite and Bluefin, using a user-local installer and bundled runtime libraries. The prebuilt release workflow is implemented, but **no Shanti GitHub Release is currently published**, so the normal download-based installer is not ready for general use. Until release assets are published, use `tools/build.sh` for a source build or the experimental IBus Flatpak described below. Source building remains available for development and release packaging.
 
 OpenBangla Keyboard is an open-source, Unicode-compliant **Bangla (Bengali) keyboard and input method for Linux**. It provides phonetic and fixed keyboard layouts, typing automation, dictionary support and autocorrection.
 
@@ -25,7 +25,7 @@ This is an experimental fork and significant portions of the fork-specific insta
 
 == What this fork provides
 
-* **Prebuilt Linux releases** for x86_64 and ARM64.
+* **Prebuilt Linux release workflow** for x86_64 and ARM64; published release assets are not available yet.
 * **Automatic backend selection:** KDE Plasma uses Fcitx5; other desktop environments use IBus.
 * **User-local installation** under `~/.local` without a system-wide package install.
 * **Source builds** remain available through `tools/build.sh`.
@@ -58,7 +58,7 @@ For bugs or installation/integration problems introduced by this fork, use this 
 
 === Prebuilt installation
 
-Normal users do not need a compiler, CMake, Rust, Qt development packages, or a build container. The installer downloads the matching prebuilt Linux release for the current architecture and desktop environment, verifies its checksum, and installs it for the current user.
+The installer is designed for users who do not want to install a compiler, CMake, Rust, Qt development packages, or a build container. It downloads the matching prebuilt Linux release, verifies its checksum, and installs it for the current user. **No GitHub Release is currently published**, so this download path will not work until the first Shanti release and its assets are available. For now, build from source or use the experimental IBus Flatpak described below.
 
 Supported architectures:
 
@@ -87,7 +87,7 @@ bash tools/install.sh --version shanti-alpha.1
 
 === Experimental IBus-only Flatpak
 
-A developer-built IBus-only Flatpak is available as `org.openbangla.Shanti.IBus` (OpenBangla Keyboard Shanti (IBus)) and does not include the Fcitx5 engine. GitHub Actions builds architecture-specific bundles for x86_64 and aarch64 from the same manifest; users must install the bundle matching their device. It has been confirmed working on Bluefin/GNOME, including its GUI, AppIndicator, layout changes and settings changes. A hosted repository is not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide] for build instructions and publishing status.
+The experimental IBus-only Flatpak uses app ID `org.openbangla.Shanti.IBus` and does not include the Fcitx5 engine. GitHub Actions builds architecture-specific bundles for x86_64 and aarch64; users must install the bundle matching their device. The GUI, AppIndicator, layout changes and settings changes have been confirmed on Bluefin/GNOME. The app now offers an in-app GNOME IBus registration flow, but that host integration still needs end-to-end testing on real GNOME sessions, especially conflicts, recovery and removal. A hosted OSTree repository and signing key are not configured, so there is no published Flatpak install option yet. See the link:tools/flatpak/README.md[IBus Flatpak build guide].
 
 === Build from source
 
@@ -117,7 +117,7 @@ GitHub Actions currently tests source builds across:
 
 A separate prebuilt-package test workflow builds release archives for x86_64 and ARM64 with both IBus and Fcitx5, verifies their SHA-256 checksums, inspects the archive contents, checks the bundled runtime and backend metadata, and runs `openbangla-gui --version` plus `openbangla-gui --check-data`. The data check verifies that layout and dictionary files can be found relative to the installed executable, not the CI builder's home directory.
 
-After installation, `bash tools/install.sh` also runs the data-file check. You can repeat it with `~/.local/bin/openbangla-gui --check-data`. These workflows validate the build and package structure. They do not replace functional testing of actual Bangla input on a user’s desktop.
+After installation, `bash tools/install.sh` also runs the data-file check. You can repeat it with `~/.local/bin/openbangla-gui --check-data` after a release is available and installed. These workflows validate build and package structure. They do not replace functional testing of actual Bangla input or the Flatpak's host-IBus setup on a user's desktop.
 
 == Related projects and technologies
 
@@ -152,7 +152,7 @@ bash tools/uninstall.sh --purge-cache
 
 == Manual Linux build
 
-The CMake project supports one input-method backend per build.
+The CMake project supports one input-method backend per build. For the normal source-build workflow, prefer `tools/build.sh` so build isolation, cache handling and packaging remain consistent. The manual commands below are for developers who specifically need to configure CMake directly.
 
 === IBus
 

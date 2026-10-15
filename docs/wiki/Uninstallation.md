@@ -1,21 +1,32 @@
 # Uninstallation
 
-Remove the current-user OpenBangla installation:
+## Portable user-local installation
+
+Remove the current-user installation:
 
 ```bash
 bash tools/uninstall.sh
 ```
 
-The uninstaller removes the OpenBangla GUI, IBus engine, bundled runtime libraries, application data, desktop entry, icons, metadata, input-method registration and fork-specific environment configuration.
+The uninstaller removes Shanti's installed binaries, bundled runtime, desktop entry, icons, metadata, input-method registration and fork-specific environment configuration. It may also remove the OpenBangla entry from the user Fcitx5 profile when present. It does not remove the source checkout or system-wide IBus, Fcitx5, Qt, compilers or other shared packages.
 
-It also removes the OpenBangla entry from the user Fcitx5 profile when present.
-
-The source tree is not removed.
-
-To remove the build and staging cache as well:
+**User data is preserved by default.** The ordinary uninstall does not purge personal settings/layout data or the cache. Review the script's prompts and options before requesting deletion:
 
 ```bash
+bash tools/uninstall.sh --purge-data
 bash tools/uninstall.sh --purge-cache
 ```
 
-The uninstaller does not remove system IBus, Fcitx5, Qt, compilers, or other shared packages.
+Use the purge options only when you intend to remove the corresponding user data or build/staging cache. The script asks for confirmation for destructive purge operations. Do not assume that uninstalling the application also deletes every user preference.
+
+## IBus-only Flatpak
+
+The Flatpak's GNOME IBus integration is separate from the portable installer. Before uninstalling the Flatpak, open its tray menu and choose **GNOME IBus Integration…**, then remove the app-managed registration. This removes the integration's component descriptor, launcher and GNOME IBus service drop-in, and restarts the user IBus service.
+
+If the GUI is no longer available, inspect these paths before manually removing anything:
+
+- `~/.local/share/ibus/component/shanti-flatpak-openbangla.xml`
+- `~/.local/share/shanti-ibus/ibus-flatpak-host-wrapper.sh`
+- `~/.config/systemd/user/org.freedesktop.IBus.session.GNOME.service.d/90-shanti-flatpak-ibus.conf`
+
+Only remove files that were created by this Shanti integration. Do not delete an unrelated user service override. After manual cleanup, reload the user systemd manager and restart the GNOME IBus service. Flatpak app data and the portable installation are separate; removing one does not automatically remove the other.
