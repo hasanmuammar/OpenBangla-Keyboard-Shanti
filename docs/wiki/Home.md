@@ -35,7 +35,7 @@ The current distribution approach is a portable, user-local installation. Work o
 
 ### Packaging and distribution
 
-- [Flatpak Distribution Experiment](Flatpak-Experiment.md) — status, setup notes, and validation limits for the working experimental Flatpak build.
+- [Shanti Flatpak](../../tools/flatpak/README.md) — build, optional GNOME IBus bridge, and publishing status.
 
 ## Development principles
 

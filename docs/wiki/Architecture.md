@@ -71,5 +71,5 @@ This section records source-level findings for the Flatpak feasibility assessmen
 
 ### Evidence boundary
 
-The portable-build details above come from source review. The Flatpak status reflects developer builds and tests recorded in [Flatpak Distribution Experiment](Flatpak-Experiment.md) and the [experimental IBus integration report](../../tools/flatpak/IBUS-HOST-INTEGRATION.md). The release-ID transformation still needs a successful rebuild, and the environment-specific results do not establish broad platform support.
+The portable-build details above come from source review. Flatpak build instructions and current status are in the [Shanti Flatpak guide](../../tools/flatpak/README.md); host bridge behavior and platform limits are in the [experimental IBus integration report](../../tools/flatpak/IBUS-HOST-INTEGRATION.md). The release-ID transformation still needs a successful rebuild, and the environment-specific results do not establish broad platform support.
 
