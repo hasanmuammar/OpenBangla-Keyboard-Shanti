@@ -25,6 +25,12 @@ flatpak run org.openbangla.Shanti.IBus
 
 The app's AppIndicator, layout changes, and settings changes are confirmed on Bluefin/GNOME with the Shanti app ID. Fcitx5 integration is not provided.
 
+## GNOME IBus registration
+
+On a GNOME session, the Flatpak checks whether its user-scoped IBus registration is present and the GNOME IBus service is active. If registration is missing, the app offers **Set up integration** at launch. While open, it checks every five minutes and prompts again if a previously healthy integration stops working. Setup writes a user component descriptor and Flatpak launcher, then adds a user-level systemd drop-in so GNOME's IBus service scans the component directory. It restarts that user service. After setup, add **OpenBangla** from Settings → Keyboard → Input Sources. IBus starts the engine on demand when that input source is selected; the periodic check monitors registration and the IBus service, not the idle engine process.
+
+The prompt is limited to the GNOME IBus Flatpak app ID. It does not install system-wide files. If another user drop-in already changes `IBUS_COMPONENT_PATH` or `ExecStart`, setup stops and reports the conflicting file instead of replacing it. The tray menu also includes **GNOME IBus Integration…** to retry setup or remove the app-managed registration before uninstalling. The app needs access to the user IBus component directory, its own helper directory, the GNOME IBus service drop-in directory, and the user systemd D-Bus service to offer this action.
+
 ## Publishing
 
 [`shanti-ibus.flatpakref.in`](shanti-ibus.flatpakref.in) is a template only. Publishing still requires a hosted OSTree repository, its exported public signing key, and a generated `.flatpakref` with those values. No repository URL or signing key is currently configured.

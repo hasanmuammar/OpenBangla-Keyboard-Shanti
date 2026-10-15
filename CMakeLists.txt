@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(cmake/corrosion-rs)
-find_package(Qt5 COMPONENTS Widgets Network Svg REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Network Svg DBus REQUIRED)
 
 message(STATUS "Qt5 framework version: ${Qt5Core_VERSION}")
 

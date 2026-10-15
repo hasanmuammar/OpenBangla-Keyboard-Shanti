@@ -11,6 +11,7 @@ set(SRC_GUI
     AboutFile.cpp
     LayoutViewer.cpp
     SettingsDialog.cpp
+    FlatpakIbusIntegration.cpp
     AutoCorrectDialog.cpp
     SingleInstance.cpp
     SingleInstance.h
@@ -33,6 +34,7 @@ target_link_libraries(
     Qt5::Widgets
     Qt5::Network
     Qt5::Svg
+    Qt5::DBus
     platform
     ${ZSTD_LIBRARIES}
 )

@@ -37,6 +37,7 @@
 #include "LayoutConverter.h"
 #include "AutoCorrectDialog.h"
 #include "PlatformConfig.h"
+#include "FlatpakIbusIntegration.h"
 #include "FileSystem.h"
 #include "ui_TopBar.h"
 
@@ -94,6 +95,7 @@ TopBar::TopBar(bool darkIcon, QWidget *parent) :
   SetupTrayIcon();
   DataMigration();
   notifyTrayStart(tray);
+  FlatpakIbusIntegration::checkAndPrompt(this);
 }
 
 
@@ -239,6 +241,13 @@ void TopBar::SetupTrayIcon() {
   trayMenu->addMenu(trayOutputMode);
   trayMenu->addAction(trayLayoutViewer);
   trayMenu->addAction(traySettings);
+  if (FlatpakIbusIntegration::isApplicable()) {
+    QAction *ibusIntegration = new QAction("GNOME IBus Integration…", this);
+    connect(ibusIntegration, &QAction::triggered, this, [this]() {
+      FlatpakIbusIntegration::showManagementDialog(this);
+    });
+    trayMenu->addAction(ibusIntegration);
+  }
   trayMenu->addSeparator();
   trayMenu->addAction(trayTopBarVisibility);
   trayMenu->addAction(trayQuit);
