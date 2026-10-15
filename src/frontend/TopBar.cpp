@@ -25,6 +25,7 @@
 #include <QFileDialog>
 #include <QPushButton>
 #include <QMenu>
+#include <QTimer>
 #include <QDir>
 #include "TopBar.h"
 #include "Layout.h"
@@ -184,7 +185,10 @@ void TopBar::SetupPopupMenus() {
 }
 
 void TopBar::SetupTrayIcon() {
-  tray = new QSystemTrayIcon(QIcon::fromTheme("openbangla-keyboard", QIcon(":/images/tray.png")), this);
+  // Use the bundled icon so StatusNotifier hosts receive OpenBangla's artwork
+  // even when the host icon theme does not include openbangla-keyboard.
+  const QIcon trayIcon(":/images/OpenBangla-Keyboard.png");
+  tray = new QSystemTrayIcon(trayIcon, this);
   tray->setToolTip("OpenBangla Keyboard");
 
   /* Tray Menu */
@@ -241,6 +245,14 @@ void TopBar::SetupTrayIcon() {
 
   tray->setContextMenu(trayMenu);
   tray->show();
+
+  // GNOME's StatusNotifier host can briefly show a generic icon while it
+  // finishes registering the item. Republish the pixmap once registration has
+  // had an event-loop turn so the host replaces that placeholder promptly.
+  QTimer::singleShot(250, tray, [this, trayIcon]() {
+    if (tray->isVisible())
+      tray->setIcon(trayIcon);
+  });
 }
 
 void TopBar::RefreshLayouts() {

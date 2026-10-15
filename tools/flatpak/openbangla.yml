@@ -1,0 +1,46 @@
+app-id: io.github.openbangla.keyboard
+runtime: org.kde.Platform
+runtime-version: '5.15-25.08'
+sdk: org.kde.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: openbangla-gui
+separate-locales: false
+
+# The GUI writes its layout and tweak settings here. The experimental host
+# IBus bridge exposes this same directory read-only to the engine process.
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=xdg-config/OpenBangla:create
+  - --talk-name=org.kde.StatusNotifierWatcher
+
+modules:
+  - name: openbangla-keyboard
+    buildsystem: cmake-ninja
+    builddir: true
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      build-args:
+        - --share=network
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DBIN_DIR=/app/bin
+      - -DDATADIR=/app/share
+      - -DLIBEXECDIR=/app/libexec
+      - -DENABLE_IBUS=ON
+      - -DENABLE_FCITX=OFF
+    post-install:
+      - install -Dm644 /app/share/applications/openbangla-keyboard.desktop /app/share/applications/io.github.openbangla.keyboard.desktop
+      - sed -i 's/^Icon=openbangla-keyboard$/Icon=io.github.openbangla.keyboard/' /app/share/applications/io.github.openbangla.keyboard.desktop
+      - install -Dm644 /app/share/icons/hicolor/16x16/apps/openbangla-keyboard.png /app/share/icons/hicolor/16x16/apps/io.github.openbangla.keyboard.png
+      - install -Dm644 /app/share/icons/hicolor/32x32/apps/openbangla-keyboard.png /app/share/icons/hicolor/32x32/apps/io.github.openbangla.keyboard.png
+      - install -Dm644 /app/share/icons/hicolor/48x48/apps/openbangla-keyboard.png /app/share/icons/hicolor/48x48/apps/io.github.openbangla.keyboard.png
+      - install -Dm644 /app/share/icons/hicolor/128x128/apps/openbangla-keyboard.png /app/share/icons/hicolor/128x128/apps/io.github.openbangla.keyboard.png
+      - install -Dm644 /app/share/icons/hicolor/512x512/apps/openbangla-keyboard.png /app/share/icons/hicolor/512x512/apps/io.github.openbangla.keyboard.png
+    sources:
+      - type: dir
+        path: ../..

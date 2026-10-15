@@ -1,4 +1,44 @@
-# Shanti Flatpak filesystem-permission probe
+# Shanti Flatpak packaging and permission probes
+
+## Full GUI and IBus Flatpak
+
+`openbangla.yml` packages the complete Qt application, IBus engine, seven bundled layouts, and dictionary/autocorrect data under the AppStream ID `io.github.openbangla.keyboard`. Its desktop launcher and icons use app-ID-matching export names so GNOME can show OpenBangla in the app overview.
+
+The GUI shares layout and tweak settings with the host-launched engine through `~/.config/OpenBangla`: the manifest grants the GUI write access to that directory, and `manage-ibus-flatpak-host.py` grants the engine read-only access. Launching **OpenBangla Keyboard** opens the application's GUI and top bar. It is separate from GNOME's IBus input-source indicator.
+
+The manifest also grants session-bus access to `org.kde.StatusNotifierWatcher`, which Qt needs to register the GNOME AppIndicator/status icon. For an already-installed build created before this permission was added, apply it with `flatpak override --user --talk-name=org.kde.StatusNotifierWatcher io.github.openbangla.keyboard`.
+
+Build from the repository root using new build and state paths:
+
+```sh
+flatpak-builder --disable-rofiles-fuse \
+  --state-dir=/tmp/openbangla-flatpak-state \
+  /tmp/openbangla-flatpak-build tools/flatpak/openbangla.yml
+```
+
+The build needs network access for Cargo dependencies. If `flatpak-builder` reports that `appstreamcli` is missing after compilation, install it on the build host or finalize/export manually:
+
+```sh
+flatpak build-finish --command=openbangla-gui \
+  --share=ipc --socket=wayland --socket=fallback-x11 --device=dri \
+  --filesystem=xdg-config/OpenBangla:create /tmp/openbangla-flatpak-build
+flatpak build-export --disable-sandbox --no-update-summary \
+  /tmp/openbangla-flatpak-repo /tmp/openbangla-flatpak-build master
+flatpak build-update-repo --no-update-appstream /tmp/openbangla-flatpak-repo
+flatpak --user install --assumeyes /tmp/openbangla-flatpak-repo \
+  io.github.openbangla.keyboard
+```
+
+After installing the app, register its engine with the experimental GNOME IBus bridge:
+
+```sh
+python3 tools/flatpak/manage-ibus-flatpak-host.py install \
+  --app-id io.github.openbangla.keyboard
+systemctl --user daemon-reload
+systemctl --user restart org.freedesktop.IBus.session.GNOME.service
+```
+
+Launch the app from GNOME's overview or run `flatpak run io.github.openbangla.keyboard`; select OpenBangla as the GNOME input source to type. The full-app package, IBus discovery, AppIndicator, layout changes, and settings changes have been confirmed working in the developer's Bluefin/GNOME environment. The bridge and packaging remain experimental and have not been validated across other distributions or desktop environments.
 
 This is a disposable test application, not the Shanti manager and not a production manifest. It tests four narrowly scoped, Shanti-specific permission aliases:
 
@@ -23,6 +63,10 @@ flatpak run io.github.hasanmuammar.ShantiFilesystemProbe
 ```
 
 The probe prints sandbox XDG paths, host XDG locations reported by Flatpak, and one PASS/FAIL result per test root. A passing result establishes only that these disposable path grants can create directories and read/write a marker through the sandbox-visible mounts in this environment. It does not establish that the eventual production paths, IBus/Fcitx5 registration, module ABI, host typing, or daemon refresh will work.
+
+### Local verification — 2026-10-15
+
+The probe was built and installed with the Freedesktop SDK/runtime 26.08, then run on the development host. All four create/write/read checks passed. Read-only device and inode comparisons confirmed that the sandbox-visible XDG data, config, and cache probe directories referred to the corresponding host directories. This verifies the default XDG setup on this host only; custom XDG locations remain untested. The test created only the disposable probe directories listed above, and removed its temporary marker files and child directories.
 
 ## Custom XDG test
 

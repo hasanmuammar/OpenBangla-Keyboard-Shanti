@@ -35,7 +35,7 @@ The current distribution approach is a portable, user-local installation. Work o
 
 ### Packaging and distribution
 
-- [Flatpak Distribution Experiment](Flatpak-Experiment.md) — feasibility plan, stages, and acceptance criteria. This is an experiment only; no Flatpak implementation is currently claimed by this page.
+- [Flatpak Distribution Experiment](Flatpak-Experiment.md) — status, setup notes, and validation limits for the working experimental Flatpak build.
 
 ## Development principles
 
