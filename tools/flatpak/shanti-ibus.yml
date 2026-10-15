@@ -43,7 +43,7 @@ modules:
       - install -Dm644 /app/share/icons/hicolor/128x128/apps/openbangla-keyboard.png /app/share/icons/hicolor/128x128/apps/org.openbangla.Shanti.IBus.png
       - install -Dm644 /app/share/icons/hicolor/512x512/apps/openbangla-keyboard.png /app/share/icons/hicolor/512x512/apps/org.openbangla.Shanti.IBus.png
       - install -Dm644 /app/share/metainfo/io.github.openbangla.keyboard.metainfo.xml /app/share/metainfo/org.openbangla.Shanti.IBus.metainfo.xml
-      - sed -i 's#<id>io.github.openbangla.keyboard</id>#<id>org.openbangla.Shanti.IBus</id>#; s#<name>OpenBangla Keyboard</name>#<name>OpenBangla Keyboard Shanti (IBus)</name>#; s#https://github.com/hasanmuammar/OpenBangla-Keyboard#https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti#g; s#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard/#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard-Shanti/#g' /app/share/metainfo/org.openbangla.Shanti.IBus.metainfo.xml
+      - sed -i 's#<id>io.github.openbangla.keyboard</id>#<id>org.openbangla.Shanti.IBus</id>#; s#<name>OpenBangla Keyboard</name>#<name>OpenBangla Keyboard Shanti (IBus)</name>#; s#<icon type="remote"[^>]*>[^<]*</icon>#<icon type="stock">org.openbangla.Shanti.IBus</icon>#; s#https://github.com/hasanmuammar/OpenBangla-Keyboard#https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti#g; s#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard/#https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard-Shanti/#g' /app/share/metainfo/org.openbangla.Shanti.IBus.metainfo.xml
       - rm /app/share/metainfo/io.github.openbangla.keyboard.metainfo.xml
     sources:
       - type: dir
