@@ -13,7 +13,7 @@ flatpak-builder --disable-rofiles-fuse --force-clean --user --install \
   /tmp/openbangla-flatpak-build tools/flatpak/openbangla.yml
 ```
 
-The build downloads Cargo dependencies. The Shanti-ID package has been built, installed, and confirmed working by the developer. Flatpak Builder composes AppStream metadata after compilation using `appstreamcli` and its Compose addon. Install both on the build host if composition fails; on Ubuntu, the packages are `appstream` and `appstream-compose`. The failure occurs after the application payload has been compiled and staged. For a local smoke test only, set the top-level manifest key `appstream-compose: false` to skip catalog generation; remove that override for builds intended for software-center distribution.
+The build downloads Cargo dependencies. The Shanti-ID package has been built, installed, and confirmed working by the developer. Flatpak Builder composes AppStream metadata after compilation using `appstreamcli` and its Compose addon. Install both on the build host if composition fails; on Ubuntu, the packages are `appstream` and `appstream-compose`. The failure occurs after the application payload has been compiled and staged.
 
 Run the installed application with:
 

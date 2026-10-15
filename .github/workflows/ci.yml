@@ -8,6 +8,7 @@ on:
   pull_request:
     branches: ["**"]
     paths-ignore: ["**.md", "**.adoc"]
+  workflow_dispatch:
 
 jobs:
   build-flatpak:
