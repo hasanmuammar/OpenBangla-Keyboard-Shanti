@@ -1,6 +1,9 @@
 # Change Log
 ## Unreleased
 
+* Merged upstream dialog redesign (upstream PR #475): Settings, About, AutoCorrect and Layout Viewer dialogs restyled with light/dark themes, new ToggleSwitch and KeyboardWidget widgets, and layout JSON v3 `transliteration` layout support.
+* The GNOME IBus integration panel survives the redesign and now renders on the General page while keeping its backup-or-remove conflict flow.
+
 ## shanti-alpha.1.1
 
 * Offer a confirmed backup-and-update flow when an existing IBus service override blocks GNOME integration setup.
