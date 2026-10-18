@@ -1,7 +1,10 @@
 # Change Log
 ## Unreleased
 
+## shanti-alpha.1.3
+
 * Include `install.sh`, `uninstall.sh`, their `portable/` helpers and `release-tag.txt` inside portable release archives, so a downloaded tarball can install or uninstall without a source checkout.
+* Refresh those bundled scripts on upgrade while continuing to preserve user layouts, autocorrect data and other user-owned files.
 
 ## shanti-alpha.1.2
 
