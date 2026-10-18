@@ -16,6 +16,8 @@ This requires a published, attested release tag and fails closed if the attestat
 
 `tools/uninstall.sh` removes the user-local installation and backend registration. User data and caches are preserved unless separately requested with `--purge-data` or `--purge-cache`; removals are constrained to explicit OpenBangla targets.
 
+Release archives bundle `install.sh`, `uninstall.sh`, their `portable/` helpers and `release-tag.txt` under `share/openbangla-keyboard/`, so a downloaded archive can install, repair or uninstall without a source checkout. Installing relocates that directory into the user data directory (`~/.local/share/openbangla-keyboard/` by default).
+
 The portable installer is the primary installation path for this fork.
 
 ## External build and desktop projects

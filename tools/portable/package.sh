@@ -83,6 +83,23 @@ package_openbangla() {
             sed -i -E "s#^Exec=.*\$#Exec=\"@OBK_PREFIX@/bin/openbangla-gui\" %f#" "$desktop"
         fi
 
+        # Ship the user-facing installer and uninstaller inside the archive so a
+        # downloaded release can be installed, repaired or removed without a
+        # source checkout. The tools/ layout and release-tag.txt are mirrored so
+        # that install.sh keeps resolving its libraries and release tag.
+        data_root="$install_root/share/openbangla-keyboard"
+        release_tools_root="$data_root/tools"
+        [[ -d "$OBK_WORKSPACE/tools/portable" ]] || {
+            echo "Refusing to package without the portable tools directory." >&2
+            exit 1
+        }
+        mkdir -p "$release_tools_root/portable"
+        cp -a "$OBK_WORKSPACE/tools/install.sh" "$release_tools_root/install.sh"
+        cp -a "$OBK_WORKSPACE/tools/uninstall.sh" "$release_tools_root/uninstall.sh"
+        cp -a "$OBK_WORKSPACE"/tools/portable/*.sh "$release_tools_root/portable/"
+        cp -a "$OBK_WORKSPACE/release-tag.txt" "$data_root/release-tag.txt"
+        chmod 0755 "$release_tools_root/install.sh" "$release_tools_root/uninstall.sh"
+
         tar -C "$install_root" -czf "$output_dir/$artifact_name" .
 
         (

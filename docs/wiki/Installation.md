@@ -41,6 +41,20 @@ Release assets and available versions are listed on [GitHub Releases](https://gi
 bash tools/install.sh --version shanti-alpha.1 --verify-provenance
 ```
 
+Every release archive also contains the installer and uninstaller, so a downloaded archive needs no source checkout:
+
+```text
+share/openbangla-keyboard/tools/install.sh
+share/openbangla-keyboard/tools/uninstall.sh
+share/openbangla-keyboard/release-tag.txt
+```
+
+After extracting the archive into your home directory they are available under `~/.local/share/openbangla-keyboard/`, for example:
+
+```bash
+bash ~/.local/share/openbangla-keyboard/tools/uninstall.sh
+```
+
 ## Build from source
 
 For development or local builds:

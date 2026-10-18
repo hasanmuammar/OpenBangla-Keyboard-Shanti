@@ -185,6 +185,19 @@ jobs:
           test -f "$work/share/openbangla-keyboard/data/suffix.json"
           test -f "$work/share/openbangla-keyboard/data/regex.json"
 
+          # The archive must carry the user-facing scripts with their layout and
+          # release tag intact, so a download alone can install or uninstall.
+          test -f "$work/share/openbangla-keyboard/tools/install.sh"
+          test -x "$work/share/openbangla-keyboard/tools/install.sh"
+          test -f "$work/share/openbangla-keyboard/tools/uninstall.sh"
+          test -x "$work/share/openbangla-keyboard/tools/uninstall.sh"
+          test -f "$work/share/openbangla-keyboard/tools/portable/common.sh"
+          test -f "$work/share/openbangla-keyboard/tools/portable/install.sh"
+          test -f "$work/share/openbangla-keyboard/tools/portable/launch-bundled.sh"
+          test -f "$work/share/openbangla-keyboard/release-tag.txt"
+          bash -n "$work/share/openbangla-keyboard/tools/install.sh"
+          bash -n "$work/share/openbangla-keyboard/tools/uninstall.sh"
+
           if [[ "$BACKEND" == ibus ]]; then
             test -x "$work/libexec/ibus-engine-openbangla"
             test -f "$work/share/ibus/component/openbangla.xml"
@@ -227,6 +240,10 @@ jobs:
             rewrite_install_metadata
 
             test -f "$OBK_DATA_HOME/openbangla-keyboard/data/dictionary.json"
+            # The bundled scripts travel with the relocated data directory.
+            test -f "$OBK_DATA_HOME/openbangla-keyboard/tools/install.sh"
+            test -f "$OBK_DATA_HOME/openbangla-keyboard/tools/uninstall.sh"
+            test -f "$OBK_DATA_HOME/openbangla-keyboard/release-tag.txt"
             # Custom XDG_DATA_HOME must receive resources without a shadowing
             # copy left under the install prefix.
             test ! -e "$OBK_PREFIX/share/openbangla-keyboard"

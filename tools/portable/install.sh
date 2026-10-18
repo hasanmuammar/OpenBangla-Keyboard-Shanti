@@ -26,7 +26,7 @@ merge_openbangla_data() {
         die "Data merge destination is not a directory: $destination"
     fi
     mkdir -p "$destination"
-    for name in layouts data icons; do
+    for name in layouts data icons tools; do
         target="$destination/$name"
         [[ ! -L "$target" ]] ||
             die "Refusing to merge through a symlinked data subdirectory: $target"
@@ -91,6 +91,17 @@ merge_openbangla_data() {
                     fi
                     cp -a "$layout" "$target"
                 done
+                ;;
+            tools)
+                # Program-owned helper scripts: always refresh them so the
+                # bundled installer and uninstaller match the installed release.
+                mkdir -p "$destination/tools"
+                cp -a "$item/." "$destination/tools/"
+                ;;
+            release-tag.txt)
+                [[ ! -L "$destination/release-tag.txt" ]] ||
+                    die "Refusing to overwrite a symlinked release tag file: $destination/release-tag.txt"
+                cp -a -- "$item" "$destination/release-tag.txt"
                 ;;
             *)
                 # Preserve user-owned state files and other custom additions.
