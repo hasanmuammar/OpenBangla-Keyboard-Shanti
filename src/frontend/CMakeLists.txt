@@ -10,7 +10,9 @@ set(SRC_GUI
     AboutDialog.cpp
     AboutFile.cpp
     LayoutViewer.cpp
+    KeyboardWidget.cpp
     SettingsDialog.cpp
+    ToggleSwitch.cpp
     FlatpakIbusIntegration.cpp
     AutoCorrectDialog.cpp
     SingleInstance.cpp

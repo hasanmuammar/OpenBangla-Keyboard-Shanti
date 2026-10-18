@@ -26,6 +26,7 @@ class SettingsDialog;
 }
 
 class AutoCorrectDialog;
+class ToggleSwitch;
 class QLabel;
 class QPushButton;
 
@@ -33,7 +34,7 @@ class SettingsDialog : public QDialog {
 Q_OBJECT
 
 public:
-  explicit SettingsDialog(QWidget *parent = nullptr);
+  explicit SettingsDialog(bool darkMode, QWidget *parent = nullptr);
 
   ~SettingsDialog() override;
 
@@ -47,7 +48,11 @@ private:
   AutoCorrectDialog *autoCorrectDialog;
   QLabel *ibusIntegrationStatus;
   QPushButton *ibusIntegrationRemoveButton;
+  bool m_darkMode;
 
+  void applyTheme();
+  void setupSidebar();
+  void bindToggle(ToggleSwitch *sw, QLabel *status);
   void implementSignals();
   void saveSettings();
   void updateIbusIntegrationStatus();

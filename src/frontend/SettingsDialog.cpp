@@ -16,9 +16,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <QButtonGroup>
 #include <QCloseEvent>
+#include <QFile>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QIcon>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -27,15 +30,19 @@
 #include "Settings.h"
 #include "AutoCorrectDialog.h"
 #include "FlatpakIbusIntegration.h"
+#include "ToggleSwitch.h"
 
-SettingsDialog::SettingsDialog(QWidget *parent) :
+SettingsDialog::SettingsDialog(bool darkMode, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog),
     autoCorrectDialog(nullptr),
+    m_darkMode(darkMode),
     ibusIntegrationStatus(nullptr),
     ibusIntegrationRemoveButton(nullptr) {
   ui->setupUi(this);
-  autoCorrectDialog = new AutoCorrectDialog(this);
+  autoCorrectDialog = new AutoCorrectDialog(m_darkMode, this);
+
+  applyTheme();
 
   if (FlatpakIbusIntegration::isApplicable()) {
     auto *integrationGroup = new QGroupBox("GNOME IBus Integration", this);
@@ -48,7 +55,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     integrationLayout->addWidget(setupButton);
     integrationLayout->addWidget(ibusIntegrationRemoveButton);
     integrationGroup->setMinimumHeight(78);
-    ui->verticalLayout_2->insertWidget(1, integrationGroup);
+    ui->pageGeneralLayout->insertWidget(1, integrationGroup);
     resize(width(), height() + 88);
 
     connect(setupButton, &QPushButton::clicked, this, [this]() {
@@ -65,8 +72,49 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
   ui->cmbEncoding->insertItems(0, {"Unicode", "ANSI"});
   ui->cmbKarOrder->insertItems(0, {"Modern", "Old"});
 
+  setupSidebar();
   implementSignals();
   updateSettings();
+}
+
+void SettingsDialog::applyTheme() {
+  // Load the matching theme stylesheet. Applied on the dialog so it cascades
+  // to every child widget, including the ToggleSwitch qproperty colors.
+  QString qssPath = m_darkMode ? ":/styles/dark.qss" : ":/styles/light.qss";
+  QFile file(qssPath);
+  if (file.open(QFile::ReadOnly | QFile::Text)) {
+    setStyleSheet(QString::fromUtf8(file.readAll()));
+  }
+
+  // Icons ship in black/white variants; pick the one that reads on the theme.
+  QString theme = m_darkMode ? "white" : "black";
+  auto icon = [&](const QString &name) {
+    return QIcon(":/images/" + theme + "/" + name + ".svg");
+  };
+  ui->sidebarGeneral->setIcon(icon("settings"));
+  ui->sidebarPhonetic->setIcon(icon("translate"));
+  ui->sidebarFixed->setIcon(icon("layout"));
+  ui->pageGeneralIcon->setPixmap(icon("settings").pixmap(24, 24));
+  ui->pagePhoneticIcon->setPixmap(icon("translate").pixmap(24, 24));
+  ui->pageFixedIcon->setPixmap(icon("layout").pixmap(24, 24));
+}
+
+void SettingsDialog::setupSidebar() {
+  auto *group = new QButtonGroup(this);
+  group->setExclusive(true);
+  group->addButton(ui->sidebarGeneral, 0);
+  group->addButton(ui->sidebarPhonetic, 1);
+  group->addButton(ui->sidebarFixed, 2);
+  ui->sidebarGeneral->setChecked(true);
+  ui->pages->setCurrentIndex(0);
+  connect(group, QOverload<int>::of(&QButtonGroup::idClicked),
+          ui->pages, &QStackedWidget::setCurrentIndex);
+}
+
+void SettingsDialog::bindToggle(ToggleSwitch *sw, QLabel *status) {
+  auto update = [status](bool on) { status->setText(on ? "On" : "Off"); };
+  connect(sw, &QAbstractButton::toggled, status, update);
+  update(sw->isChecked());
 }
 
 SettingsDialog::~SettingsDialog() {
@@ -76,45 +124,27 @@ SettingsDialog::~SettingsDialog() {
 
 void SettingsDialog::implementSignals() {
   // General Group
-  connect(ui->btnEnterClosePW, &QPushButton::toggled, [=](bool checked) {
-    ui->btnEnterClosePW->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnIncludeEnglishPrevWin, &QPushButton::toggled, [=](bool checked) {
-    ui->btnIncludeEnglishPrevWin->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnSmartQuote, &QPushButton::toggled, [=](bool checked) {
-    ui->btnSmartQuote->setText(checked ? "On" : "Off");
-  });
-  
+  bindToggle(ui->btnEnterClosePW, ui->btnEnterClosePWStatus);
+  bindToggle(ui->btnIncludeEnglishPrevWin, ui->btnIncludeEnglishPrevWinStatus);
+  bindToggle(ui->btnSmartQuote, ui->btnSmartQuoteStatus);
+
   // Phonetic Keyboard Layout Group.
-  connect(ui->btnSuggestionPhonetic, &QPushButton::toggled, [=](bool checked) {
-    ui->btnSuggestionPhonetic->setText(checked ? "On" : "Off");
-    // Control other Preview window related settings.
-    ui->btnACUpdate->setEnabled(checked);
-  });
+  bindToggle(ui->btnSuggestionPhonetic, ui->btnSuggestionPhoneticStatus);
+  // Control other Preview window related settings.
+  connect(ui->btnSuggestionPhonetic, &QAbstractButton::toggled,
+          ui->btnACUpdate, &QWidget::setEnabled);
+  ui->btnACUpdate->setEnabled(ui->btnSuggestionPhonetic->isChecked());
   connect(ui->btnACUpdate, &QPushButton::clicked, [=]() {
     autoCorrectDialog->open();
   });
 
   // Fixed Keyboard Layout Group.
-  connect(ui->btnSuggestionFixed, &QPushButton::toggled, [=](bool checked) {
-    ui->btnSuggestionFixed->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnAutoVowel, &QPushButton::toggled, [=](bool checked) {
-    ui->btnAutoVowel->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnKarJoining, &QPushButton::toggled, [=](bool checked) {
-    ui->btnKarJoining->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnAutoChandra, &QPushButton::toggled, [=](bool checked) {
-    ui->btnAutoChandra->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnOldReph, &QPushButton::toggled, [=](bool checked) {
-    ui->btnOldReph->setText(checked ? "On" : "Off");
-  });
-  connect(ui->btnNumberpad, &QPushButton::toggled, [=](bool checked) {
-    ui->btnNumberpad->setText(checked ? "On" : "Off");
-  });
+  bindToggle(ui->btnSuggestionFixed, ui->btnSuggestionFixedStatus);
+  bindToggle(ui->btnAutoVowel, ui->btnAutoVowelStatus);
+  bindToggle(ui->btnKarJoining, ui->btnKarJoiningStatus);
+  bindToggle(ui->btnAutoChandra, ui->btnAutoChandraStatus);
+  bindToggle(ui->btnOldReph, ui->btnOldRephStatus);
+  bindToggle(ui->btnNumberpad, ui->btnNumberpadStatus);
 
   connect(ui->btnOK, &QPushButton::clicked, [=]() {
     saveSettings();
