@@ -13,6 +13,18 @@ require_linux() {
     [[ "$(uname -s)" == "Linux" ]] || die "This experimental installer supports Linux only."
 }
 
+normalize_home() {
+    local canonical_home
+    [[ "${HOME:-}" == /* && -d "$HOME" ]] ||
+        die "HOME must be an existing absolute directory."
+    canonical_home="$(realpath -e -- "$HOME")" ||
+        die "Could not normalize HOME safely."
+    [[ "$canonical_home" != "/" ]] ||
+        die "Refusing to use filesystem root as HOME."
+    HOME="$canonical_home"
+    export HOME
+}
+
 assert_no_symlink_components() {
     local path="$1" current="/" component
     local -a components=()
@@ -63,15 +75,8 @@ xdg_dir() {
 }
 
 prepare_paths() {
-    local data_home cache_home canonical_home
-    [[ "${HOME:-}" == /* && -d "$HOME" ]] ||
-        die "HOME must be an existing absolute directory."
-    canonical_home="$(realpath -e -- "$HOME")" ||
-        die "Could not normalize HOME safely."
-    [[ "$canonical_home" != "/" ]] ||
-        die "Refusing to use filesystem root as HOME."
-    HOME="$canonical_home"
-    export HOME
+    local data_home cache_home
+    normalize_home
 
     data_home="$(xdg_dir XDG_DATA_HOME "$HOME/.local/share")"
     cache_home="$(xdg_dir XDG_CACHE_HOME "$HOME/.cache")"

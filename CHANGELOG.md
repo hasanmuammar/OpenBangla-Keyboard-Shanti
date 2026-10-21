@@ -1,6 +1,8 @@
 # Change Log
 ## Unreleased
 
+* Deduplicated the uninstaller: `tools/uninstall.sh` now sources the bundled `tools/portable/common.sh` helper library instead of carrying its own copies of `die`, `log`, the mount-point safety check and the XDG/HOME canonicalization logic. Unsafe XDG values now fail closed instead of silently falling back to defaults.
+
 ## shanti-alpha.1.4
 
 * Pinned the system toolchain `PATH` for the Flatpak build steps in CI and release workflows, so a Homebrew `appstream` lacking the `appstream-compose` helper can never break the final `appstreamcli compose` step.

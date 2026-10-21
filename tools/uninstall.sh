@@ -1,38 +1,24 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-if [[ "${HOME:-}" != /* || ! -d "$HOME" ]]; then
-    printf 'Error: HOME must be an existing absolute directory.\n' >&2
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ -f "$SCRIPT_DIR/portable/common.sh" ]]; then
+    # The helper library ships beside this script in the checkout and inside
+    # every release archive. Never re-copy shared helpers into this file.
+    source "$SCRIPT_DIR/portable/common.sh"
+else
+    printf 'Error: tools/portable/common.sh helper library not found; run this script from the checkout or the release archive.\n' >&2
     exit 1
 fi
-HOME="$(realpath -e -- "$HOME")" || {
-    printf 'Error: Could not normalize HOME safely.\n' >&2
-    exit 1
-}
-if [[ "$HOME" == "/" ]]; then
-    printf 'Error: Refusing to use filesystem root as HOME.\n' >&2
-    exit 1
-fi
-export HOME
-PREFIX="$(realpath -m -- "$HOME/.local")" || {
-    printf 'Error: Could not normalize the install prefix safely.\n' >&2
-    exit 1
-}
 
-xdg_home() {
-    local variable="$1"
-    local fallback="$2"
-    local value="${!variable:-}"
-    if [[ "$value" == /* ]]; then
-        value="$(realpath -m -- "$value" 2>/dev/null)" || value=""
-    fi
-    [[ "$value" == /* && "$value" != "/" ]] || value=""
-    printf '%s\n' "${value:-$fallback}"
-}
+normalize_home
+PREFIX="$(realpath -m -- "$HOME/.local")" ||
+    die "Could not normalize the install prefix safely."
 
-DATA_HOME="$(xdg_home XDG_DATA_HOME "$HOME/.local/share")"
-CONFIG_HOME="$(xdg_home XDG_CONFIG_HOME "$HOME/.config")"
-CACHE_HOME="$(xdg_home XDG_CACHE_HOME "$HOME/.cache")"
+DATA_HOME="$(xdg_dir XDG_DATA_HOME "$HOME/.local/share")"
+CONFIG_HOME="$(xdg_dir XDG_CONFIG_HOME "$HOME/.config")"
+CACHE_HOME="$(xdg_dir XDG_CACHE_HOME "$HOME/.cache")"
 
 PURGE_CACHE=0
 PURGE_DATA=0
@@ -51,15 +37,6 @@ Options:
                   and autocorrect data. This is not removed by default.
   -h, --help      Show this help.
 EOF
-}
-
-die() {
-    printf 'Error: %s\n' "$*" >&2
-    exit 1
-}
-
-log() {
-    printf '==> %s\n' "$*"
 }
 
 is_allowed_openbangla_target() {
@@ -101,18 +78,6 @@ is_allowed_openbangla_target() {
 
     return 1
 }
-assert_no_nested_mounts() {
-    local path="$1" nested_mount
-    [[ -d "$path" && ! -L "$path" ]] ||
-        die "Refusing to inspect an invalid recursive-removal target: $path"
-    command -v mountpoint >/dev/null 2>&1 ||
-        die "Cannot verify mount boundaries because mountpoint is unavailable; refusing recursive removal of: $path"
-    nested_mount="$(find "$path" -type d -exec mountpoint -q -- {} \; -print -quit 2>/dev/null)" ||
-        die "Could not inspect mount boundaries safely; refusing recursive removal of: $path"
-    [[ -z "$nested_mount" ]] ||
-        die "Refusing recursive removal because the target contains a mount point: $nested_mount"
-}
-
 remove_path() {
     local path="$1"
     local allowed=0 root normalized normalized_parent normalized_root cache_target parent
