@@ -99,6 +99,13 @@ The smallest Rust-first milestone with immediate payoff: the engines stop linkin
 
 Strangler-fig order: core first, wrapper stays until the port is proven.
 
+**libibus GIR coverage scouting findings (2026-10-22, against Fedora 42 `IBus-1.0.gir`):**
+- The API surface `main.cpp` actually uses is **fully introspectable**: `ibus_bus_*` (new, get_connection, register_component, request_name, set_global_engine_async), `ibus_component_new`/`add_engine`, `ibus_engine_desc_new`, `ibus_factory_new`, `ibus_engine_new`, preedit/auxiliary/lookup-table updates (`update_preedit_text_with_mode`, `update_lookup_table_fast`, `update_auxiliary_text`, hide/commit), all `ibus_lookup_table_*` manipulators, `ibus_text_new_from_string`/`get_length`, plus `ibus_main`/`ibus_quit`.
+- All consumed engine signals are introspected with usable signatures, e.g. `process-key-event` → `gboolean (guint keyval, guint keycode, guint state)`; likewise `candidate-clicked`, `cursor-up/down`, `page-up/down`, `enable`, `disable`, `focus-in`, `focus-out`, `reset`, `property-activate`.
+- 164 non-introspectable entries are benign for us: type/instance/class macros (`*_CLASS`, `IS_*`, `GET_CLASS`), and the varargs constructors (`*_new_varargs`, `ibus_text_new_from_printf`, `ibus_x_event_new`, emoji/unicode-data ctors, `serializable_*_attachment`) — none on the engine path.
+- Quality caveats for generated bindings: several `IBusText` constructors are recorded with `return-value transfer-ownership="none"` (they actually produce floating `GInitiallyUnowned` refs), so generated Rust constructors would need ownership/metadata patching around text creation; `IBusText` and `IBusHotkeyProfile` similarly need annotation care. Signal wiring is fine.
+- Verdict: glib-rs via GIR would cover ~95% of the surface, but needs a maintained GIR file, generation tooling in CI, and ownership-annotation surgery on the IBusText constructors — binding-plumbing risk layered on top of the port itself.
+
 1. **Keysym tables single-sourced.** The per-platform `keycode.h` tables (ibus and fcitx) hold ~140 duplicated entries mapping platform enums → riti `VC_*`. Generate both engines' tables from one Rust source (`crates/shanti-keysyms`), emitting (a) the Rust map and (b) a tiny C header via cbindgen for any C++ shell still standing. (This codifies the known intentional duplication into build-time generation.)
 2. **Binding strategy for libibus** (scout, then pick — record in the decision log):
    - *Preferred if annotations suffice:* gir-generated glib-rs bindings for `ibus-1.0`. libibus is GObject-introspectable — verify coverage of `IBusEngine` and the text/property APIs our plugin uses (preedit, lookup table, auxiliary text, commit).
@@ -108,8 +115,8 @@ Strangler-fig order: core first, wrapper stays until the port is proven.
 4. Ship `ibus-engine-shanti` in parallel with the C++ engine (distinct engine descriptor, opt-in install path); run the real-desktop Bengali typing matrix (IBus × GNOME/other DEs, x86_64/aarch64) before flipping the default.
 
 **Task list:**
-- [x] Keysym tables generated from `crates/shanti-keysyms` (single source; C header emitted for the C++ shells still standing — hand-written like the other crate headers, not cbindgen). Real-desktop regression check still owed before release (engines now call the crate over the FFI path).
-- [ ] Scouting write-up for libibus GIR coverage, recorded in the decision log.
+- [x] Keysym tables generated from `crates/shanti-keysyms` (single source; C header emitted for the C++ shells still standing — hand-written like the other crate headers, not cbindgen). Real-desktop IBus typing check confirmed by the maintainer on 2026-10-22 (local Flatpak built from `rust-rewrite`); Fcitx5 real-desktop check still owed (maintainer has a test environment in progress).
+- [x] Scouting write-up for libibus GIR coverage, recorded in the decision log.
 - [ ] Rust engine implementation (preedit, lookup table, auxiliary, commits, config refresh, key filtering).
 - [ ] Parallel-run `ibus-engine-shanti` descriptor + opt-in packaging.
 - [ ] Real-desktop typing matrix; default flip decision recorded.
@@ -205,7 +212,7 @@ Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/
 | 2026-10-22 | Phase 1 started on branch `rust-rewrite`; narrowed to the IBus engine | Inspection showed the Fcitx5 module is already Qt-free (own INI reader). Decision 0 not required for phase 1: the new crates share no types with riti. |
 | 2026-10-22 | Keysym tables single-sourced in `crates/shanti-keysyms`; engines consume it over a hand-written C ABI header, not cbindgen | The C surface is one function (`shanti_keysyms_lookup`), far below cbindgen's threshold; hand-written headers match the phase-1 crate convention. Table verified 112/112 identical across the engines and against the real IBus and Fcitx enums (in-container probe); riti `VC_*` numbers resolved from the submodule header at build time so riti bumps need no regeneration. |
 | *(pending)* | Decision 0: vendor riti vs upstream submodule | Needed before phase 1 crates can share types with the core. |
-| *(pending)* | IBus binding strategy (gir bindings vs shrunken C++ wrapper) | Scout libibus GIR coverage first. |
+| 2026-10-22 | IBus binding strategy resolved to the **shrunken C++ wrapper**: engine logic moves into Rust behind a small C ABI; `main.cpp` shrinks to libibus plumbing. GIR/glib-rs (gir-generated) stays the documented alternative | Scouting verdict above: the used surface is introspectable, but gir-generation needs ownership-annotation surgery (`IBusText` ctors) plus CI generation tooling. The shrunken wrapper keeps all new risk in Rust logic, matches the strangler-fig plan default and the Fcitx5 model, and `main.cpp` is only ~550 lines — well below the effort threshold where hand-FFI stops being sensible. Revisit only if the GUI phase already produces a shared glib-rs layer that the engine could piggyback on. |
 | *(pending)* | GTK runtime + libadwaita pin (decided at phase 4 kickoff) | Newest stable GNOME runtime at start; no mid-phase switches. |
 
 *Update this log — with a commit — every time a pending row is resolved.*
