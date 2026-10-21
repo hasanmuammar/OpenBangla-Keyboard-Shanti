@@ -1,13 +1,36 @@
+/*
+ *  OpenBangla Keyboard
+ *  Copyright (C) 2015-2018 Muhammad Mominul Huque <mominul2082@gmail.com>
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*  IBus engine for OpenBangla Keyboard.
+ *
+ *  Qt-free since rewrite phase 1 (docs/REWRITE-PLAN.md): configuration is
+ *  read through the shanti-config crate (a read-only QSettings-store reader)
+ *  and path discovery through shanti-paths, mirroring the contracts of the
+ *  former src/shared Settings/UserFolders code the Qt GUI still uses. */
+
 #include <ibus.h>
-#include <QCoreApplication>
-#include <QDebug>
-#include <QFileInfo>
-#include <QStandardPaths>
+#include <cstring>
 #include <filesystem>
+#include <string>
 #include "riti.h"
 #include "keycode.h"
-#include "FileSystem.h"
-#include "Settings.h"
+#include "shanti-config.h"
+#include "shanti-paths.h"
 #include "Log.h"
 
 static RitiContext *ctx = nullptr;
@@ -20,49 +43,75 @@ static Suggestion *suggestion = nullptr;
 /* Unfortunately, we have to keep track of the right Alt Key. */
 static bool altGr = false;
 
-void update_with_settings() {
-  QString configuredLayoutPath = gSettings->getLayoutPath();
-  QString resolvedLayoutPath = configuredLayoutPath;
+/* shanti-config boolean getter with Settings.cpp default semantics. */
+static bool cfg_bool(const char *key, bool dflt) {
+  return shanti_config_get_bool(key, dflt ? 1 : 0) != 0;
+}
 
-  // The host GUI can save an absolute path to its layout file. When the
-  // engine runs in Flatpak, that host path may not exist inside the sandbox.
-  // Resolve bundled layouts by filename against the engine's own data tree.
-  if (!QFileInfo(resolvedLayoutPath).exists() &&
-      QFileInfo(resolvedLayoutPath).isAbsolute()) {
-    const QString bundledLayoutPath =
-        QDir(LayoutsFilePath()).filePath(QFileInfo(resolvedLayoutPath).fileName());
-    if (QFileInfo(bundledLayoutPath).isFile()) {
-      LOG_INFO("[IM:iBus]: Resolving inaccessible layout path to bundled file: %s\n",
-               bundledLayoutPath.toUtf8().constData());
-      resolvedLayoutPath = bundledLayoutPath;
+/* The host GUI can save an absolute path to its layout file. When the
+ * engine runs in Flatpak, that host path may not exist inside the sandbox.
+ * Resolve bundled layouts by filename against the engine's own data tree. */
+static std::string resolve_layout_path(const std::string &configuredPath) {
+  namespace fs = std::filesystem;
+  try {
+    if (!fs::exists(configuredPath) && fs::path(configuredPath).is_absolute()) {
+      char *dataDirC = shanti_paths_engine_data_dir();
+      fs::path dataDir = std::string(dataDirC ? dataDirC : "");
+      shanti_string_free(dataDirC);
+      fs::path bundled = dataDir / "layouts" / fs::path(configuredPath).filename();
+      if (fs::is_regular_file(bundled)) {
+        LOG_INFO("[IM:iBus]: Resolving inaccessible layout path to bundled file: %s\n",
+                 bundled.string().c_str());
+        return bundled.string();
+      }
     }
+  } catch (...) {
+    // Keep the configured path on any filesystem error.
+  }
+  return configuredPath;
+}
+
+std::string engine_data_dir() {
+  char *dataDirC = shanti_paths_engine_data_dir();
+  std::string dataDir(dataDirC ? dataDirC : "");
+  shanti_string_free(dataDirC);
+  return dataDir;
+}
+
+void update_with_settings() {
+  shanti_config_load();
+
+  char *layoutC = shanti_config_get_string("layout/path", "avro_phonetic");
+  std::string layoutPath = resolve_layout_path(layoutC ? layoutC : "");
+  shanti_string_free(layoutC);
+
+  if (!riti_config_set_layout_file(config, layoutPath.c_str())) {
+    LOG_ERROR("[IM:iBus]: Failed to set layout file: %s\n", layoutPath.c_str());
   }
 
-  const QByteArray layoutPathBytes = resolvedLayoutPath.toUtf8();
-  if (!riti_config_set_layout_file(config, layoutPathBytes.constData())) {
-    LOG_ERROR("[IM:iBus]: Failed to set layout file: %s\n",
-              resolvedLayoutPath.toUtf8().constData());
+  riti_config_set_suggestion_include_english(config, cfg_bool("settings/PreviewWin/IncludeEnglish", true));
+  riti_config_set_phonetic_suggestion(config, cfg_bool("settings/CandidateWin/Phonetic", true));
+
+  const std::string databaseDir = engine_data_dir() + "/data";
+  if (!riti_config_set_database_dir(config, databaseDir.c_str())) {
+    LOG_ERROR("[IM:iBus]: Failed to set database directory: %s\n", databaseDir.c_str());
   }
 
-  riti_config_set_suggestion_include_english(config, gSettings->getSuggestionIncludeEnglish());
-  riti_config_set_phonetic_suggestion(config, gSettings->getShowCWPhonetic());
+  riti_config_set_fixed_suggestion(config, cfg_bool("settings/FixedLayout/ShowPrevWin", true));
+  riti_config_set_fixed_auto_vowel(config, cfg_bool("settings/FixedLayout/AutoVowelForm", true));
+  riti_config_set_fixed_auto_chandra(config, cfg_bool("settings/FixedLayout/AutoChandraPos", true));
+  riti_config_set_fixed_traditional_kar(config, cfg_bool("settings/FixedLayout/TraditionalKar", false));
+  riti_config_set_fixed_old_kar_order(config, cfg_bool("settings/FixedLayout/OldKarOrder", false));
+  riti_config_set_fixed_old_reph(config, cfg_bool("settings/FixedLayout/OldReph", true));
+  riti_config_set_fixed_numpad(config, cfg_bool("settings/FixedLayout/NumberPad", true));
+  riti_config_set_ansi_encoding(config, cfg_bool("settings/ANSI", false));
+  riti_config_set_smart_quote(config, cfg_bool("settings/SmartQuoting", true));
 
-  if(!riti_config_set_database_dir(config, DatabasePath().toStdString().data())) {
-    LOG_ERROR("[IM:iBus]: Failed to set database directory: %s\n", DatabasePath().toStdString().data());
-  }
-  
-  riti_config_set_fixed_suggestion(config, gSettings->getShowPrevWinFixed());
-  riti_config_set_fixed_auto_vowel(config, gSettings->getAutoVowelFormFixed());
-  riti_config_set_fixed_auto_chandra(config, gSettings->getAutoChandraPosFixed());
-  riti_config_set_fixed_traditional_kar(config, gSettings->getTraditionalKarFixed());
-  riti_config_set_fixed_old_kar_order(config, gSettings->getFixedOldKarOrder());
-  riti_config_set_fixed_old_reph(config, gSettings->getOldReph());
-  riti_config_set_fixed_numpad(config, gSettings->getNumberPadFixed());
-  riti_config_set_ansi_encoding(config, gSettings->getANSIEncoding());
-  riti_config_set_smart_quote(config, gSettings->getSmartQuoting());
-
-  if(table != nullptr) {
-    ibus_lookup_table_set_orientation(table, gSettings->getCandidateWinHorizontal() ? IBUS_ORIENTATION_HORIZONTAL : IBUS_ORIENTATION_VERTICAL);
+  if (table != nullptr) {
+    ibus_lookup_table_set_orientation(
+        table,
+        cfg_bool("settings/CandidateWin/Horizontal", true) ? IBUS_ORIENTATION_HORIZONTAL
+                                                           : IBUS_ORIENTATION_VERTICAL);
   }
 }
 
@@ -94,7 +143,7 @@ void engine_update_lookup_table() {
 
     uintptr_t len = riti_suggestion_get_length(suggestion);
 
-    for(uintptr_t i = 0; i < len; i++) {
+    for (uintptr_t i = 0; i < len; i++) {
       char *txt = riti_suggestion_get_suggestion(suggestion, i);
       IBusText *text = ibus_text_new_from_string(txt);
       ibus_lookup_table_append_candidate(table, text);
@@ -116,7 +165,7 @@ void engine_reset() {
   ibus_engine_hide_lookup_table(engine);
 }
 
-void engine_commit_text(IBusText * text) {
+void engine_commit_text(IBusText *text) {
   ibus_engine_commit_text(engine, text);
   engine_reset();
 }
@@ -143,7 +192,7 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
   bool ctrl_key = false;
   bool alt_key = false;
 
-  if(!riti_context_ongoing_input_session(ctx)) {
+  if (!riti_context_ongoing_input_session(ctx)) {
     update_with_settings();
     riti_context_update_engine(ctx, config);
   }
@@ -151,12 +200,12 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
   // At first, handle the special keys.
   switch (keyval) {
     case IBUS_KEY_BackSpace:
-      if(riti_context_ongoing_input_session(ctx)) {
+      if (riti_context_ongoing_input_session(ctx)) {
         // Is Ctrl key is pressed?
         bool ctrl_mod = state & IBUS_CONTROL_MASK;
         suggestion = riti_context_backspace_event(ctx, ctrl_mod);
 
-        if(!riti_suggestion_is_empty(suggestion)) {
+        if (!riti_suggestion_is_empty(suggestion)) {
           engine_update_lookup_table();
         } else {
           engine_reset();
@@ -167,29 +216,29 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
         return FALSE;
       }
     case IBUS_KEY_Return:
-      if(riti_context_ongoing_input_session(ctx)) {
+      if (riti_context_ongoing_input_session(ctx)) {
         engine_commit();
-        return (gboolean) gSettings->getEnterKeyClosesPrevWin();
+        return (gboolean)cfg_bool("settings/EnterKeyClosesPrevWin", false);
       } else {
         return FALSE;
       }
     case IBUS_KEY_space:
     case IBUS_KEY_KP_Enter:
-      if(riti_context_ongoing_input_session(ctx)) {
+      if (riti_context_ongoing_input_session(ctx)) {
         engine_commit();
       }
       return FALSE;
     /** Arrow and Tab keys.
      * We use the arrow keys and the tab key to move the selection
-     * in the preview window. So we have to ensure the preview 
+     * in the preview window. So we have to ensure the preview
      * window is shown by checking if the current suggestion is
      * not a lonely one. Otherwise we don't handle it.
      **/
     case IBUS_KEY_Right:
     case IBUS_KEY_Left:
-      if(riti_context_ongoing_input_session(ctx)) {
-        if(gSettings->getCandidateWinHorizontal() && !riti_suggestion_is_lonely(suggestion)) {
-          if(keyval == IBUS_KEY_Right) {
+      if (riti_context_ongoing_input_session(ctx)) {
+        if (cfg_bool("settings/CandidateWin/Horizontal", true) && !riti_suggestion_is_lonely(suggestion)) {
+          if (keyval == IBUS_KEY_Right) {
             ibus_lookup_table_cursor_down(table);
           } else {
             ibus_lookup_table_cursor_up(table);
@@ -205,9 +254,9 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
       }
     case IBUS_KEY_Up:
     case IBUS_KEY_Down:
-      if(riti_context_ongoing_input_session(ctx)) {
-        if(!gSettings->getCandidateWinHorizontal() && !riti_suggestion_is_lonely(suggestion)) {
-          if(keyval == IBUS_KEY_Up) {
+      if (riti_context_ongoing_input_session(ctx)) {
+        if (!cfg_bool("settings/CandidateWin/Horizontal", true) && !riti_suggestion_is_lonely(suggestion)) {
+          if (keyval == IBUS_KEY_Up) {
             ibus_lookup_table_cursor_up(table);
           } else {
             ibus_lookup_table_cursor_down(table);
@@ -222,8 +271,8 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
         return FALSE;
       }
     case IBUS_KEY_Tab:
-      if(riti_context_ongoing_input_session(ctx)) {
-        if(!riti_suggestion_is_lonely(suggestion)) {
+      if (riti_context_ongoing_input_session(ctx)) {
+        if (!riti_suggestion_is_lonely(suggestion)) {
           ibus_lookup_table_cursor_down(table);
           engine_update_preedit();
           return TRUE;
@@ -245,7 +294,7 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
     case IBUS_KEY_Alt_L:
     case IBUS_KEY_Meta_L:
     case IBUS_KEY_Meta_R:
-      return (gboolean) riti_context_ongoing_input_session(ctx);
+      return (gboolean)riti_context_ongoing_input_session(ctx);
     default:
       break;
   }
@@ -267,15 +316,15 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
   uint16_t key = ibus_keycode(keyval);
 
   // Reject the key which has only Ctrl or Alt (not the right one) combination and riti doesn't handle.
-  if((ctrl_key && !alt_key) || (!ctrl_key && alt_key && !altGr) || key == VC_UNKNOWN) {
-    if(riti_context_ongoing_input_session(ctx)) {
+  if ((ctrl_key && !alt_key) || (!ctrl_key && alt_key && !altGr) || key == VC_UNKNOWN) {
+    if (riti_context_ongoing_input_session(ctx)) {
       engine_commit();
     }
     return FALSE;
   }
 
   // If we have Ctrl and Alt combination or the right Alt, set it as the AltGr modifier.
-  if((ctrl_key && alt_key) || altGr) {
+  if ((ctrl_key && alt_key) || altGr) {
     modifier |= MODIFIER_ALT_GR;
   }
 
@@ -287,7 +336,7 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
 
   suggestion = riti_get_suggestion_for_key(ctx, key, modifier, index);
 
-  if(!riti_suggestion_is_empty(suggestion)) {
+  if (!riti_suggestion_is_empty(suggestion)) {
     engine_update_lookup_table();
   } else {
     // Corner case: When old style kar typing is enabled, a lonely suggestion and an empty
@@ -302,17 +351,17 @@ gboolean engine_process_key(guint keyval, guint keycode, guint state) {
 /************************************* Callbacks *************************************/
 
 gboolean engine_process_key_event_cb(IBusEngine *engine,
-                                   guint keyval,
-                                   guint keycode,
-                                   guint state) {
+                                     guint keyval,
+                                     guint keycode,
+                                     guint state) {
   // Don't accept Key Release event
   if (state & IBUS_RELEASE_MASK) {
-    if(keyval == IBUS_KEY_Alt_R || keyval == IBUS_KEY_ISO_Level3_Shift) {
+    if (keyval == IBUS_KEY_Alt_R || keyval == IBUS_KEY_ISO_Level3_Shift) {
       altGr = false;
     }
     return FALSE;
   }
-  
+
   gboolean ret = engine_process_key(keyval, keycode, state);
   LOG_DEBUG("[IM:iBus]: Key event was %s\n", ret ? "accepted" : "rejected");
   return ret;
@@ -331,7 +380,7 @@ void engine_disable_cb(IBusEngine *engine) {
 void engine_focus_out_cb(IBusEngine *engine) {
   LOG_DEBUG("[IM:iBus]: IM Focus out\n");
 
-  if(riti_context_ongoing_input_session(ctx)) {
+  if (riti_context_ongoing_input_session(ctx)) {
     riti_context_finish_input_session(ctx);
     engine_reset();
   }
@@ -340,7 +389,7 @@ void engine_focus_out_cb(IBusEngine *engine) {
 void engine_reset_cb(IBusEngine *engine) {
   LOG_DEBUG("[IM:iBus]: IM Reset\n");
 
-  if(riti_context_ongoing_input_session(ctx)) {
+  if (riti_context_ongoing_input_session(ctx)) {
     riti_context_finish_input_session(ctx);
     engine_reset();
   }
@@ -353,8 +402,8 @@ void engine_candidate_clicked_cb(IBusEngine *engine, guint index, guint button, 
 }
 
 IBusEngine *create_engine_cb(IBusFactory *factory,
-                                  gchar *engine_name,
-                                  gpointer user_data) {
+                             gchar *engine_name,
+                             gpointer user_data) {
   id += 1;
   gchar *path = g_strdup_printf("/org/freedesktop/IBus/Engine/%i", id);
   engine = ibus_engine_new(engine_name,
@@ -404,12 +453,12 @@ void start_setup(bool ibus) {
         std::filesystem::read_symlink("/proc/self/exe", executableError);
     const std::string engineCommand =
         "\"" + (executableError ? std::string("ibus-engine-openbangla")
-                                   : executablePath.string()) +
+                                : executablePath.string()) +
         "\" --ibus";
-    const std::string iconPath =
-        (QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) +
-         "/openbangla-keyboard/icons/OpenBangla-Keyboard.png")
-            .toStdString();
+
+    char *iconC = shanti_paths_user_icon_file();
+    const std::string iconPath = iconC ? std::string(iconC) : std::string();
+    shanti_string_free(iconC);
 
     component = ibus_component_new("org.freedesktop.IBus.OpenBangla",
                                    "OpenBangla Keyboard",
@@ -438,18 +487,19 @@ void start_setup(bool ibus) {
   ibus_main();
 }
 
-int main(int argc, char* argv[]) {
-    QCoreApplication qtApp(argc, argv);
+int main(int argc, char *argv[]) {
+  // Keep the UserFolders side effect: the user data tree (and its layouts
+  // directory) is created by the engine too, exactly as before.
+  shanti_paths_ensure_user_dirs();
 
-    gSettings = new Settings();
-    UserFolders folders;
-    config = riti_config_new();
-    update_with_settings();
-    initKeycode();
-    ctx = riti_context_new_with_config(config);
+  shanti_config_load();
+  config = riti_config_new();
+  update_with_settings();
+  initKeycode();
+  ctx = riti_context_new_with_config(config);
 
-    start_setup(argc > 1 && strcmp(argv[1], "--ibus") == 0);
+  start_setup(argc > 1 && strcmp(argv[1], "--ibus") == 0);
 
-    riti_context_free(ctx);
-    return 0;
+  riti_context_free(ctx);
+  return 0;
 }

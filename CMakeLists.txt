@@ -18,6 +18,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(cmake/corrosion-rs)
 find_package(Qt5 COMPONENTS Widgets Network Svg DBus REQUIRED)
 
+# Rust crates shared by the engine plugins (shanti-config, shanti-paths);
+# imported as CMake targets so the engines can link them directly.
+add_subdirectory(crates)
+
 message(STATUS "Qt5 framework version: ${Qt5Core_VERSION}")
 
 if(NOT CMAKE_BUILD_TYPE)

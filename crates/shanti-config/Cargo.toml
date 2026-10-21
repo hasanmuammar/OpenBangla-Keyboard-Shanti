@@ -1,0 +1,13 @@
+[package]
+name = "shanti-config"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+description = "Read-only parser for the OpenBangla Keyboard settings store ($XDG_CONFIG_HOME/OpenBangla/Keyboard.conf), byte-compatible with what QSettings (\"OpenBangla\", \"Keyboard\") writes on Linux."
+publish = false
+
+[lib]
+crate-type = ["lib", "staticlib"]
+
+[dependencies]
+shanti-paths = { path = "../shanti-paths" }

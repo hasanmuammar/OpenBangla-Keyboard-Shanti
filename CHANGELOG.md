@@ -1,6 +1,8 @@
 # Change Log
 ## Unreleased
 
+* The IBus engine is now Qt-free (rewrite phase 1): settings and path discovery moved to the new `shanti-config` and `shanti-paths` Rust crates, which read the same `~/.config/OpenBangla/Keyboard.conf` store written by the Qt GUI and mirror the `FileSystem.cpp` path contracts exactly. The GUI and the Fcitx5 addon are unchanged.
+* `package-test.yml` now asserts the shipped IBus engine binary links no Qt libraries, locking the phase-1 contract into CI.
 * Deduplicated the uninstaller: `tools/uninstall.sh` now sources the bundled `tools/portable/common.sh` helper library instead of carrying its own copies of `die`, `log`, the mount-point safety check and the XDG/HOME canonicalization logic. Unsafe XDG values now fail closed instead of silently falling back to defaults.
 
 ## shanti-alpha.1.4
