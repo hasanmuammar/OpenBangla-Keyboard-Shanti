@@ -71,4 +71,35 @@ This downloads the build dependencies and can take several minutes. Then launch 
 flatpak run org.openbangla.Shanti.IBus
 ```
 
+### Troubleshooting: build fails at `appstreamcli compose`
+
+`flatpak-builder` finishes by running `appstreamcli compose`. If the
+`appstreamcli` found on `PATH` was installed without its compose helper — for
+example a Homebrew `appstream` on Bluefin, Bazzite and other atomic desktops —
+the build fails near the end with:
+
+```
+AppStream Compose binary '…/libexec/appstreamcli-compose' was not found!
+Error: appstreamcli compose failed
+```
+
+The helper path is compiled into `appstreamcli`. On Bluefin-style systems the
+system helper already exists at `/usr/libexec/appstreamcli-compose`; expose it
+where the Homebrew AppStream expects it and rebuild:
+
+```sh
+brew_cellar="$(brew --cellar appstream)/$(brew list --versions appstream | cut -d' ' -f2)"
+mkdir -p "$brew_cellar/libexec"
+ln -s /usr/libexec/appstreamcli-compose "$brew_cellar/libexec/appstreamcli-compose"
+```
+
+Alternatively, build with the sandboxed Flatpak Builder app, which does not
+use the host's `appstreamcli`:
+
+```sh
+flatpak run org.flatpak.Builder --user --install --force-clean \
+  --default-branch=stable \
+  /tmp/shanti-ibus-build tools/flatpak/shanti-ibus.yml
+```
+
 The release bundles are direct downloads, not a Flatpak remote. If installation says the required runtime was not found, check that Flathub is added to the same installation scope. Then run the explicit runtime install above, omitting `--user` for a system-wide install. The Flatpak and portable installer are separate installations.

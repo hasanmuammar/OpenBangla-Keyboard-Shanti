@@ -43,6 +43,9 @@ jobs:
       - name: Build Flatpak bundle
         env:
           FLATPAK_ARCH: ${{ matrix.arch }}
+          # Use the distro AppStream tools: a Homebrew appstream on PATH may
+          # lack the appstream-compose helper flatpak-builder needs to finish.
+          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           flatpak-builder --disable-rofiles-fuse --force-clean --user \
             --default-branch=stable \
