@@ -198,15 +198,18 @@ jobs:
           bash -n "$work/share/openbangla-keyboard/tools/install.sh"
           bash -n "$work/share/openbangla-keyboard/tools/uninstall.sh"
 
-          # Rewrite phase 1 contract: the IBus engine must be Qt-free (its
-          # settings/paths support moved to the Rust shanti-config and
-          # shanti-paths crates; see docs/REWRITE-PLAN.md).
-          ibus_engine="$work/libexec/ibus-engine-openbangla"
-          test -x "$ibus_engine"
-          if ldd "$ibus_engine" | grep -qi 'libQt'; then
-            echo "IBus engine links Qt libraries (must be Qt-free):" >&2
-            ldd "$ibus_engine" | grep -i 'libQt' >&2
-            exit 1
+          # Rewrite phase 1 contract: the shipped IBus engine must be Qt-free
+          # (its settings/paths support moved to the Rust shanti-config and
+          # shanti-paths crates; see docs/REWRITE-PLAN.md). IBus backend only:
+          # the fcitx archive does not carry the ibus engine binary.
+          if [ "$BACKEND" = "ibus" ]; then
+            ibus_engine="$work/libexec/ibus-engine-openbangla"
+            test -x "$ibus_engine"
+            if ldd "$ibus_engine" | grep -qi 'libQt'; then
+              echo "IBus engine links Qt libraries (must be Qt-free):" >&2
+              ldd "$ibus_engine" | grep -i 'libQt' >&2
+              exit 1
+            fi
           fi
 
           if [[ "$BACKEND" == ibus ]]; then
