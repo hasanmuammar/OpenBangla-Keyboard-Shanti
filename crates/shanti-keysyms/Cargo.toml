@@ -1,0 +1,12 @@
+[package]
+name = "shanti-keysyms"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+description = "Single source of truth for the key event keysym -> riti virtual-key mapping shared by the IBus and Fcitx5 engines."
+publish = false
+
+[lib]
+crate-type = ["lib", "staticlib"]
+
+[dependencies]

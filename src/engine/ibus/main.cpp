@@ -495,7 +495,6 @@ int main(int argc, char *argv[]) {
   shanti_config_load();
   config = riti_config_new();
   update_with_settings();
-  initKeycode();
   ctx = riti_context_new_with_config(config);
 
   start_setup(argc > 1 && strcmp(argv[1], "--ibus") == 0);

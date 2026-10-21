@@ -91,7 +91,7 @@ The smallest Rust-first milestone with immediate payoff: the engines stop linkin
 - [x] Rewire `src/engine/ibus/main.cpp` off Qt (`QCoreApplication`, `QStandardPaths`, `QFileInfo`, `QString`/`QDir` → `std::filesystem` + the new crates' C ABI).
 - [x] CMake: root imports the crates via corrosion; IBus engine no longer links `libShared`/`Qt5::Core`; Fcitx5 module unchanged (already Qt-free).
 - [x] package-test.yml: engine-binary Qt-free assertion (archive validation); CHANGELOG entry.
-- [ ] Real-desktop Bengali typing check through IBus (agent cannot do this — flagged for the maintainer).
+- [x] Real-desktop Bengali typing check through IBus — confirmed by the maintainer on 2026-10-22 (IBus Flatpak works fine).
 
 **AC:** package-test gains a step proving `lddtree`/`ldd` of the portable archive's `ibus-engine-openbangla` contain **no Qt5 libraries**; `--check-data` and offscreen GUI checks stay green (GUI still builds with Qt); no regression in real-desktop Bengali typing.
 
@@ -108,7 +108,7 @@ Strangler-fig order: core first, wrapper stays until the port is proven.
 4. Ship `ibus-engine-shanti` in parallel with the C++ engine (distinct engine descriptor, opt-in install path); run the real-desktop Bengali typing matrix (IBus × GNOME/other DEs, x86_64/aarch64) before flipping the default.
 
 **Task list:**
-- [ ] Keysym tables generated from `crates/shanti-keysyms` (single source; cbindgen C header emitted only if a C++ shell still needs it).
+- [x] Keysym tables generated from `crates/shanti-keysyms` (single source; C header emitted for the C++ shells still standing — hand-written like the other crate headers, not cbindgen). Real-desktop regression check still owed before release (engines now call the crate over the FFI path).
 - [ ] Scouting write-up for libibus GIR coverage, recorded in the decision log.
 - [ ] Rust engine implementation (preedit, lookup table, auxiliary, commits, config refresh, key filtering).
 - [ ] Parallel-run `ibus-engine-shanti` descriptor + opt-in packaging.
@@ -203,6 +203,7 @@ Through phase 1, upstream-merge semantics stay mostly intact except `src/shared/
 |---|---|---|
 | 2026-10-22 | Plan created; phase 1 defined as the first milestone | Settings/paths are small and testable and de-Qt the engines independently of the GUI. |
 | 2026-10-22 | Phase 1 started on branch `rust-rewrite`; narrowed to the IBus engine | Inspection showed the Fcitx5 module is already Qt-free (own INI reader). Decision 0 not required for phase 1: the new crates share no types with riti. |
+| 2026-10-22 | Keysym tables single-sourced in `crates/shanti-keysyms`; engines consume it over a hand-written C ABI header, not cbindgen | The C surface is one function (`shanti_keysyms_lookup`), far below cbindgen's threshold; hand-written headers match the phase-1 crate convention. Table verified 112/112 identical across the engines and against the real IBus and Fcitx enums (in-container probe); riti `VC_*` numbers resolved from the submodule header at build time so riti bumps need no regeneration. |
 | *(pending)* | Decision 0: vendor riti vs upstream submodule | Needed before phase 1 crates can share types with the core. |
 | *(pending)* | IBus binding strategy (gir bindings vs shrunken C++ wrapper) | Scout libibus GIR coverage first. |
 | *(pending)* | GTK runtime + libadwaita pin (decided at phase 4 kickoff) | Newest stable GNOME runtime at start; no mid-phase switches. |
