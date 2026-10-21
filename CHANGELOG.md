@@ -1,6 +1,12 @@
 # Change Log
 ## Unreleased
 
+## shanti-alpha.1.4
+
+* Pinned the system toolchain `PATH` for the Flatpak build steps in CI and release workflows, so a Homebrew `appstream` lacking the `appstream-compose` helper can never break the final `appstreamcli compose` step.
+* Documented the `appstreamcli compose` local build failure seen on Bluefin, Bazzite and other atomic desktops, with two fixes: exposing the system compose helper to the Homebrew AppStream, or building with the sandboxed `org.flatpak.Builder` app.
+* The Flatpak metadata now advertises the release version, so `flatpak list` and software centers show it instead of a blank version.
+
 ## shanti-alpha.1.3
 
 * Include `install.sh`, `uninstall.sh`, their `portable/` helpers and `release-tag.txt` inside portable release archives, so a downloaded tarball can install or uninstall without a source checkout.
