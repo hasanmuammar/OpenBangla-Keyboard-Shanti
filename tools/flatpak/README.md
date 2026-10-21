@@ -55,7 +55,25 @@ sha256sum --check shanti-ibus-x86_64.flatpak.sha256
 
 Use the aarch64 checksum filename for an ARM64 download. Releases also include GitHub build-provenance attestations; see GitHub's [artifact attestation verification](https://cli.github.com/manual/gh_attestation_verify) documentation if you want to verify one with `gh`.
 
-## Build locally
+# Build locally
+
+### Test a CI build from a branch or PR
+
+Every push (including PR branches) already builds Flatpak bundles in CI and
+uploads them as downloadable artifacts, named `shanti-ibus-flatpak-x86_64`
+and `shanti-ibus-flatpak-aarch64`. Grab them with `gh` using the run ID:
+
+```sh
+gh -R hasanmuammar/OpenBangla-Keyboard-Shanti run list --branch rust-rewrite
+gh -R hasanmuammar/OpenBangla-Keyboard-Shanti run download <run-id> \
+  -n shanti-ibus-flatpak-x86_64 -D /tmp/shanti-flatpak-test
+flatpak install --user --reinstall /tmp/shanti-flatpak-test/shanti-ibus-x86_64.flatpak
+```
+
+Then follow [Install and add the GNOME input source](#install-and-add-the-gnome-input-source).
+Log out and back in so IBus picks up the updated engine.
+
+### Build from a checkout
 
 To build and install from a checkout, use Flatpak Builder on a Linux host with Flatpak and Flatpak Builder installed:
 
@@ -70,6 +88,19 @@ This downloads the build dependencies and can take several minutes. Then launch 
 ```sh
 flatpak run org.openbangla.Shanti.IBus
 ```
+
+> Tip: `flatpak-builder` requires its state directory (default
+> `.flatpak-builder` inside the checkout) to be on the **same filesystem** as
+> the target directory. If your clone lives on a different filesystem than
+> `/tmp`, pass a matching `--state-dir`:
+>
+> ```sh
+> mkdir -p /tmp/opencode
+> flatpak-builder --user --install --force-clean \
+>   --state-dir=/tmp/opencode/flatpak-build-state \
+>   --default-branch=stable \
+>   /tmp/shanti-ibus-build tools/flatpak/shanti-ibus.yml
+> ```
 
 ### Troubleshooting: build fails at `appstreamcli compose`
 

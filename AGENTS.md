@@ -55,7 +55,7 @@ QT_QPA_PLATFORM=offscreen ~/.local/bin/openbangla-gui --check-data
 
 - For installer changes run `bash tools/install.sh` then `bash tools/uninstall.sh`; verify IBus registration with `ibus list-engine | grep -i -A3 -B2 openbangla`.
 - Engine behavior changes require actually typing Bangla in a real desktop/input-method session — CI/packaging checks do not cover that, and a successful Flatpak bundle build does not prove host IBus integration works.
-- Local Flatpak builds use `tools/flatpak/shanti-ibus.yml` (see its README); `appstreamcli compose` is known to fail on atomic distros (Bluefin, Bazzite) — see the shanti-alpha.1.4 CHANGELOG entry and docs/wiki/Development.md for the fixes.
+- Local Flatpak builds use `tools/flatpak/shanti-ibus.yml` (see its README); `appstreamcli compose` is known to fail on atomic distros (Bluefin, Bazzite) — see the shanti-alpha.1.4 CHANGELOG entry and docs/wiki/Development.md for the fixes. Every CI push, including PR branches, builds a Flatpak and uploads it as a downloadable artifact (`shanti-ibus-flatpak-x86_64` / `-aarch64`); the README documents testing a PR build with `gh run download` — this is the way to validate engine changes on a real desktop before release. Local builder gotcha: `flatpak-builder`'s state dir must be on the same filesystem as the target dir (pass `--state-dir` under `/tmp` if the clone lives elsewhere).
 
 ## Releases
 
