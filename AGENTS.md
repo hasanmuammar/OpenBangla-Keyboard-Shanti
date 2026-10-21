@@ -4,7 +4,7 @@
 
 Linux-only fork of OpenBangla Keyboard (Qt5 Bengali input method). Remotes: `origin` = this fork (`hasanmuammar/OpenBangla-Keyboard-Shanti`), `upstream` = `OpenBangla/OpenBangla-Keyboard`. All fork development happens on the `develop` branch; Windows/macOS are out of scope.
 
-Layout: `src/engine/` (C++ IBus and Fcitx5 engine plugins, `common/`, plus the `riti` Rust transliteration engine built as a static lib via corrosion), `src/frontend/` (Qt5 GUI → the `openbangla-gui` binary), `src/ibus` engine binary is `ibus-engine-openbangla`, `src/shared/` (shared C++ utilities), `src/platform/` (Rust platform support). Keyboard layouts and language data live in `data/`. Fork-specific docs belong in `docs/wiki/`. The Flatpak manifest and guide are in `tools/flatpak/`, and CI workflows are in `.github/workflows/`.
+Layout: `src/engine/` (C++ IBus and Fcitx5 engine plugins, `common/`, plus the `riti` Rust transliteration engine built as a static lib via corrosion), `src/frontend/` (Qt5 GUI → the `openbangla-gui` binary), `src/ibus` engine binary is `ibus-engine-openbangla`, `src/shared/` (shared C++ utilities), `src/platform/` (Rust platform support). Keyboard layouts and language data live in `data/`. Fork-specific docs belong in `docs/wiki/`. The Flatpak manifest and guide are in `tools/flatpak/`, and CI workflows are in `.github/workflows/`. The adopted `docs/REWRITE-PLAN.md` is the phased roadmap for the eventual Rust (core) + GTK4/libadwaita (GUI) rewrite — consult it and its decision log before any rewrite-adjacent work.
 
 ## Submodules — required before building
 
