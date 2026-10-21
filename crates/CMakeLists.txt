@@ -25,3 +25,8 @@ corrosion_import_crate(
     MANIFEST_PATH shanti-keysyms/Cargo.toml
     CRATE_TYPES staticlib
 )
+
+corrosion_import_crate(
+    MANIFEST_PATH shanti-core/Cargo.toml
+    CRATE_TYPES staticlib
+)

@@ -26,7 +26,12 @@ const RITI_HEADER: &str = include_str!("../../../src/engine/riti/include/riti.h"
 /// Fallback for `VC_UNKNOWN`, which riti's generated header does not define.
 /// Both engine `keycode.h` files historically used this exact constant; the
 /// tests assert it stays in agreement if riti ever starts defining the name.
-const VC_UNKNOWN_FALLBACK: u16 = 0x0046;
+pub const VC_UNKNOWN_FALLBACK: u16 = 0x0046;
+
+/// Value riti assigns to its `VC_UNKNOWN` virtual key. Not present in
+/// riti's generated header, but engine `keycode.h` files historically used
+/// this exact constant; the lookup fallback must agree with it.
+pub const VC_UNKNOWN_VALUE: u16 = VC_UNKNOWN_FALLBACK;
 
 /// `#define VC_*  <number>` entries parsed from the committed riti header.
 fn riti_vc_defines() -> &'static [(&'static str, u16)] {
