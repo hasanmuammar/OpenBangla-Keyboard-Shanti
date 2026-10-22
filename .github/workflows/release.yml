@@ -119,8 +119,10 @@ jobs:
             build-dir-fcitx tools/flatpak/fcitx-addon.yml
           # The addon is committed as a runtime ref (see the manifest
           # comment); bundle it with --runtime and its actual branch.
-          ref=$(flatpak repo --refs flatpak-repo-fcitx \
-            | grep -F "org.fcitx.Fcitx5.Addon.Shanti/$FLATPAK_ARCH" | head -n1)
+          # (List the refs via the repo's refs/heads layout.)
+          ref_path=$(find flatpak-repo-fcitx/refs/heads \
+            -path "*org.fcitx.Fcitx5.Addon.Shanti/$FLATPAK_ARCH*" | head -n1)
+          ref=${ref_path#flatpak-repo-fcitx/refs/heads/}
           echo "addon ref: $ref"
           kind=$(echo "$ref" | cut -d/ -f1)
           branch=$(echo "$ref" | cut -d/ -f4)
