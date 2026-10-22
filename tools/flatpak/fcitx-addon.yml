@@ -1,0 +1,55 @@
+# Fcitx5 engine addon for the Flathub Fcitx5 Flatpak.
+#
+# Flatpak requires Fcitx5 addons to be extensions of Flathub's
+# org.fcitx.Fcitx5 app with IDs under org.fcitx.Fcitx5.Addon.* — the parent
+# manifest (fcitx/flatpak-fcitx5) declares that extension point:
+#
+#   add-extensions:
+#     org.fcitx.Fcitx5.Addon:
+#       version: master
+#       directory: addons
+#       subdirectories: true
+#       add-ld-path: lib
+#       no-autodownload: true
+#
+# Installing this addon makes Flatpak pull org.fcitx.Fcitx5 (and its
+# org.kde.Platform//6.11 runtime) from Flathub automatically. The build runs
+# against the parent app (its Fcitx5Core headers/libs are what the addon
+# links to) exactly like the other Flathub Fcitx5 addons (Sayura, Hangul).
+#
+# Note: the Qt5 settings GUI is not built here (BUILD_FRONTEND=OFF,
+# no Qt5 in the Fcitx5 runtime); the Fcitx5 config dialog's launcher entry
+# therefore cannot open the GUI. Engine, layouts and data files install to
+# /app/addons/Shanti, mounted into the parent at runtime.
+app-id: org.fcitx.Fcitx5.Addon.Shanti
+branch: master
+runtime: org.fcitx.Fcitx5
+runtime-version: master
+sdk: org.kde.Sdk//6.11
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+build-extension: true
+separate-locales: false
+build-options:
+  prefix: /app/addons/Shanti
+  append-path: /usr/lib/sdk/rust-stable/bin
+  prepend-pkg-config-path: /app/addons/Shanti/lib/pkgconfig
+  build-args:
+    - --share=network
+
+cleanup:
+  - /include
+  - "*.la"
+
+modules:
+  - name: shanti-keyboard
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_FRONTEND=OFF
+      - -DENABLE_IBUS=OFF
+      - -DENABLE_FCITX=ON
+    sources:
+      - type: dir
+        path: ../..
