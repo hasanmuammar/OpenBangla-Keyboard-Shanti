@@ -47,8 +47,10 @@ modules:
       - sed -i 's/^Name=Shanti Keyboard$/Name=Shanti Keyboard (IBus)/; s/^Icon=shanti-keyboard$/Icon=org.shanti.ShantiIbus/' /app/share/applications/org.shanti.ShantiIbus.desktop
       - rm /app/share/applications/shanti-keyboard.desktop
       - install -Dm644 /app/share/icons/hicolor/16x16/apps/shanti-keyboard.png /app/share/icons/hicolor/16x16/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 /app/share/icons/hicolor/24x24/apps/shanti-keyboard.png /app/share/icons/hicolor/24x24/apps/org.shanti.ShantiIbus.png
       - install -Dm644 /app/share/icons/hicolor/32x32/apps/shanti-keyboard.png /app/share/icons/hicolor/32x32/apps/org.shanti.ShantiIbus.png
       - install -Dm644 /app/share/icons/hicolor/48x48/apps/shanti-keyboard.png /app/share/icons/hicolor/48x48/apps/org.shanti.ShantiIbus.png
+      - install -Dm644 /app/share/icons/hicolor/64x64/apps/shanti-keyboard.png /app/share/icons/hicolor/64x64/apps/org.shanti.ShantiIbus.png
       - install -Dm644 /app/share/icons/hicolor/128x128/apps/shanti-keyboard.png /app/share/icons/hicolor/128x128/apps/org.shanti.ShantiIbus.png
       - install -Dm644 /app/share/icons/hicolor/512x512/apps/shanti-keyboard.png /app/share/icons/hicolor/512x512/apps/org.shanti.ShantiIbus.png
       - install -Dm644 /app/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml /app/share/metainfo/org.shanti.ShantiIbus.metainfo.xml

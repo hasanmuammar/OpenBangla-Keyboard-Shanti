@@ -15,12 +15,20 @@ if(OS_LINUX)
                 DESTINATION ${DATADIR}/icons/hicolor/16x16/apps/
                 RENAME shanti-keyboard.png)
 
+        install(FILES ${CMAKE_SOURCE_DIR}/data/24.png
+                DESTINATION ${DATADIR}/icons/hicolor/24x24/apps/
+                RENAME shanti-keyboard.png)
+
         install(FILES ${CMAKE_SOURCE_DIR}/data/32.png
                 DESTINATION ${DATADIR}/icons/hicolor/32x32/apps/
                 RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/48.png
                 DESTINATION ${DATADIR}/icons/hicolor/48x48/apps/
+                RENAME shanti-keyboard.png)
+
+        install(FILES ${CMAKE_SOURCE_DIR}/data/64.png
+                DESTINATION ${DATADIR}/icons/hicolor/64x64/apps/
                 RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/128.png
