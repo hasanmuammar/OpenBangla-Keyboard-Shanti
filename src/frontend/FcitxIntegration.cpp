@@ -32,6 +32,8 @@
 #include <QTimer>
 #include <QWidget>
 
+#include "PlatformConfig.h"
+
 namespace {
 constexpr auto kAppId = "org.shanti.ShantiFcitx5";
 constexpr auto kMarker = "Shanti Flatpak autostart integration.";
@@ -66,9 +68,120 @@ QString autostartEntry() {
     ).arg(kMarker);
 }
 
+// ---- Plasma (KWin Wayland) wiring -------------------------------------
+// Unlike GNOME/IBus, KDE apps reach input methods through KWin: without
+// the [Wayland] InputMethod key in kwinrc, keystrokes never enter fcitx5.
+constexpr auto kKWinInputMethodValue =
+    "flatpak run --user --command=fcitx5 org.shanti.ShantiFcitx5";
+
+bool plasmaWaylandSession() {
+    const auto env = QProcessEnvironment::systemEnvironment();
+    return detectDesktopEnvironment() == DesktopEnvironment::KDE &&
+           env.value("XDG_SESSION_TYPE") == "wayland";
+}
+
+QString kwinRcProfileSectionLine(const QString &contents, bool *found) {
+    *found = false;
+    const QStringList lines = contents.split(QLatin1Char('\n'));
+    bool inWayland = false;
+    for (const QString &line : lines) {
+        const QString trimmed = line.trimmed();
+        if (trimmed.startsWith(QLatin1Char('[')) && trimmed.endsWith(QLatin1Char(']'))) {
+            inWayland = (trimmed == QLatin1String("[Wayland]"));
+            continue;
+        }
+        if (inWayland && trimmed.startsWith(QLatin1String("InputMethod"))) {
+            *found = true;
+            return line;
+        }
+    }
+    return {};
+}
+
+bool kwinConfigured() {
+    QFile file(QDir::homePath() + "/.config/kwinrc");
+    if (!file.open(QIODevice::ReadOnly))
+        return false;
+    bool found = false;
+    const QString line = kwinRcProfileSectionLine(QString::fromUtf8(file.readAll()), &found);
+    return found && line.section(QLatin1Char('='), 1).trimmed() == QLatin1String(kKWinInputMethodValue);
+}
+
+// Targeted edit inside the [Wayland] group only, never rewriting the
+// rest of kwinrc (it is shared by the whole Plasma session).
+bool ensureKwinConfigured(QString *error) {
+    const QString path = QDir::homePath() + "/.config/kwinrc";
+    QString contents;
+    QFile file(path);
+    if (file.exists()) {
+        if (!file.open(QIODevice::ReadOnly)) {
+            *error = QString("Could not read: %1").arg(path);
+            return false;
+        }
+        contents = QString::fromUtf8(file.readAll());
+    }
+    if (contents.size() > 4 * 1024 * 1024) {
+        *error = QString("Refusing to edit an unexpectedly large kwinrc: %1").arg(path);
+        return false;
+    }
+
+    QStringList lines = contents.split(QLatin1Char('\n'));
+    bool found = false;
+    const QString existing = kwinRcProfileSectionLine(contents, &found);
+    // The marker comment before the key marks the wiring as owned by us,
+    // so remove() can reset the key without touching anyone else's.
+    const QString markerLine = QStringLiteral("# %1").arg(kMarker);
+    const QStringList wiring = {markerLine,
+                                QStringLiteral("InputMethod=%1").arg(kKWinInputMethodValue)};
+    int at = -1; // index of the existing InputMethod line, if any
+    if (found) {
+        at = lines.indexOf(existing);
+        if (at > 0 && lines.at(at - 1).trimmed() == markerLine)
+            lines.removeAt(at - 1), --at;
+    }
+    if (at >= 0) {
+        for (int i = 0; i < wiring.size(); ++i)
+            lines.insert(at + i, wiring.at(i));
+        lines.removeAt(at + wiring.size()); // the row we are replacing
+    } else {
+        int afterHeader = -1;
+        for (int i = 0; i < lines.size(); ++i) {
+            if (lines.at(i).trimmed() == QLatin1String("[Wayland]")) {
+                afterHeader = i;
+                break;
+            }
+        }
+        if (afterHeader < 0) {
+            if (!lines.isEmpty() && !lines.last().isEmpty())
+                lines << QString(); // blank separator
+            lines << QStringLiteral("[Wayland]");
+            lines << wiring;
+        } else {
+            for (int i = 0; i < wiring.size(); ++i)
+                lines.insert(afterHeader + 1 + i, wiring.at(i));
+        }
+    }
+
+    QString result = lines.join(QLatin1Char('\n'));
+    if (!result.endsWith(QLatin1Char('\n')))
+        result += QLatin1Char('\n');
+    QSaveFile out(path);
+    const QByteArray data = result.toUtf8();
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate) ||
+        out.write(data) != data.size() || !out.commit()) {
+        *error = QString("Could not write: %1").arg(path);
+        return false;
+    }
+    return true;
+}
+
 QString defaultProfile() {
     // Mirrors the shape fcitx5 itself writes (a comment line above every
     // key) so a generated file blends in with daemon-managed ones.
+    // daemon 5.1.14 ignores DefaultIM when picking the IM that is active
+    // after startup: the group's FIRST item wins. Shanti therefore goes
+    // in first on a fresh machine, and it becomes the active keyboard
+    // right after setup.
     return QStringLiteral(
         "[Groups/0]\n"
         "# Group Name\n"
@@ -80,13 +193,13 @@ QString defaultProfile() {
         "\n"
         "[Groups/0/Items/0]\n"
         "# Name\n"
-        "Name=keyboard-us\n"
+        "Name=shanti\n"
         "# Layout\n"
         "Layout=\n"
         "\n"
         "[Groups/0/Items/1]\n"
         "# Name\n"
-        "Name=shanti\n"
+        "Name=keyboard-us\n"
         "# Layout\n"
         "Layout=\n"
         "\n"
@@ -286,12 +399,72 @@ bool restartDaemon(QString *error) {
 }
 
 bool setupNeeded() {
-    return !autostartPresent() || !profileHasShanti() || !daemonRunning();
+    return !autostartPresent() || !profileHasShanti() || !daemonRunning() ||
+           (plasmaWaylandSession() && !kwinConfigured());
 }
+
+bool kwinOwned();
 
 bool hasManagedFiles() {
     const Paths p = paths();
-    return fileContainsMarker(p.autostart);
+    return fileContainsMarker(p.autostart) || kwinOwned();
+}
+
+// Deletes our InputMethod key (and its marker) from kwinrc when it is
+// owned by us; foreign values are left untouched.
+bool removeKwinWiring(QString *error) {
+    const QString path = QDir::homePath() + "/.config/kwinrc";
+    QFile file(path);
+    if (!file.exists())
+        return true;
+    if (!file.open(QIODevice::ReadOnly)) {
+        *error = QString("Could not read: %1").arg(path);
+        return false;
+    }
+    QString contents = QString::fromUtf8(file.readAll());
+    const QString markerLine = QStringLiteral("# %1").arg(kMarker);
+    QStringList lines = contents.split(QLatin1Char('\n'));
+    bool found = false;
+    const QString existing = kwinRcProfileSectionLine(contents, &found);
+    if (!found)
+        return true;
+    const int at = lines.indexOf(existing);
+    bool owned = at > 0 && lines.at(at - 1).trimmed() == markerLine;
+    if (!owned)
+        owned = existing.section(QLatin1Char('='), 1).trimmed() == QLatin1String(kKWinInputMethodValue);
+    if (!owned)
+        return true; // someone else's wiring; leave it alone
+    lines.removeAt(at);
+    if (owned && at > 0 && lines.at(at - 1).trimmed() == markerLine)
+        lines.removeAt(at - 1);
+    QString result = lines.join(QLatin1Char('\n'));
+    if (!result.endsWith(QLatin1Char('\n')))
+        result += QLatin1Char('\n');
+    QSaveFile out(path);
+    const QByteArray data = result.toUtf8();
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate) ||
+        out.write(data) != data.size() || !out.commit()) {
+        *error = QString("Could not write: %1").arg(path);
+        return false;
+    }
+    return true;
+}
+
+bool kwinOwned() {
+    const QString path = QDir::homePath() + "/.config/kwinrc";
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly))
+        return false;
+    const QString contents = QString::fromUtf8(file.readAll());
+    const QString markerLine = QStringLiteral("# %1").arg(kMarker);
+    bool found = false;
+    const QString existing = kwinRcProfileSectionLine(contents, &found);
+    if (!found)
+        return false;
+    const QStringList lines = contents.split(QLatin1Char('\n'));
+    const int at = lines.indexOf(existing);
+    return (at > 0 && lines.at(at - 1).trimmed() == markerLine) ||
+           existing.section(QLatin1Char('='), 1).trimmed() == QLatin1String(kKWinInputMethodValue);
 }
 
 bool installIntegration(QString *error) {
@@ -335,6 +508,13 @@ bool installIntegration(QString *error) {
         return false;
     }
 
+    // On Plasma Wayland the session routes keystrokes through KWin, which
+    // must be told to use our daemon (the equivalent of GNOME's IBus
+    // registration). Takes effect at the next login; the daemon keeps
+    // working in this session regardless.
+    if (plasmaWaylandSession() && !kwinConfigured() && !ensureKwinConfigured(error))
+        return false;
+
     gPromptSuppressedUntilHealthy = false;
     return true;
 }
@@ -351,6 +531,8 @@ bool removeIntegration(QString *error) {
         *error = QString("Could not remove: %1").arg(p.autostart);
         return false;
     }
+    if (!removeKwinWiring(error))
+        return false;
     gPromptSuppressedUntilHealthy = true;
     return true;
 }
@@ -360,15 +542,32 @@ void showSetupError(QWidget *parent, const QString &title, const QString &error)
     QMessageBox::critical(parent, title, error);
 }
 
+
+void setupSuccessInfo(QWidget *parent) {
+    QString message = QStringLiteral(
+        "The Fcitx5 daemon is running with Shanti's input method. Switch input methods "
+        "(usually Ctrl+Space) and select Shanti, then start typing.");
+    if (plasmaWaylandSession())
+        message += QStringLiteral(
+            "\n\nThe KDE keyboard wiring takes effect at your next login.");
+    QMessageBox::information(parent, "Shanti is registered", message);
+}
+
 void showSetupPrompt(QWidget *parent) {
     if (!setupNeeded())
         return;
 
-    QMessageBox box(QMessageBox::Information, "Set up Shanti for Fcitx5",
-                    "The Fcitx5 daemon does not currently have Shanti registered as an input method.\n\n"
-                    "Set up integration for this user? This adds Shanti to the Fcitx5 input method list, "
-                    "creates a login autostart entry, and starts the Fcitx5 daemon.",
-                    QMessageBox::NoButton, parent);
+    QString about = QStringLiteral(
+        "Shanti is not set up with this system's keyboard service yet.\n\n"
+        "Set up integration for this user? Shanti is added to your input list, "
+        "starts automatically at every login, and starts right away.");
+    if (plasmaWaylandSession())
+        about += QStringLiteral(
+            "\n\nOn KDE this also connects Shanti to the desktop's keyboard service; "
+            "that connection takes effect the next time you log in.");
+
+    QMessageBox box(QMessageBox::Information, "Set up Shanti",
+                    about, QMessageBox::NoButton, parent);
     QPushButton *setup = box.addButton("Set up integration", QMessageBox::AcceptRole);
     box.addButton("Later", QMessageBox::RejectRole);
     box.setDefaultButton(setup);
@@ -381,9 +580,7 @@ void showSetupPrompt(QWidget *parent) {
         showSetupError(parent, "Could not set up Shanti", error);
         return;
     }
-    QMessageBox::information(parent, "Shanti is registered",
-                             "The Fcitx5 daemon is running with Shanti's input method. Switch input methods "
-                             "(usually Ctrl+Space) and select Shanti, then start typing.");
+    setupSuccessInfo(parent);
 }
 
 void showManagementPrompt(QWidget *parent) {
@@ -394,8 +591,8 @@ void showManagementPrompt(QWidget *parent) {
         return;
     }
 
-    QMessageBox box(QMessageBox::Question, "Fcitx5 integration",
-                    "Shanti is registered with Fcitx5 for this user. Remove that integration?",
+    QMessageBox box(QMessageBox::Question, "System integration",
+                    "Shanti is set up with this system's keyboard service. Remove the integration?",
                     QMessageBox::NoButton, parent);
     QPushButton *remove = box.addButton("Remove integration", QMessageBox::DestructiveRole);
     QPushButton *keep = box.addButton("Keep integration", QMessageBox::RejectRole);
@@ -429,9 +626,7 @@ void showSetupOrRepair(QWidget *parent) {
         showSetupError(parent, "Could not set up Shanti", error);
         return;
     }
-    QMessageBox::information(parent, "Shanti is registered",
-                             "The Fcitx5 daemon is running with Shanti's input method. Switch input methods "
-                             "(usually Ctrl+Space) and select Shanti, then start typing.");
+    setupSuccessInfo(parent);
 }
 
 void showRemoveConfirmation(QWidget *parent) {
@@ -466,15 +661,17 @@ QString statusText() {
         return {};
     QStringList missing;
     if (!autostartPresent())
-        missing << QStringLiteral("login autostart");
+        missing << QStringLiteral("starting at login");
     if (!profileHasShanti())
-        missing << QStringLiteral("Fcitx5 input method entry");
+        missing << QStringLiteral("Shanti in the input list");
     if (!daemonRunning())
-        missing << QStringLiteral("running daemon");
+        missing << QStringLiteral("the keyboard service");
+    if (plasmaWaylandSession() && !kwinConfigured())
+        missing << QStringLiteral("KDE's keyboard setup");
     if (!missing.isEmpty())
-        return QStringLiteral("Not fully configured. Missing: %1.")
+        return QStringLiteral("Not fully set up yet. Missing: %1.")
             .arg(missing.join(QStringLiteral(", ")));
-    return QStringLiteral("Configured. The Fcitx5 daemon is running.");
+    return QStringLiteral("Set up. Shanti's keyboard service is running.");
 }
 
 bool canRemove() {
