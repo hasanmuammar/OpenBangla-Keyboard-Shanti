@@ -83,7 +83,7 @@ prepare_paths() {
 
     OBK_PREFIX="$HOME/.local"
     OBK_DATA_HOME="$data_home"
-    OBK_CACHE="$cache_home/openbangla-keyboard"
+    OBK_CACHE="$cache_home/shanti-keyboard"
     OBK_BUILD="$OBK_CACHE/build"
     OBK_WORKSPACE="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
@@ -96,7 +96,7 @@ prepare_paths() {
     # Never clear a possibly stale staging directory. Create a new one for
     # each invocation so a missing/unset path can never expand to /*.
     OBK_STAGE="$(mktemp -d "$OBK_CACHE/stage.XXXXXXXX")" ||
-        die "Could not create a fresh OpenBangla staging directory."
+        die "Could not create a fresh Shanti staging directory."
 
     export OBK_PREFIX OBK_DATA_HOME OBK_CACHE OBK_BUILD OBK_STAGE OBK_WORKSPACE
 }

@@ -28,25 +28,28 @@ usage() {
     cat <<'EOF'
 Usage: tools/uninstall.sh [--purge-cache] [--purge-data]
 
-Remove the current user's OpenBangla Keyboard installation.
+Remove the current user's Shanti Keyboard installation.
 
 Options:
   --purge-cache   Also remove the build/staging cache at
+                  ~/.cache/shanti-keyboard or the legacy
                   ~/.cache/openbangla-keyboard (or XDG_CACHE_HOME).
-  --purge-data    Also remove OpenBangla user data, including custom layouts
+  --purge-data    Also remove Shanti user data, including custom layouts
                   and autocorrect data. This is not removed by default.
   -h, --help      Show this help.
 EOF
 }
 
-is_allowed_openbangla_target() {
+is_allowed_shanti_target() {
     local path="$1" relative directory
 
     case "$path" in
-        "$PREFIX/bin/openbangla-gui"|"$PREFIX/bin/openbangla-gui.bin"|"$PREFIX/libexec/ibus-engine-openbangla"|"$PREFIX/libexec/ibus-engine-openbangla.bin"|"$PREFIX/lib/openbangla"|"$DATA_HOME/openbangla-keyboard"|"$DATA_HOME/applications/openbangla-keyboard.desktop"|"$DATA_HOME/ibus/component/openbangla.xml"|"$DATA_HOME/fcitx5/addon/openbangla.conf"|"$DATA_HOME/fcitx5/inputmethod/openbangla.conf"|"$DATA_HOME/metainfo/io.github.openbangla.keyboard.metainfo.xml"|"$DATA_HOME/pixmaps/openbangla-keyboard.png"|"$DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"|"$CONFIG_HOME/environment.d/90-openbangla-ibus.conf"|"$CONFIG_HOME/fcitx5/profile"|"$CACHE_HOME/openbangla-keyboard")
+        "$PREFIX/bin/openbangla-gui"|"$PREFIX/bin/openbangla-gui.bin"|"$PREFIX/libexec/ibus-engine-openbangla"|"$PREFIX/libexec/ibus-engine-openbangla.bin"|"$PREFIX/lib/openbangla"|"$DATA_HOME/openbangla-keyboard"|"$DATA_HOME/applications/openbangla-keyboard.desktop"|"$DATA_HOME/ibus/component/openbangla.xml"|"$DATA_HOME/fcitx5/addon/openbangla.conf"|"$DATA_HOME/fcitx5/inputmethod/openbangla.conf"|"$DATA_HOME/metainfo/io.github.openbangla.keyboard.metainfo.xml"|"$DATA_HOME/pixmaps/openbangla-keyboard.png"|"$DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"|"$CONFIG_HOME/environment.d/90-openbangla-ibus.conf"|"$CONFIG_HOME/fcitx5/profile"|"$CACHE_HOME/openbangla-keyboard"|\
+        "$PREFIX/bin/shanti-gui"|"$PREFIX/bin/shanti-gui.bin"|"$PREFIX/libexec/ibus-engine-shanti"|"$PREFIX/libexec/ibus-engine-shanti.bin"|"$PREFIX/lib/shanti"|"$DATA_HOME/shanti-keyboard"|"$DATA_HOME/applications/shanti-keyboard.desktop"|"$DATA_HOME/ibus/component/shanti.xml"|"$DATA_HOME/fcitx5/addon/shanti.conf"|"$DATA_HOME/fcitx5/inputmethod/shanti.conf"|"$DATA_HOME/metainfo/org.shanti.ShantiKeyboard.metainfo.xml"|"$DATA_HOME/pixmaps/shanti-keyboard.png"|"$DATA_HOME/.shanti-keyboard-xdg-migration-v1-complete"|"$DATA_HOME/ibus/component/shanti-flatpak.xml"|"$CONFIG_HOME/environment.d/90-shanti-ibus.conf"|"$CONFIG_HOME/fcitx5/profile"|"$CACHE_HOME/shanti-keyboard")
             return 0
             ;;
-        "$DATA_HOME/icons/hicolor/16x16/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/32x32/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/48x48/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/128x128/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/512x512/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/1024x1024/apps/openbangla-keyboard.png"|"$PREFIX/lib/fcitx5/openbangla.so"|"$PREFIX/lib64/fcitx5/openbangla.so"|"$PREFIX/lib/fcitx5/addon/openbangla.conf"|"$PREFIX/lib/fcitx5/inputmethod/openbangla.conf"|"$PREFIX/share/fcitx5/addon/openbangla.conf"|"$PREFIX/share/fcitx5/inputmethod/openbangla.conf")
+        "$DATA_HOME/icons/hicolor/16x16/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/32x32/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/48x48/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/128x128/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/512x512/apps/openbangla-keyboard.png"|"$DATA_HOME/icons/hicolor/1024x1024/apps/openbangla-keyboard.png"|"$PREFIX/lib/fcitx5/openbangla.so"|"$PREFIX/lib64/fcitx5/openbangla.so"|"$PREFIX/lib/fcitx5/addon/openbangla.conf"|"$PREFIX/lib/fcitx5/inputmethod/openbangla.conf"|"$PREFIX/share/fcitx5/addon/openbangla.conf"|"$PREFIX/share/fcitx5/inputmethod/openbangla.conf"|\
+        "$DATA_HOME/icons/hicolor/16x16/apps/shanti-keyboard.png"|"$DATA_HOME/icons/hicolor/32x32/apps/shanti-keyboard.png"|"$DATA_HOME/icons/hicolor/48x48/apps/shanti-keyboard.png"|"$DATA_HOME/icons/hicolor/128x128/apps/shanti-keyboard.png"|"$DATA_HOME/icons/hicolor/512x512/apps/shanti-keyboard.png"|"$DATA_HOME/icons/hicolor/1024x1024/apps/shanti-keyboard.png"|"$PREFIX/lib/fcitx5/shanti.so"|"$PREFIX/lib64/fcitx5/shanti.so"|"$PREFIX/lib/fcitx5/addon/shanti.conf"|"$PREFIX/lib/fcitx5/inputmethod/shanti.conf"|"$PREFIX/share/fcitx5/addon/shanti.conf"|"$PREFIX/share/fcitx5/inputmethod/shanti.conf")
             return 0
             ;;
     esac
@@ -74,6 +77,26 @@ is_allowed_openbangla_target() {
             directory="${relative%/fcitx5/inputmethod/openbangla.conf}"
             [[ -n "$directory" && "$directory" != */* ]] && return 0
             ;;
+        "$PREFIX"/lib/*/fcitx5/shanti.so)
+            relative="${path#"$PREFIX"/lib/}"
+            directory="${relative%/fcitx5/shanti.so}"
+            [[ -n "$directory" && "$directory" != */* ]] && return 0
+            ;;
+        "$PREFIX"/lib64/*/fcitx5/shanti.so)
+            relative="${path#"$PREFIX"/lib64/}"
+            directory="${relative%/fcitx5/shanti.so}"
+            [[ -n "$directory" && "$directory" != */* ]] && return 0
+            ;;
+        "$PREFIX"/lib/*/fcitx5/addon/shanti.conf)
+            relative="${path#"$PREFIX"/lib/}"
+            directory="${relative%/fcitx5/addon/shanti.conf}"
+            [[ -n "$directory" && "$directory" != */* ]] && return 0
+            ;;
+        "$PREFIX"/lib/*/fcitx5/inputmethod/shanti.conf)
+            relative="${path#"$PREFIX"/lib/}"
+            directory="${relative%/fcitx5/inputmethod/shanti.conf}"
+            [[ -n "$directory" && "$directory" != */* ]] && return 0
+            ;;
     esac
 
     return 1
@@ -95,8 +118,8 @@ remove_path() {
 
     # Constrain removal to the exact application paths this uninstaller owns;
     # membership somewhere below ~/.local or an XDG root is not sufficient.
-    is_allowed_openbangla_target "$normalized" ||
-        die "Refusing to remove a path that is not an explicit OpenBangla target: $path"
+    is_allowed_shanti_target "$normalized" ||
+        die "Refusing to remove a path that is not an explicit Shanti (or legacy OpenBangla) target: $path"
 
     # Reject symlinked parent components even when their targets happen to
     # remain inside a managed root; those paths may contain unrelated user data.
@@ -122,7 +145,7 @@ remove_path() {
     cache_target="$(realpath -m -- "$CACHE_HOME/openbangla-keyboard" 2>/dev/null)" || cache_target=""
     [[ -n "$cache_target" && "$normalized" == "$cache_target" ]] && allowed=1
     [[ "$allowed" -eq 1 ]] ||
-        die "Refusing to remove a path outside the OpenBangla uninstall targets: $path"
+        die "Refusing to remove a path outside the Shanti uninstall targets: $path"
 
     for root in "$PREFIX" "$DATA_HOME" "$CONFIG_HOME" "$CACHE_HOME"; do
         normalized_root="$(realpath -m -- "$root" 2>/dev/null)" || continue
@@ -172,7 +195,7 @@ remove_fcitx_profile_entry() {
     local tmp
 
     [[ -f "$profile" ]] || return 0
-    grep -q '^Name=openbangla$' "$profile" || return 0
+    grep -Eq '^Name=(openbangla|shanti)$' "$profile" || return 0
 
     tmp="$(mktemp)"
 
@@ -193,7 +216,7 @@ remove_fcitx_profile_entry() {
         {
             block = block $0 ORS
             if (section ~ /^\[Groups\/[0-9]+\/Items\/[0-9]+\]$/ &&
-                $0 == "Name=openbangla")
+                $0 == "Name=openbangla" || $0 == "Name=shanti")
                 drop = 1
         }
 
@@ -202,11 +225,11 @@ remove_fcitx_profile_entry() {
         }
     ' "$profile" > "$tmp"
 
-    sed -i 's/^DefaultIM=openbangla$/DefaultIM=keyboard-us/' "$tmp"
+    sed -i -E 's/^DefaultIM=(openbangla|shanti)$/DefaultIM=keyboard-us/' "$tmp"
 
     if ! cmp -s "$profile" "$tmp"; then
         mv -- "$tmp" "$profile"
-        log "Removed OpenBangla from $profile"
+        log "Removed Shanti entries from $profile"
     else
         rm -f -- "$tmp"
     fi
@@ -216,6 +239,7 @@ remove_ibus_registration() {
     local component_dir="$DATA_HOME/ibus/component"
 
     remove_path "$component_dir/openbangla.xml"
+    remove_path "$component_dir/shanti.xml"
 
     if command -v ibus >/dev/null 2>&1; then
         IBUS_COMPONENT_PATH="$component_dir:/usr/share/ibus/component" \
@@ -228,10 +252,19 @@ remove_ibus_registration() {
         "('ibus', 'OpenBangla')"
 
     remove_dconf_tuple \
+        "/org/gnome/desktop/input-sources/sources" \
+        "('ibus', 'Shanti')"
+
+    remove_dconf_tuple \
         "/org/gnome/desktop/input-sources/mru-sources" \
         "('ibus', 'OpenBangla')"
 
+    remove_dconf_tuple \
+        "/org/gnome/desktop/input-sources/mru-sources" \
+        "('ibus', 'Shanti')"
+
     remove_path "$CONFIG_HOME/environment.d/90-openbangla-ibus.conf"
+    remove_path "$CONFIG_HOME/environment.d/90-shanti-ibus.conf"
 
     if command -v systemctl >/dev/null 2>&1; then
         systemctl --user unset-environment IBUS_COMPONENT_PATH >/dev/null 2>&1 || true
@@ -275,21 +308,21 @@ main() {
 
     if [[ $PURGE_DATA -eq 1 ]]; then
         [[ -t 0 ]] || die "--purge-data requires an interactive confirmation; user data will be preserved."
-        printf 'User data may include custom layouts and autocorrect data. Target: %s\n' "$DATA_HOME/openbangla-keyboard"
+        printf 'User data may include custom layouts and autocorrect data. Targets: %s %s\n' "$DATA_HOME/openbangla-keyboard" "$DATA_HOME/shanti-keyboard"
         read -r -p 'Delete this user-data directory as well? [y/N] ' data_reply
         [[ "$data_reply" =~ ^[Yy]([Ee][Ss])?$ ]] || PURGE_DATA=0
     fi
 
     if [[ $PURGE_CACHE -eq 1 ]]; then
         [[ -t 0 ]] || die "--purge-cache requires an interactive confirmation; cache data will be preserved."
-        printf 'Build/staging cache target: %s\n' "$CACHE_HOME/openbangla-keyboard"
+        printf 'Build/staging cache targets: %s %s\n' "$CACHE_HOME/openbangla-keyboard" "$CACHE_HOME/shanti-keyboard"
         read -r -p 'Delete this cache directory as well? [y/N] ' cache_reply
         [[ "$cache_reply" =~ ^[Yy]([Ee][Ss])?$ ]] || PURGE_CACHE=0
     fi
 
     [[ -t 0 ]] || die "Interactive confirmation is required before uninstalling."
 
-    printf 'Review these OpenBangla program and registration paths before continuing:\n'
+    printf 'Review these Shanti program and registration paths before continuing:\n'
     for path in \
         "$PREFIX/bin/openbangla-gui" \
         "$PREFIX/bin/openbangla-gui.bin" \
@@ -304,26 +337,46 @@ main() {
         "$DATA_HOME/pixmaps/openbangla-keyboard.png" \
         "$DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete" \
         "$CONFIG_HOME/environment.d/90-openbangla-ibus.conf" \
+        "$DATA_HOME/ibus/component/shanti-flatpak.xml" \
+        "$PREFIX/bin/shanti-gui" \
+        "$PREFIX/bin/shanti-gui.bin" \
+        "$PREFIX/libexec/ibus-engine-shanti" \
+        "$PREFIX/libexec/ibus-engine-shanti.bin" \
+        "$PREFIX/lib/shanti" \
+        "$DATA_HOME/applications/shanti-keyboard.desktop" \
+        "$DATA_HOME/ibus/component/shanti.xml" \
+        "$DATA_HOME/fcitx5/addon/shanti.conf" \
+        "$DATA_HOME/fcitx5/inputmethod/shanti.conf" \
+        "$DATA_HOME/metainfo/org.shanti.ShantiKeyboard.metainfo.xml" \
+        "$DATA_HOME/pixmaps/shanti-keyboard.png" \
+        "$DATA_HOME/.shanti-keyboard-xdg-migration-v1-complete" \
+        "$CONFIG_HOME/environment.d/90-shanti-ibus.conf" \
         "$CONFIG_HOME/fcitx5/profile"; do
         printf '  %s\n' "$path"
     done
     for size in 16 32 48 128 512 1024; do
         printf '  %s\n' "$DATA_HOME/icons/hicolor/${size}x${size}/apps/openbangla-keyboard.png"
     done
+    for size in 16 32 48 128 512 1024; do
+        printf '  %s\n' "$DATA_HOME/icons/hicolor/${size}x${size}/apps/shanti-keyboard.png"
+    done
     if [[ $PURGE_CACHE -eq 1 ]]; then
-        printf 'Requested cache purge target: %s\n' "$CACHE_HOME/openbangla-keyboard"
+        printf 'Requested cache purge targets: %s %s\n' "$CACHE_HOME/openbangla-keyboard" "$CACHE_HOME/shanti-keyboard"
     fi
     if [[ $PURGE_DATA -eq 1 ]]; then
-        printf 'Requested user-data purge target: %s\n' "$DATA_HOME/openbangla-keyboard"
+        printf 'Requested user-data purge targets: %s %s\n' "$DATA_HOME/openbangla-keyboard" "$DATA_HOME/shanti-keyboard"
     else
-        printf 'Preserving user data by default: %s\n' "$DATA_HOME/openbangla-keyboard"
+        printf 'Preserving user data by default: %s %s\n' "$DATA_HOME/openbangla-keyboard" "$DATA_HOME/shanti-keyboard"
     fi
     if [[ -d "$PREFIX" ]]; then
         mapfile -d '' -t FCITX_FILES < <(
             find "$PREFIX" -type f \
                 \( -path '*/fcitx5/openbangla.so' -o \
                    -path '*/fcitx5/inputmethod/openbangla.conf' -o \
-                   -path '*/fcitx5/addon/openbangla.conf' \) \
+                   -path '*/fcitx5/addon/openbangla.conf' -o \
+                   -path '*/fcitx5/shanti.so' -o \
+                   -path '*/fcitx5/inputmethod/shanti.conf' -o \
+                   -path '*/fcitx5/addon/shanti.conf' \) \
                 -print0 2>/dev/null || true
         )
         printf 'Matching Fcitx files that would be removed:\n'
@@ -338,12 +391,18 @@ main() {
 
     remove_path "$PREFIX/bin/openbangla-gui"
     remove_path "$PREFIX/bin/openbangla-gui.bin"
-    remove_path "$PREFIX/libexec/ibus-engine-openbangla"
+    remove_path "$PREFIX/libeec/ibus-engine-openbangla"
     remove_path "$PREFIX/libexec/ibus-engine-openbangla.bin"
     remove_path "$PREFIX/lib/openbangla"
+    remove_path "$PREFIX/bin/shanti-gui"
+    remove_path "$PREFIX/bin/shanti-gui.bin"
+    remove_path "$PREFIX/libexec/ibus-engine-shanti"
+    remove_path "$PREFIX/libexec/ibus-engine-shanti.bin"
+    remove_path "$PREFIX/lib/shanti"
 
     if [[ $PURGE_DATA -eq 1 ]]; then
         remove_path "$DATA_HOME/openbangla-keyboard"
+        remove_path "$DATA_HOME/shanti-keyboard"
     fi
 
     remove_path "$DATA_HOME/applications/openbangla-keyboard.desktop"
@@ -352,9 +411,19 @@ main() {
     remove_path "$DATA_HOME/metainfo/io.github.openbangla.keyboard.metainfo.xml"
     remove_path "$DATA_HOME/pixmaps/openbangla-keyboard.png"
     remove_path "$DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"
+    remove_path "$DATA_HOME/.shanti-keyboard-xdg-migration-v1-complete"
+    remove_path "$DATA_HOME/ibus/component/shanti-flatpak.xml"
+    remove_path "$DATA_HOME/applications/shanti-keyboard.desktop"
+    remove_path "$DATA_HOME/fcitx5/addon/shanti.conf"
+    remove_path "$DATA_HOME/fcitx5/inputmethod/shanti.conf"
+    remove_path "$DATA_HOME/metainfo/org.shanti.ShantiKeyboard.metainfo.xml"
+    remove_path "$DATA_HOME/pixmaps/shanti-keyboard.png"
 
     for size in 16 32 48 128 512 1024; do
         remove_path "$DATA_HOME/icons/hicolor/${size}x${size}/apps/openbangla-keyboard.png"
+    done
+    for size in 16 32 48 128 512 1024; do
+        remove_path "$DATA_HOME/icons/hicolor/${size}x${size}/apps/shanti-keyboard.png"
     done
 
     remove_ibus_registration
@@ -362,9 +431,10 @@ main() {
 
     if [[ $PURGE_CACHE -eq 1 ]]; then
         remove_path "$CACHE_HOME/openbangla-keyboard"
+        remove_path "$CACHE_HOME/shanti-keyboard"
     fi
 
-    printf 'OpenBangla Keyboard was removed for the current user.\n'
+    printf 'Shanti Keyboard was removed for the current user.\n'
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

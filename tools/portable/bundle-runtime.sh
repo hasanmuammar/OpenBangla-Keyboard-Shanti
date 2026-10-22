@@ -85,8 +85,8 @@ enqueue() {
     queue+=("$library")
 }
 
-enqueue "$stage_dir$HOME/.local/bin/openbangla-gui"
-enqueue "$stage_dir$HOME/.local/libexec/ibus-engine-openbangla"
+enqueue "$stage_dir$HOME/.local/bin/shanti-gui"
+enqueue "$stage_dir$HOME/.local/libexec/ibus-engine-shanti"
 for library in "$runtime_lib_dir"/*.so* "$runtime_plugin_dir"/platforms/*.so*; do
     enqueue "$library"
 done

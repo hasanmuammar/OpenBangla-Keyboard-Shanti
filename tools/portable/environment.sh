@@ -53,7 +53,7 @@ select_builder() {
     OBK_CLEANUP_BUILDER_ON_SUCCESS=0
     OBK_BUILDER_CREATED=0
 
-    if [[ "${OPENBANGLA_BUILD_USE_HOST:-0}" == 1 ]]; then
+    if [[ "${SHANTI_BUILD_USE_HOST:-0}" == 1 ]]; then
         OBK_BUILDER=host
     elif command -v toolbox >/dev/null 2>&1; then
         OBK_BUILDER=toolbox
@@ -74,13 +74,13 @@ select_builder() {
 builder_exists() {
     case "$OBK_BUILDER" in
         toolbox)
-            toolbox list 2>/dev/null | grep -q 'openbangla-builder'
+            toolbox list 2>/dev/null | grep -q 'shanti-builder'
             ;;
         distrobox)
-            distrobox list 2>/dev/null | grep -q 'openbangla-builder'
+            distrobox list 2>/dev/null | grep -q 'shanti-builder'
             ;;
         podman)
-            podman container exists openbangla-builder 2>/dev/null
+            podman container exists shanti-builder 2>/dev/null
             ;;
         docker)
             return 1
@@ -103,10 +103,10 @@ confirm_temporary_build() {
 
     if [[ "$OBK_BUILDER" == docker ]] || ! builder_exists; then
         printf '\n'
-        printf '%s\n' "OpenBangla needs some extra files to build the program."
+        printf '%s\n' "Shanti needs some extra files to build the program."
         printf '%s\n' "This may temporarily use about 1 GB or more of disk space."
         printf '%s\n' "The files are kept inside a temporary build container, not added to your normal installation."
-        printf '%s\n' "After OpenBangla is installed successfully, temporary files may be cleaned up and that space will be freed."
+        printf '%s\n' "After Shanti is installed successfully, temporary files may be cleaned up and that space will be freed."
         if [[ "${OBK_NEEDS_PODMAN_BOOTSTRAP:-0}" == 1 ]]; then
             printf '%s\n' "Podman is not installed; continuing will install it as a host system package using the detected package manager."
         fi
@@ -138,14 +138,14 @@ ensure_builder() {
 
     case "$OBK_BUILDER" in
         toolbox)
-            if ! toolbox list 2>/dev/null | grep -q 'openbangla-builder'; then
-                toolbox create --container openbangla-builder
+            if ! toolbox list 2>/dev/null | grep -q 'shanti-builder'; then
+                toolbox create --container shanti-builder
                 created=1
             fi
             ;;
         distrobox)
-            if ! distrobox list 2>/dev/null | grep -q 'openbangla-builder'; then
-                distrobox create --name openbangla-builder --image ubuntu:24.04
+            if ! distrobox list 2>/dev/null | grep -q 'shanti-builder'; then
+                distrobox create --name shanti-builder --image ubuntu:24.04
                 created=1
             fi
             ;;
@@ -153,11 +153,11 @@ ensure_builder() {
             local builder_image="debian:13-slim"
             local current_image=""
 
-            if podman container exists openbangla-builder 2>/dev/null; then
-                current_image="$(podman inspect -f '{{.Config.Image}}' openbangla-builder 2>/dev/null || true)"
+            if podman container exists shanti-builder 2>/dev/null; then
+                current_image="$(podman inspect -f '{{.Config.Image}}' shanti-builder 2>/dev/null || true)"
 
                 if [[ "$current_image" != "$builder_image" ]]; then
-                    printf 'Existing container openbangla-builder uses image %s; expected %s.\n' "$current_image" "$builder_image" >&2
+                    printf 'Existing container shanti-builder uses image %s; expected %s.\n' "$current_image" "$builder_image" >&2
                     if [[ ! -t 0 ]]; then
                         echo "Refusing to remove the existing container non-interactively. Review it and rerun interactively to choose whether to replace it." >&2
                         exit 1
@@ -167,17 +167,17 @@ ensure_builder() {
                         echo "Build cancelled. The existing container was preserved." >&2
                         exit 1
                     }
-                    podman rm -f openbangla-builder >/dev/null
+                    podman rm -f shanti-builder >/dev/null
                 fi
             fi
 
-            if ! podman container exists openbangla-builder 2>/dev/null; then
+            if ! podman container exists shanti-builder 2>/dev/null; then
                 created=1
-                podman create --pull=missing                     --name openbangla-builder                     -v "$OBK_WORKSPACE:/workspace:rw"                     -v "$HOME:$HOME:rw"                     -v "$OBK_CACHE:/cache:rw"                     -v "$OBK_STAGE:/stage:rw"                     -e HOME="$HOME"                     "$builder_image"                     sleep infinity
+                podman create --pull=missing                     --name shanti-builder                     -v "$OBK_WORKSPACE:/workspace:rw"                     -v "$HOME:$HOME:rw"                     -v "$OBK_CACHE:/cache:rw"                     -v "$OBK_STAGE:/stage:rw"                     -e HOME="$HOME"                     "$builder_image"                     sleep infinity
             fi
 
-            if [[ "$(podman inspect -f '{{.State.Running}}' openbangla-builder 2>/dev/null)" != true ]]; then
-                    podman start openbangla-builder >/dev/null
+            if [[ "$(podman inspect -f '{{.State.Running}}' shanti-builder 2>/dev/null)" != true ]]; then
+                    podman start shanti-builder >/dev/null
             fi
             ;;
     esac
@@ -201,13 +201,13 @@ run_builder() {
             bash -lc "$env_prefix$command"
             ;;
         toolbox)
-            toolbox run --container openbangla-builder bash -lc "$env_prefix$command"
+            toolbox run --container shanti-builder bash -lc "$env_prefix$command"
             ;;
         distrobox)
-            distrobox enter --name openbangla-builder -- bash -lc "$env_prefix$command"
+            distrobox enter --name shanti-builder -- bash -lc "$env_prefix$command"
             ;;
         podman)
-            podman exec                 -e OBK_WORKSPACE=/workspace                 -e OBK_BUILD=/cache/build                 -e OBK_STAGE=/stage                 -e OBK_CACHE=/cache                 -e OBK_BACKEND="$OBK_BACKEND"                 -e OBK_JOBS="$OBK_JOBS"                 openbangla-builder                 bash -lc "$env_prefix$command"
+            podman exec                 -e OBK_WORKSPACE=/workspace                 -e OBK_BUILD=/cache/build                 -e OBK_STAGE=/stage                 -e OBK_CACHE=/cache                 -e OBK_BACKEND="$OBK_BACKEND"                 -e OBK_JOBS="$OBK_JOBS"                 shanti-builder                 bash -lc "$env_prefix$command"
             ;;
         docker)
             docker run --rm                 -v "$OBK_WORKSPACE:/workspace:rw"                 -v "$HOME:$HOME:rw"                 -v "$OBK_CACHE:/cache:rw"                 -v "$OBK_STAGE:/stage:rw"                 -e HOME="$HOME"                 -e OBK_WORKSPACE=/workspace                 -e OBK_BUILD=/cache/build                 -e OBK_STAGE=/stage                 -e OBK_CACHE=/cache                 -e OBK_BACKEND="$OBK_BACKEND"                 -e OBK_JOBS="$OBK_JOBS"                 ubuntu:24.04 bash -lc "$command"
@@ -231,13 +231,13 @@ cleanup_builder() {
 
     case "$OBK_BUILDER" in
         podman)
-            podman rm -f openbangla-builder >/dev/null 2>&1 || true
+            podman rm -f shanti-builder >/dev/null 2>&1 || true
             ;;
         toolbox)
-            toolbox rm -f openbangla-builder >/dev/null 2>&1 || true
+            toolbox rm -f shanti-builder >/dev/null 2>&1 || true
             ;;
         distrobox)
-            distrobox rm -f openbangla-builder >/dev/null 2>&1 || true
+            distrobox rm -f shanti-builder >/dev/null 2>&1 || true
             ;;
     esac
 

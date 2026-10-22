@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-build_openbangla() {
-    local jobs="${OPENBANGLA_BUILD_JOBS:-2}"
+build_shanti() {
+    local jobs="${SHANTI_BUILD_JOBS:-2}"
 
     [[ "$jobs" =~ ^[1-9][0-9]*$ ]] ||
-        die "OPENBANGLA_BUILD_JOBS must be a positive integer."
+        die "SHANTI_BUILD_JOBS must be a positive integer."
 
     export OBK_JOBS="$jobs"
 
@@ -19,7 +19,7 @@ build_openbangla() {
             sudo_cmd=sudo
         fi
 
-        deps_stamp="/var/lib/openbangla-builder/deps-v3-$OBK_BACKEND"
+        deps_stamp="/var/lib/shanti-builder/deps-v3-$OBK_BACKEND"
 
         if [[ ! -f "$deps_stamp" ]]; then
             if command -v apt-get >/dev/null 2>&1; then
@@ -110,7 +110,7 @@ build_openbangla() {
             -GNinja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="$HOME/.local" \
-            -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib/openbangla \
+            -DCMAKE_INSTALL_RPATH=\$ORIGIN/../lib/shanti \
             -DENABLE_IBUS="$ibus" \
             -DENABLE_FCITX="$fcitx" \
             -DCMAKE_EXE_LINKER_FLAGS=-Wl,--disable-new-dtags \
@@ -135,7 +135,7 @@ build_openbangla() {
 
         qt_lib_dir="$("$qt_query_tool" -query QT_INSTALL_LIBS)"
         qt_plugin_dir="$("$qt_query_tool" -query QT_INSTALL_PLUGINS)"
-        runtime_lib_dir="$stage_dir$HOME/.local/lib/openbangla"
+        runtime_lib_dir="$stage_dir$HOME/.local/lib/shanti"
         runtime_plugin_dir="$runtime_lib_dir/qt5/plugins"
 
         mkdir -p "$runtime_lib_dir" "$runtime_plugin_dir"
@@ -159,7 +159,7 @@ build_openbangla() {
 
         cat > "$stage_dir$HOME/.local/bin/qt.conf" <<EOF
 [Paths]
-Plugins=../lib/openbangla/qt5/plugins
+Plugins=../lib/shanti/qt5/plugins
 EOF
     '
 }

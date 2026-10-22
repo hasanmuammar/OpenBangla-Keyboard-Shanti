@@ -6,7 +6,7 @@ source "$SCRIPT_DIR/portable/common.sh"
 source "$SCRIPT_DIR/portable/install.sh"
 
 REPOSITORY="hasanmuammar/OpenBangla-Keyboard-Shanti"
-REQUESTED_VERSION="${OPENBANGLA_VERSION:-}"
+REQUESTED_VERSION="${SHANTI_VERSION:-}"
 RELEASE_VERSION="latest"
 RELEASE_BASE=""
 VERIFY_PROVENANCE=0
@@ -16,7 +16,7 @@ usage() {
     cat <<'EOF'
 Usage: tools/install.sh [options]
 
-Install the prebuilt OpenBangla Keyboard build specified by release-tag.txt for this fork.
+Install the prebuilt Shanti Keyboard build specified by release-tag.txt for this fork.
 
 Options:
   --version TAG      Install a specific Shanti release tag.
@@ -72,12 +72,12 @@ download() {
     elif command -v wget >/dev/null 2>&1; then
         wget -q --show-progress "$url" -O "$output"
     else
-        die "curl or wget is required to download OpenBangla Keyboard."
+        die "curl or wget is required to download Shanti Keyboard."
     fi
 }
 
 build_urls() {
-    local asset="openbangla-keyboard_linux_${OBK_ARCH}_${OBK_BACKEND}.tar.gz"
+    local asset="shanti-keyboard_linux_${OBK_ARCH}_${OBK_BACKEND}.tar.gz"
     if [[ -n "$REQUESTED_VERSION" ]]; then
         RELEASE_VERSION="$REQUESTED_VERSION"
     fi
@@ -237,9 +237,9 @@ download_release() {
     checksum="$archive.sha256"
     listing="$download_dir/archive-list.txt"
 
-    log "Downloading the prebuilt OpenBangla Keyboard for $OBK_ARCH / $OBK_BACKEND."
+    log "Downloading the prebuilt Shanti Keyboard for $OBK_ARCH / $OBK_BACKEND."
     download "$OBK_DOWNLOAD_URL" "$archive" ||
-        die "Could not download the OpenBangla Keyboard release."
+        die "Could not download the Shanti Keyboard release."
     download "$OBK_CHECKSUM_URL" "$checksum" ||
         die "Could not download the release checksum."
     validate_release_checksum "$archive" "$checksum" "$OBK_ASSET"
@@ -262,19 +262,19 @@ download_release() {
     tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$staged_root"
     validate_extracted_symlinks "$staged_root"
 
-    [[ -x "$staged_root/bin/openbangla-gui" ]] ||
+    [[ -x "$staged_root/bin/shanti-gui" ]] ||
         die "The downloaded release is incomplete: the GUI executable is missing."
-    [[ -d "$staged_root/lib/openbangla" ]] ||
+    [[ -d "$staged_root/lib/shanti" ]] ||
         die "The downloaded release is incomplete: the bundled runtime directory is missing."
-    [[ -d "$staged_root/share/openbangla-keyboard" ]] ||
+    [[ -d "$staged_root/share/shanti-keyboard" ]] ||
         die "The downloaded release is incomplete: application data is missing."
     case "$OBK_BACKEND" in
         ibus)
-            [[ -x "$staged_root/libexec/ibus-engine-openbangla" && -f "$staged_root/share/ibus/component/openbangla.xml" ]] ||
+            [[ -x "$staged_root/libexec/ibus-engine-shanti" && -f "$staged_root/share/ibus/component/shanti.xml" ]] ||
                 die "The downloaded IBus release is incomplete."
             ;;
         fcitx)
-            [[ -f "$staged_root/share/fcitx5/addon/openbangla.conf" && -f "$staged_root/share/fcitx5/inputmethod/openbangla.conf" ]] ||
+            [[ -f "$staged_root/share/fcitx5/addon/shanti.conf" && -f "$staged_root/share/fcitx5/inputmethod/shanti.conf" ]] ||
                 die "The downloaded Fcitx release is incomplete."
             ;;
     esac
@@ -284,12 +284,12 @@ download_release() {
     XDG_DATA_HOME="$staged_root/share" \
         XDG_CONFIG_HOME="$OBK_STAGE/.smoke-config" \
         XDG_CACHE_HOME="$OBK_STAGE/.smoke-cache" \
-        QT_QPA_PLATFORM=offscreen "$staged_root/bin/openbangla-gui" --version >/dev/null 2>&1 ||
+        QT_QPA_PLATFORM=offscreen "$staged_root/bin/shanti-gui" --version >/dev/null 2>&1 ||
         die "The downloaded GUI cannot start from staging; the existing installation was left untouched."
     XDG_DATA_HOME="$staged_root/share" \
         XDG_CONFIG_HOME="$OBK_STAGE/.smoke-config" \
         XDG_CACHE_HOME="$OBK_STAGE/.smoke-cache" \
-        QT_QPA_PLATFORM=offscreen "$staged_root/bin/openbangla-gui" --check-data >/dev/null 2>&1 ||
+        QT_QPA_PLATFORM=offscreen "$staged_root/bin/shanti-gui" --check-data >/dev/null 2>&1 ||
         die "The downloaded runtime cannot find its staged data files; the existing installation was left untouched."
 
     export OBK_STAGE
@@ -308,9 +308,9 @@ main() {
     log "Architecture: $OBK_ARCH"
     log "Release: $RELEASE_VERSION"
     download_release
-    install_openbangla
+    install_shanti
     verify_installation
-    log "OpenBangla Keyboard was installed for the current user."
+    log "Shanti Keyboard was installed for the current user."
     log "Need to rebuild from source? Use: bash tools/build.sh"
 }
 

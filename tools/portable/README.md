@@ -17,4 +17,4 @@ The portable build uses [CMake](https://github.com/Kitware/CMake), [Qt5](https:/
 
 The build prefers an existing Toolbx or Distrobox environment, then Podman or Docker. If no suitable builder exists, an interactive source build may offer to install Podman through a detected host package manager on supported systems. Non-interactive builds do not install host packages automatically. On Arch-based systems, the script deliberately refuses to run `pacman -Sy`; install Podman through the normal system-update workflow instead.
 
-The Podman builder is persistent and named `openbangla-builder`. It uses Debian 13 slim, with development dependencies cached inside that container. Existing incompatible builder containers are not removed without explicit confirmation, and automatic cleanup is restricted to a builder created by the current run.
+The Podman builder is persistent and named `shanti-builder`. It uses Debian 13 slim, with development dependencies cached inside that container. Existing incompatible builder containers are not removed without explicit confirmation, and automatic cleanup is restricted to a builder created by the current run.

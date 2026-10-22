@@ -14,9 +14,9 @@ bash tools/install.sh --version TAG --verify-provenance
 
 This requires a published, attested release tag and fails closed if the attestation does not match this repository's release workflow and the selected tag. It remains optional so the ordinary install flow does not require the GitHub CLI.
 
-`tools/uninstall.sh` removes the user-local installation and backend registration. User data and caches are preserved unless separately requested with `--purge-data` or `--purge-cache`; removals are constrained to explicit OpenBangla targets.
+`tools/uninstall.sh` removes the user-local installation and backend registration. User data and caches are preserved unless separately requested with `--purge-data` or `--purge-cache`; removals are constrained to explicit Shanti targets.
 
-Release archives bundle `install.sh`, `uninstall.sh`, their `portable/` helpers and `release-tag.txt` under `share/openbangla-keyboard/`, so a downloaded archive can install, repair or uninstall without a source checkout. Installing relocates that directory into the user data directory (`~/.local/share/openbangla-keyboard/` by default).
+Release archives bundle `install.sh`, `uninstall.sh`, their `portable/` helpers and `release-tag.txt` under `share/shanti-keyboard/`, so a downloaded archive can install, repair or uninstall without a source checkout. Installing relocates that directory into the user data directory (`~/.local/share/shanti-keyboard/` by default).
 
 The portable installer is the primary installation path for this fork.
 
