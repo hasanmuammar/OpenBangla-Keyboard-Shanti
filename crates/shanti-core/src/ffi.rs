@@ -84,6 +84,13 @@ pub unsafe extern "C" fn shanti_core_finish_session(core: *mut ShantiCore) {
     borrow(core).finish_session();
 }
 
+/// Full state reset: clear suggestion/selection/AltGr and finish any
+/// ongoing session (the shell then clears its rendered windows).
+#[no_mangle]
+pub unsafe extern "C" fn shanti_core_reset_state(core: *mut ShantiCore) {
+    borrow(core).reset_state();
+}
+
 /// Process a key event; returns one of the `SHANTI_KEY_*` action codes.
 #[no_mangle]
 pub unsafe extern "C" fn shanti_core_key_event(core: *mut ShantiCore, keyval: u32, state: u32) -> c_int {

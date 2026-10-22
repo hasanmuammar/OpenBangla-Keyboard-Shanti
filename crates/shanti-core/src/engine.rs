@@ -84,17 +84,31 @@ pub struct ShantiCore {
     /// the arrow-key semantics.
     candidates_horizontal: bool,
     enter_closes_prev_win: bool,
+    /// Settings source. `None` reads the user's store from disk (production
+    /// behaviour, refreshed on every session start); `Some` pins a parsed
+    /// store so tests are deterministic regardless of the host machine.
+    settings_store: Option<shanti_config::Config>,
 }
 
 impl ShantiCore {
     /// Create the core. Mirrors old `main()`: keep the UserFolders side
     /// effect (the user data tree and layouts directory get created by the
-    /// engine too), then load settings into a fresh riti context.
+    /// engine too), then load the user's settings store into a fresh riti
+    /// context.
     pub fn new() -> Self {
+        Self::with_settings_store(None)
+    }
+
+    /// Injection point for the test suite: pin the settings store instead of
+    /// reading the host's `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf`.
+    pub fn with_settings_store(store: Option<shanti_config::Config>) -> Self {
         shanti_paths::ensure_user_dirs();
 
         let mut config = Config::default();
-        let viewport = settings::apply(&mut config);
+        let viewport = match &store {
+            Some(known) => settings::map_store(&mut config, known),
+            None => settings::apply(&mut config),
+        };
         let ctx = RitiContext::new_with_config(&config);
         ShantiCore {
             config,
@@ -105,6 +119,7 @@ impl ShantiCore {
             selection: 0,
             candidates_horizontal: viewport.candidates_horizontal,
             enter_closes_prev_win: viewport.enter_key_closes_prev_win,
+            settings_store: store,
         }
     }
 
@@ -112,7 +127,10 @@ impl ShantiCore {
     /// refreshes the icon/layout decisions). Called on engine enable and
     /// before the first key of every input session, as the old engine did.
     pub fn apply_settings(&mut self) {
-        let viewport = settings::apply(&mut self.config);
+        let viewport = match &self.settings_store {
+            Some(known) => settings::map_store(&mut self.config, known),
+            None => settings::apply(&mut self.config),
+        };
         self.candidates_horizontal = viewport.candidates_horizontal;
         self.enter_closes_prev_win = viewport.enter_key_closes_prev_win;
         self.ctx.update_engine(&self.config);
@@ -148,19 +166,35 @@ impl ShantiCore {
         }
     }
 
+    /// Full state reset (the old `OpenBanglaState::reset()` /
+    /// `engine_focus_out_cb` pairing): clear the suggestion, selection and
+    /// AltGr tracking, and finish an ongoing session. The shell clears its
+    /// rendered windows; committed text history is also cleared since it is
+    /// only readable between commits.
+    pub fn reset_state(&mut self) {
+        self.finish_session();
+        self.suggestion = None;
+        self.altgr = false;
+        self.selection = 0;
+        self.last_committed.clear();
+    }
+
     /// Whether an input session is ongoing (shell uses this e.g. for
     /// focus-out / reset decisions).
     pub fn ongoing_input_session(&self) -> bool {
         self.ctx.ongoing_input_session()
     }
 
-    /// A mouse click on candidate `index` (IBus `candidate-clicked`.
+    /// A mouse click on candidate `index` (IBus `candidate-clicked` / Fcitx
+    /// candidate selection). Commits the *pre-edit text* at `index` — with
+    /// ANSI encoding enabled this is the encoded (Bijoy) text, matching the
+    /// old Fcitx engine's commit semantics.
     pub fn candidate_clicked(&mut self, index: usize) -> KeyAction {
         self.last_committed = self
             .suggestion
             .as_ref()
             .filter(|s| !s.is_lonely())
-            .and_then(|s| s.get_suggestions().get(index).cloned())
+            .map(|s| s.get_pre_edit_text(index))
             .unwrap_or_default();
         self.ctx.candidate_committed(index);
         KeyAction::HideWindow
@@ -422,7 +456,9 @@ mod tests {
     use super::*;
 
     fn core() -> ShantiCore {
-        ShantiCore::new()
+        // Parse an empty store: production defaults with no host settings
+        // file involved (tests must not depend on ~/.config contents).
+        ShantiCore::with_settings_store(Some(shanti_config::Config::parse("")))
     }
 
     const RELEASE: u32 = masks::RELEASE;

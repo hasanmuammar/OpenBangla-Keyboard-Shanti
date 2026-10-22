@@ -19,13 +19,10 @@
 #ifndef _FCITX5_OPENBANGLA_OPENBANGLA_H_
 #define _FCITX5_OPENBANGLA_OPENBANGLA_H_
 
-#include "riti.h"
+#include "shanti-core.h"
 #include <fcitx-config/configuration.h>
-#include <fcitx-config/iniparser.h>
 #include <fcitx-config/option.h>
-#include <fcitx-config/rawconfig.h>
 #include <fcitx-utils/i18n.h>
-#include <fcitx-utils/misc.h>
 #include <fcitx-utils/trackableobject.h>
 #include <fcitx/addonfactory.h>
 #include <fcitx/addoninstance.h>
@@ -35,17 +32,20 @@
 #include <fcitx/inputcontextproperty.h>
 #include <fcitx/inputmethodengine.h>
 #include <fcitx/instance.h>
-#include <filesystem>
 
 namespace fcitx {
 
 class OpenBanglaState;
 
+/* The addon configuration only carries the external launcher option that
+ * Fcitx5's config dialog uses to open the (Qt) OpenBangla settings GUI. */
 FCITX_CONFIGURATION(OpenBanglaConfig,
                     ExternalOption config{this, "OpenBanglaKeyboard",
                                           _("OpenBangla Keyboard"),
                                           "openbangla-gui"};);
 
+/* The engine state machine lives in the shanti-core crate; this class only
+ * wires that core into the Fcitx5 addon API and owns its lifetime. */
 class OpenBanglaEngine final : public InputMethodEngine {
 public:
   OpenBanglaEngine(Instance *instance);
@@ -61,28 +61,15 @@ public:
 
   const Configuration *getConfig() const override { return &config_; }
 
-  auto candidateWinHorizontal() const { return candidateWinHorizontal_; }
-  auto enterKeyClosesPrevWin() const { return enterKeyClosesPrevWin_; }
-
-  RitiContext *context(InputContext *ic);
-
-  auto *suggestion() const { return suggestion_.get(); }
-  void setSuggestion(Suggestion *suggestion) { suggestion_.reset(suggestion); }
+  auto *core() const { return core_; }
+  void syncInputContext(InputContext *ic);
 
 private:
-  void populateConfig(const RawConfig &config);
-
   Instance *instance_;
   OpenBanglaConfig config_;
-  UniqueCPtr<Config, riti_config_free> cfg_;
-  UniqueCPtr<RitiContext, riti_context_free> ctx_;
-  UniqueCPtr<Suggestion, riti_suggestion_free> suggestion_;
+  ShantiCore *core_ = nullptr;
   TrackableObjectReference<InputContext> currentIC_;
   FactoryFor<OpenBanglaState> factory_;
-  std::filesystem::file_time_type lastConfigTimestamp_ =
-      std::filesystem::file_time_type::min();
-  bool candidateWinHorizontal_ = true;
-  bool enterKeyClosesPrevWin_ = false;
 };
 
 class OpenBanglaFactory : public AddonFactory {

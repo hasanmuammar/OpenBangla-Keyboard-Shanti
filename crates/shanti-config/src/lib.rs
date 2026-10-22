@@ -34,7 +34,7 @@ use std::ffi::{c_char, c_int, CString};
 use std::path::Path;
 use std::sync::RwLock;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Config {
     entries: HashMap<(String, String), String>,
 }

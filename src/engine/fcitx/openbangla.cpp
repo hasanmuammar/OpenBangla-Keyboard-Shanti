@@ -16,20 +16,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+/*  Fcitx5 addon shell for OpenBangla.
+ *
+ *  Pure Fcitx5 plumbing since rewrite phase 2 (docs/REWRITE-PLAN.md): the
+ *  engine state machine (settings application, key filtering, suggestion
+ *  handling, riti session) lives in the shanti-core crate and decides what
+ *  happens; this shell renders those decisions with Fcitx5 calls.
+ *
+ *  Fcitx5's addon API is a C++ ABI interface, so this shell stays a C++
+ *  class by design (documented hard limit in the rewrite plan). */
+
 #include "openbangla.h"
-#include "keycode.h"
-#include "riti.h"
-#include <cstdint>
-#include <fcitx-config/iniparser.h>
-#include <fcitx-config/rawconfig.h>
+#include "shanti-core.h"
 #include <fcitx-utils/capabilityflags.h>
-#include <fcitx-utils/fs.h>
 #include <fcitx-utils/keysym.h>
 #include <fcitx-utils/log.h>
-#include <fcitx-utils/misc.h>
-#include <fcitx-utils/standardpath.h>
-#include <fcitx-utils/stringutils.h>
-#include <fcitx-utils/utf8.h>
 #include <fcitx/addoninstance.h>
 #include <fcitx/candidatelist.h>
 #include <fcitx/event.h>
@@ -39,12 +40,12 @@
 #include <fcitx/inputpanel.h>
 #include <fcitx/text.h>
 #include <fcitx/userinterface.h>
-#include <fcntl.h>
-#include <filesystem>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <utility>
+
+/* The core expects IBus semantics for the state bits: release is IBus's
+ * bit 1<<30; Fcitx reports release separately on the KeyEvent. */
+#define SHANTI_IBUS_RELEASE_MASK (1u << 30)
 
 FCITX_DEFINE_LOG_CATEGORY(openbangla, "openbangla");
 #define FCITX_OPENBANGLA_DEBUG() FCITX_LOGC(openbangla, Debug)
@@ -85,40 +86,27 @@ public:
   };
 
   void selectCandidate(const std::string & /*text*/, int index) {
-    auto *ctx = engine_->context(ic_);
-    auto *suggestion = engine_->suggestion();
-    if (!suggestion) {
-      return;
-    }
-
-    char *txt = riti_suggestion_get_pre_edit_text(suggestion, index);
+    engine_->syncInputContext(ic_);
+    shanti_core_candidate_clicked(engine_->core(), index);
+    char *txt = shanti_core_last_committed_text(engine_->core());
     ic_->commitString(std::string(txt));
-    riti_context_candidate_committed(ctx, index);
-    riti_string_free(txt);
+    shanti_core_string_free(txt);
     reset();
   }
 
   void updatePreedit() {
-    auto *suggestion = engine_->suggestion();
-    if (!suggestion) {
-      return;
+    char *txt = shanti_core_preedit_text(engine_->core());
+    std::string text(txt);
+    shanti_core_string_free(txt);
+
+    /* Mirror the logical selection onto the widget so the cursor stays in
+     * sync with the core. */
+    auto candidateList = std::dynamic_pointer_cast<CommonCandidateList>(
+        ic_->inputPanel().candidateList());
+    if (candidateList) {
+      candidateList->setGlobalCursorIndex(
+          shanti_core_selection(engine_->core()));
     }
-
-    std::string text;
-    auto index = 0;
-
-    if (!riti_suggestion_is_lonely(suggestion)) {
-      auto candidateList = std::dynamic_pointer_cast<CommonCandidateList>(
-          ic_->inputPanel().candidateList());
-      auto idx = candidateList->globalCursorIndex();
-      if (idx >= 0 && idx < candidateList->totalSize()) {
-        index = idx;
-      }
-    }
-
-    auto *txt = riti_suggestion_get_pre_edit_text(suggestion, index);
-    text = txt;
-    riti_string_free(txt);
 
     Text preedit(std::move(text));
     preedit.setCursor(preedit.textLength());
@@ -130,59 +118,30 @@ public:
     // enough.
   }
 
-  void commit() {
-    auto *ctx = engine_->context(ic_);
-    auto *suggestion = engine_->suggestion();
-    if (!suggestion) {
-      return;
-    }
-
-    std::string text;
-    if (!riti_suggestion_is_lonely(suggestion)) {
-      auto candidateList = ic_->inputPanel().candidateList();
-      auto index = candidateList->cursorIndex();
-      if (index >= 0 && index < candidateList->size()) {
-        candidateList->candidate(index).select(ic_);
-      }
-    } else {
-      char *txt = riti_suggestion_get_pre_edit_text(suggestion, 0);
-      text = txt;
-      ic_->commitString(text);
-      riti_string_free(txt);
-      riti_context_candidate_committed(ctx, 0);
-      reset();
-    }
-  }
+  /* Render the candidate window + auxiliary text + preedit from the core
+   * state (the old updateUI). */
   void updateUI() {
     ic_->inputPanel().reset();
     do {
-      auto *suggestion = engine_->suggestion();
-      if (!suggestion) {
-        break;
-      }
-      if (!riti_suggestion_is_lonely(suggestion)) {
-        char *aux = riti_suggestion_get_auxiliary_text(suggestion);
+      if (shanti_core_has_auxiliary(engine_->core())) {
+        char *aux = shanti_core_auxiliary_text(engine_->core());
         if (aux && aux[0]) {
           ic_->inputPanel().setAuxUp(Text(std::string(aux)));
         }
-        riti_string_free(aux);
+        shanti_core_string_free(aux);
 
         auto candidateList = std::make_unique<OpenBanglaCandidateList>();
-        auto len = riti_suggestion_get_length(suggestion);
-        for (decltype(len) i = 0; i < len; i++) {
-          char *text = riti_suggestion_get_suggestion(suggestion, i);
+        auto len = shanti_core_candidate_count(engine_->core());
+        for (int i = 0; i < len; i++) {
+          char *text = shanti_core_candidate(engine_->core(), i);
           candidateList->append<OpenBanglaCandidate>(engine_, text, i);
-          riti_string_free(text);
+          shanti_core_string_free(text);
         }
 
-        candidateList->setLayoutHint(engine_->candidateWinHorizontal()
+        candidateList->setLayoutHint(shanti_core_candidates_horizontal(engine_->core())
                                          ? CandidateLayoutHint::Horizontal
                                          : CandidateLayoutHint::Vertical);
-        auto index = riti_suggestion_previously_selected_index(suggestion);
-        if (index >= len) {
-          index = 0;
-        }
-        candidateList->setGlobalCursorIndex(index);
+        candidateList->setGlobalCursorIndex(shanti_core_selection(engine_->core()));
         ic_->inputPanel().setCandidateList(std::move(candidateList));
       }
       updatePreedit();
@@ -191,12 +150,7 @@ public:
   }
 
   void reset() {
-    altGrPressed_ = false;
-    engine_->setSuggestion(nullptr);
-    auto *ctx = engine_->context(ic_);
-    if (riti_context_ongoing_input_session(ctx)) {
-      riti_context_finish_input_session(ctx);
-    }
+    shanti_core_reset_state(engine_->core());
     ic_->inputPanel().reset();
     ic_->updatePreedit();
     ic_->updateUserInterface(UserInterfaceComponent::InputPanel);
@@ -204,188 +158,99 @@ public:
 
   void keyEvent(KeyEvent &keyEvent) {
     auto key = keyEvent.rawKey();
+
+    /* Release events only matter for AltGr tracking inside the core; like
+     * the old engine, they pass through untouched and never switch
+     * contexts. */
     if (keyEvent.isRelease()) {
-      if (key.sym() == FcitxKey_Alt_R ||
-          key.sym() == FcitxKey_ISO_Level3_Shift) {
-        altGrPressed_ = false;
-      }
+      shanti_core_key_event(engine_->core(), key.sym(), SHANTI_IBUS_RELEASE_MASK);
       return;
     }
 
-    auto *ctx = engine_->context(ic_);
-    if (!riti_context_ongoing_input_session(ctx)) {
-      engine_->reloadConfig();
-    }
-    auto candidateList = ic_->inputPanel().candidateList();
-    // At first, handle the special keys.
-    switch (key.sym()) {
-    case FcitxKey_BackSpace:
-      if (riti_context_ongoing_input_session(ctx)) {
-        // Is Ctrl key is pressed?
-        auto ctrlKey = key.states().test(KeyState::Ctrl);
-        engine_->setSuggestion(riti_context_backspace_event(ctx, ctrlKey));
+    engine_->syncInputContext(ic_);
 
-        if (engine_->suggestion() &&
-            !riti_suggestion_is_empty(engine_->suggestion())) {
-          updateUI();
-        } else {
-          reset();
-        }
-
-        keyEvent.filterAndAccept();
-        return;
-      }
+    /* Old engine behaviour kept: BackSpace before any session just clears
+     * our leftover panel and is forwarded to the application. */
+    if (key.sym() == FcitxKey_BackSpace &&
+        !shanti_core_ongoing_input_session(engine_->core())) {
+      /* covers the old reloadConfig() call made when no session is ongoing */
+      shanti_core_apply_settings(engine_->core());
       reset();
       return;
-    case FcitxKey_Return:
-      if (riti_context_ongoing_input_session(ctx)) {
-        commit();
-        if (engine_->enterKeyClosesPrevWin()) {
-          keyEvent.filterAndAccept();
-        }
-      }
-      return;
-    case FcitxKey_space:
-    case FcitxKey_KP_Enter:
-      if (riti_context_ongoing_input_session(ctx)) {
-        commit();
-      }
-      return;
-    /** Arrow and Tab keys.
-     * We use the arrow keys and the tab key to move the selection
-     * in the preview window. So we have to ensure the preview
-     * window is shown by checking if the current suggestion is
-     * not a lonely one. Otherwise we don't handle it.
-     **/
-    case FcitxKey_Right:
-    case FcitxKey_Left:
-    case FcitxKey_Up:
-    case FcitxKey_Down:
-    case FcitxKey_Tab:
-      if (riti_context_ongoing_input_session(ctx)) {
-        if (engine_->candidateWinHorizontal() && engine_->suggestion() &&
-            !riti_suggestion_is_lonely(engine_->suggestion()) &&
-            candidateList && candidateList->toCursorMovable()) {
-          if (key.sym() == FcitxKey_Right || key.sym() == FcitxKey_Tab ||
-              key.sym() == FcitxKey_Down) {
-            candidateList->toCursorMovable()->nextCandidate();
-          } else {
-            candidateList->toCursorMovable()->prevCandidate();
-          }
-          updatePreedit();
-
-          ic_->updateUserInterface(UserInterfaceComponent::InputPanel);
-          keyEvent.filterAndAccept();
-        } else {
-          commit();
-        }
-      }
-      return;
-    /** Modifier keys **/
-    case FcitxKey_Alt_R:
-    case FcitxKey_ISO_Level3_Shift:
-      // Keep track of the right Alt key (also known as the AltGr key)
-      altGrPressed_ = true;
-      [[fallthrough]];
-    case FcitxKey_Shift_L:
-    case FcitxKey_Shift_R:
-    case FcitxKey_Control_L:
-    case FcitxKey_Control_R:
-    case FcitxKey_Alt_L:
-    case FcitxKey_Meta_L:
-    case FcitxKey_Meta_R:
-      if (riti_context_ongoing_input_session(ctx)) {
-        keyEvent.filterAndAccept();
-      }
-      return;
-    default:
-      break;
     }
 
-    uint8_t modifier = 0;
-    // Set modifiers
-    if (key.states().test(KeyState::Shift)) {
-      modifier |= MODIFIER_SHIFT;
-    }
-
-    auto ctrlKey = key.states().test(KeyState::Ctrl);
-    auto altKey = key.states().test(KeyState::Alt);
-
-    // Convert the key value into riti's key value.
-    auto ritiKey = keySymToRitiKey(key.sym());
-
-    // Reject the key which has only Ctrl or Alt (not the right one) combination
-    // and riti doesn't handle.
-    if ((ctrlKey && !altKey) || (!ctrlKey && altKey && !altGrPressed_) ||
-        ritiKey == VC_UNKNOWN) {
-      if (riti_context_ongoing_input_session(ctx)) {
-        commit();
-      }
+    switch (shanti_core_key_event(engine_->core(), key.sym(), key.states())) {
+    case SHANTI_KEY_PASS_THROUGH:
+      // Let Fcitx forward the key; no UI change.
       return;
-    }
-
-    // If we have Ctrl and Alt combination or the right Alt, set it as the AltGr
-    // modifier.
-    if ((ctrlKey && altKey) || altGrPressed_) {
-      modifier |= MODIFIER_ALT_GR;
-    }
-
-    auto index = 0;
-
-    if (riti_context_ongoing_input_session(ctx) && engine_->suggestion() &&
-        !riti_suggestion_is_lonely(engine_->suggestion())) {
-      auto candidateList = std::dynamic_pointer_cast<CommonCandidateList>(
-          ic_->inputPanel().candidateList());
-      auto idx = candidateList->globalCursorIndex();
-      if (idx >= 0 && idx < candidateList->totalSize()) {
-        index = idx;
-      }
-    }
-
-    engine_->setSuggestion(
-        riti_get_suggestion_for_key(ctx, ritiKey, modifier, index));
-
-    if (engine_->suggestion() &&
-        !riti_suggestion_is_empty(engine_->suggestion())) {
+    case SHANTI_KEY_SWALLOW:
+      keyEvent.filterAndAccept();
+      return;
+    case SHANTI_KEY_UPDATE_CANDIDATES:
       updateUI();
       keyEvent.filterAndAccept();
       return;
-    }
-
-    // Corner case: When old style kar typing is enabled, a lonely suggestion
-    // and an empty suggestion is not distinguishable. So we check if a input
-    // session is ongoing to accept the key event.
-    if (riti_context_ongoing_input_session(ctx)) {
+    case SHANTI_KEY_UPDATE_PREEDIT:
+      updatePreedit();
+      ic_->updateUserInterface(UserInterfaceComponent::InputPanel);
       keyEvent.filterAndAccept();
+      return;
+    case SHANTI_KEY_COMMIT:
+      commit();
+      keyEvent.filterAndAccept();
+      return;
+    case SHANTI_KEY_COMMIT_PASS:
+      commit();
+      return;
+    case SHANTI_KEY_HIDE_WINDOW:
+      // Old engine: the BackSpace that emptied the composition is still
+      // swallowed (see engine_process_key: the key never reaches the app).
+      keyEvent.filterAndAccept();
+      reset();
+      return;
+    default:
+      return;
     }
+  }
+
+  /* Commit the text the core just prepared and clear the panels. */
+  void commit() {
+    char *txt = shanti_core_last_committed_text(engine_->core());
+    ic_->commitString(std::string(txt));
+    shanti_core_string_free(txt);
+    reset();
   }
 
 private:
   OpenBanglaEngine *engine_;
   InputContext *ic_;
-  /* Unfortunately, we have to keep track of the right Alt Key. */
-  bool altGrPressed_ = false;
 };
 
 OpenBanglaEngine::OpenBanglaEngine(Instance *instance)
-    : instance_(instance), cfg_(riti_config_new()),
-      factory_(
+    : instance_(instance), factory_(
           [this](InputContext &ic) { return new OpenBanglaState(this, ic); }) {
-  if (!fs::makePath(stringutils::joinPath(
-          StandardPath::global().userDirectory(StandardPath::Type::Data),
-          "openbangla-keyboard"))) {
-    throw std::runtime_error("Failed to create user directory");
-  }
-  reloadConfig();
+  /* shanti_core_new() keeps the UserFolders side effect: it creates the
+   * user data tree (and its layouts directory) exactly as before. */
+  core_ = shanti_core_new();
   instance->inputContextManager().registerProperty("openbanglaState",
                                                    &factory_);
 }
 
-OpenBanglaEngine::~OpenBanglaEngine() {}
+OpenBanglaEngine::~OpenBanglaEngine() {
+  if (core_) {
+    shanti_core_free(core_);
+    core_ = nullptr;
+  }
+}
 
 void OpenBanglaEngine::activate(const InputMethodEntry & /*entry*/,
                                 InputContextEvent & /*event*/) {
-  reloadConfig();
+  shanti_core_apply_settings(core_);
+}
+
+void OpenBanglaEngine::reloadConfig() {
+  /* Fcitx5 config-dialog hook: re-apply the settings store into the core. */
+  shanti_core_apply_settings(core_);
 }
 
 void OpenBanglaEngine::keyEvent(const InputMethodEntry & /*entry*/,
@@ -401,115 +266,22 @@ void OpenBanglaEngine::reset(const InputMethodEntry & /*entry*/,
   state->reset();
 }
 
-RitiContext *OpenBanglaEngine::context(InputContext *ic) {
-  // Check if the last input context is same as the current one.
-  // Since RitiContext is shared, reset any existing state if needed.
-  if (currentIC_.isValid() && ic != currentIC_.get()) {
-    suggestion_.reset();
-    if (riti_context_ongoing_input_session(ctx_.get())) {
-      riti_context_finish_input_session(ctx_.get());
-    }
+/* Check if the last input context is the current one; since the core is
+ * shared, reset its state when the context switched. (The old engine's
+ * context() was structurally the same but never seeded its tracking, so
+ * the switch path was dormant — here it actually works.) */
+void OpenBanglaEngine::syncInputContext(InputContext *ic) {
+  if (!currentIC_.isValid()) {
+    currentIC_ = ic->watch();
+    return;
+  }
+  if (ic != currentIC_.get()) {
+    shanti_core_reset_state(core_);
     auto *oldIC = currentIC_.get();
     oldIC->inputPanel().reset();
     oldIC->updatePreedit();
     oldIC->updateUserInterface(UserInterfaceComponent::InputPanel);
     currentIC_ = ic->watch();
-  }
-  return ctx_.get();
-}
-
-bool booleanValue(const RawConfig &config, const std::string &path,
-                  bool defaultValue) {
-  bool value = defaultValue;
-  if (const auto *option = config.valueByPath(path)) {
-    value = *option == "true";
-  }
-  return value;
-}
-
-void OpenBanglaEngine::populateConfig(const RawConfig &config) {
-  // Keep sync with Settings.cpp
-  std::string layoutPath = "avro_phonetic";
-  if (const auto *path = config.valueByPath("layout/path")) {
-    layoutPath = *path;
-  }
-  const bool showCWPhonetic =
-      booleanValue(config, "settings/CandidateWin\\Phonetic", true);
-  const bool includeEnglish =
-      booleanValue(config, "settings/PreviewWin\\IncludeEnglish", true);
-  const bool showPrevWinFixed =
-      booleanValue(config, "settings/FixedLayout\\ShowPrevWin", true);
-  const bool autoVowelFormFixed =
-      booleanValue(config, "settings/FixedLayout\\AutoVowelForm", true);
-  const bool autoChandraPosFixed =
-      booleanValue(config, "settings/FixedLayout\\AutoChandraPos", true);
-  const bool traditionalKarFixed =
-      booleanValue(config, "settings/FixedLayout\\TraditionalKar", false);
-  const bool oldKarOrder =
-      booleanValue(config, "settings/FixedLayout\\OldKarOrder", false);
-  const bool oldReph =
-      booleanValue(config, "settings/FixedLayout\\OldReph", true);
-  const bool numberPadFixed =
-      booleanValue(config, "settings/FixedLayout\\NumberPad", true);
-  const bool ansiOutput = booleanValue(config, "settings/ANSI", false);
-  const bool smartQuoting = booleanValue(config, "settings/SmartQuoting", true);
-
-  if (!riti_config_set_layout_file(cfg_.get(), layoutPath.data())) {
-    FCITX_OPENBANGLA_DEBUG() << "Failed to set layout file: " << layoutPath;
-  }
-
-  riti_config_set_suggestion_include_english(cfg_.get(), includeEnglish);
-  riti_config_set_phonetic_suggestion(cfg_.get(), showCWPhonetic);
-
-  const auto databaseDir = stringutils::joinPath(
-      StandardPath::global().userDirectory(StandardPath::Type::Data),
-      "openbangla-keyboard/data");
-  if (!riti_config_set_database_dir(cfg_.get(), databaseDir.c_str())) {
-    FCITX_OPENBANGLA_DEBUG()
-        << "Failed to set database directory: " << databaseDir;
-  }
-
-  riti_config_set_fixed_suggestion(cfg_.get(), showPrevWinFixed);
-  riti_config_set_fixed_auto_vowel(cfg_.get(), autoVowelFormFixed);
-  riti_config_set_fixed_auto_chandra(cfg_.get(), autoChandraPosFixed);
-  riti_config_set_fixed_traditional_kar(cfg_.get(), traditionalKarFixed);
-  riti_config_set_fixed_old_kar_order(cfg_.get(), oldKarOrder);
-  riti_config_set_fixed_old_reph(cfg_.get(), oldReph);
-  riti_config_set_fixed_numpad(cfg_.get(), numberPadFixed);
-  riti_config_set_ansi_encoding(cfg_.get(), ansiOutput);
-  riti_config_set_smart_quote(cfg_.get(), smartQuoting);
-
-  candidateWinHorizontal_ =
-      booleanValue(config, "settings/CandidateWin\\Horizontal", true);
-  enterKeyClosesPrevWin_ =
-      booleanValue(config, "settings/EnterKeyClosesPrevWin", false);
-}
-
-void OpenBanglaEngine::reloadConfig() {
-  auto path = StandardPath::global().locate(StandardPath::Type::Config,
-                                            "OpenBangla/Keyboard.conf");
-  auto time = std::filesystem::file_time_type::min();
-  if (!path.empty()) {
-    time = std::filesystem::last_write_time(path);
-  }
-  if (time < lastConfigTimestamp_) {
-    return;
-  }
-
-  RawConfig config;
-  auto configFile = StandardPath::global().open(
-      StandardPath::Type::Config, "OpenBangla/Keyboard.conf", O_RDONLY);
-  if (configFile.isValid()) {
-    FCITX_OPENBANGLA_DEBUG() << "Reload openbangla configuration";
-    lastConfigTimestamp_ = time;
-    readFromIni(config, configFile.fd());
-  }
-  populateConfig(config);
-  suggestion_.reset();
-  if (ctx_) {
-    riti_context_update_engine(ctx_.get(), cfg_.get());
-  } else {
-    ctx_.reset(riti_context_new_with_config(cfg_.get()));
   }
 }
 

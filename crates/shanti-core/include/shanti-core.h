@@ -46,6 +46,10 @@ void shanti_core_apply_settings(ShantiCore *core);
 /* Non-zero when the candidate window should be horizontal. */
 int shanti_core_candidates_horizontal(ShantiCore *core);
 
+/* Full state reset: clear suggestion/selection/AltGr tracking and finish
+ * any ongoing session. The shell clears its rendered windows afterwards. */
+void shanti_core_reset_state(ShantiCore *core);
+
 /* Key event handling. `keyval` is an X keysym, `state` the IBus modifier
  * mask (SHIFT/CONTROL/MOD1, release mask). Returns one of the
  * SHANTI_KEY_* codes. Handles AltGr tracking, release filtering, the
