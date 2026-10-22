@@ -22,7 +22,7 @@ Shanti Keyboard একটি open-source, Unicode-সমর্থিত **Bangla
 ইনস্টল করার পদ্ধতি:
 
 * **GNOME:** GitHub Releases থেকে নিজের architecture-এর IBus Flatpak (`org.shanti.ShantiIbus`) ডাউনলোড করুন। একই user বা system scope-এ Flathub remote থাকতে হবে; Flatpak সাধারণত app ইনস্টলের সময় `org.kde.Platform//5.15-25.08` runtime ডাউনলোড করে। তারপর app চালু করে integration setup করুন এবং GNOME Settings → Keyboard → Input Sources থেকে **Shanti** যোগ করুন।
-* **KDE Plasma / Kinoite বা Fcitx5 ব্যবহারকারী desktop:** GitHub Releases থেকে Fcitx5 addon Flatpak (`org.fcitx.Fcitx5.Addon.Shanti`) ডাউনলোড করুন। ইনস্টলের সময় Flathub থেকে sandboxed Fcitx5 স্বয়ংক্রিয়ভাবে আসে — host-এ Fcitx5 রাখার দরকার নেই।
+* **KDE Plasma / Kinoite বা Fcitx5 ব্যবহারকারী desktop:** GitHub Releases থেকে Fcitx5 addon Flatpak (`org.fcitx.Fcitx5.Addon.Shanti`) ডাউনলোড করুন এবং Flathub-এর sandboxed Fcitx5-এর সাথে একসাথে ইনস্টল করুন (`flatpak install --user flathub org.fcitx.Fcitx5`) — host-এ Fcitx5 রাখার দরকার নেই।
 * **Portable install:** source checkout থেকে `bash tools/install.sh` চালান। এটি `release-tag.txt`-এ থাকা release ইনস্টল করে।
 * **Source build:** development-এর জন্য `bash tools/build.sh` চালান।
 

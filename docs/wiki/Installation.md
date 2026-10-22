@@ -6,7 +6,7 @@ Choose the method that matches your desktop:
 
 ## KDE Plasma / Kinoite: Fcitx5 addon Flatpak
 
-Download the Fcitx5 addon bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) and install it — Flatpak automatically pulls Flathub's sandboxed Fcitx5 (`org.fcitx.Fcitx5`) if it is not already installed:
+Download the Fcitx5 addon bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) and install it alongside Flathub's sandboxed Fcitx5 (`org.fcitx.Fcitx5`) if it is not already installed:
 
 ```bash
 flatpak install --user ./shanti-fcitx-addon-x86_64.flatpak

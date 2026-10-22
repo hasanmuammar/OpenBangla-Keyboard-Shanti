@@ -93,10 +93,10 @@ locations. After the upgrade you can remove the old app:
 ## ShantiFcitx — the Fcitx5 engine addon
 
 `org.fcitx.Fcitx5.Addon.Shanti` is an *addon* for the sandboxed Fcitx5 Flatpak
-(`org.fcitx.Fcitx5`, published on Flathub). Installing ours automatically pulls
-`org.fcitx.Fcitx5` from Flathub if it is not already installed, so you do not
-need Fcitx5 on the host system at all — the whole Fcitx5 stack runs inside the
-Flatpak sandbox, including on Kinoite, Silverblue, or any immutable desktop.
+(`org.fcitx.Fcitx5`, published on Flathub). Installing the sandboxed Fcitx5
+from Flathub puts the whole Fcitx5 stack inside the Flatpak sandbox — you do
+not need Fcitx5 on the host system at all, including on Kinoite, Silverblue,
+or any immutable desktop.
 
 ### Install and add the Fcitx input method
 
@@ -107,20 +107,20 @@ Flatpak sandbox, including on Kinoite, Silverblue, or any immutable desktop.
      https://flathub.org/repo/flathub.flatpakrepo
    ```
 
-2. Install the addon — Flatpak pulls `org.fcitx.Fcitx5` and its runtime from
-   Flathub automatically:
+2. Install the sandboxed Fcitx5 and then the addon (both per-user; the first
+   command is a no-op when Fcitx5 is already installed):
 
    ```sh
+   flatpak install --user flathub org.fcitx.Fcitx5
    flatpak install --user ./shanti-fcitx-addon-x86_64.flatpak
    ```
 
    During installation, keep the source-remote choice at its default (accept)
 
-3. Make sure Flathub's Fcitx5 runs at login. On Kinoite/Plasma, enable
+3. Make sure the sandboxed Fcitx5 runs at login. On Kinoite/Plasma, enable
    Flatpak Fcitx5 with:
 
    ```sh
-   flatpak install --user --if-not-exists runtime/org.fcitx.Fcitx5/x86_64/master
    systemctl --user enable --now org.fcitx.Fcitx5
    ```
 
@@ -128,9 +128,12 @@ Flatpak sandbox, including on Kinoite, Silverblue, or any immutable desktop.
    see [installing from source](../README.md), a portable release archive, or the
    distro package.)
 
-4. Open the Fcitx config area: `flatpak run org.fcitx.Fcitx5` exposes the
-   addon's **Shanti Keyboard (Qt)** entry; pick **Shanti** in the Fcitx5
-   method list (the method name shown to Fcitx5 is `shanti`).
+4. Open the Fcitx config area: `flatpak run --user org.fcitx.Fcitx5` exposes
+   the addon's **Shanti Keyboard** entry; pick **Shanti** in the Fcitx5
+   method list (the method name shown to Fcitx5 is `shanti`). Note: this
+   addon build does not include the Qt settings GUI, so its Configure
+   launcher entry does nothing — edit `~/.var/app/org.fcitx.Fcitx5/config`
+   the same way the portable install does, or use the portable `shanti-gui`.
 
 ### Remove
 
@@ -189,7 +192,7 @@ This downloads the build dependencies and can take several minutes. Then launch
 it with:
 
 ```sh
-flatpak run org.shanti.ShantiIbus
+flatpak run --user org.shanti.ShantiIbus
 ```
 
 The Fcitx addon builds the same way against the Flathub Fcitx5 runtime:

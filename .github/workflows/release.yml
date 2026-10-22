@@ -117,9 +117,18 @@ jobs:
             --install-deps-from=flathub \
             --repo=flatpak-repo-fcitx \
             build-dir-fcitx tools/flatpak/fcitx-addon.yml
-          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+          # The addon is committed as a runtime ref (see the manifest
+          # comment); bundle it with --runtime and its actual branch.
+          ref=$(flatpak repo --refs flatpak-repo-fcitx \
+            | grep -F "org.fcitx.Fcitx5.Addon.Shanti/$FLATPAK_ARCH" | head -n1)
+          echo "addon ref: $ref"
+          kind=$(echo "$ref" | cut -d/ -f1)
+          branch=$(echo "$ref" | cut -d/ -f4)
+          flags=""
+          [ "$kind" = runtime ] && flags="--runtime"
+          flatpak build-bundle $flags --arch="$FLATPAK_ARCH" \
             flatpak-repo-fcitx "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
-            org.fcitx.Fcitx5.Addon.Shanti master
+            org.fcitx.Fcitx5.Addon.Shanti "$branch"
           sha256sum "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
             > "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak.sha256"
 

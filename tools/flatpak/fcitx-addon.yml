@@ -2,29 +2,32 @@
 #
 # Flatpak requires Fcitx5 addons to be extensions of Flathub's
 # org.fcitx.Fcitx5 app with IDs under org.fcitx.Fcitx5.Addon.* — the parent
-# manifest (fcitx/flatpak-fcitx5) declares that extension point:
+# app declares that extension point with `directory: addons`,
+# `subdirectories: true`, `add-ld-path: lib` and `no-autodownload: true`.
 #
-#   add-extensions:
-#     org.fcitx.Fcitx5.Addon:
-#       version: master
-#       directory: addons
-#       subdirectories: true
-#       add-ld-path: lib
-#       no-autodownload: true
+# Flathub behaviour, verified against the published org.fcitx.Fcitx5
+# app and the real Flathub addons (Addon.Hangul/Addon.Rime):
+#   * Flathub publishes the parent app on branch `stable`
+#     (`app/org.fcitx.Fcitx5/x86_64/stable`) — NOT the manifest's
+#     upstream `master` branch; its extension point is
+#     `version=stable`. So the addon must use `runtime-version:
+#     stable` and declare no `branch:` (defaults to stable).
+#   * The built addon ends up as a *runtime* ref
+#     (`runtime/<addon-id>/<arch>/stable`), which is why the bundle
+#     step passes --runtime to `flatpak build-bundle`.
 #
-# Installing this addon makes Flatpak pull org.fcitx.Fcitx5 (and its
-# org.kde.Platform//6.11 runtime) from Flathub automatically. The build runs
-# against the parent app (its Fcitx5Core headers/libs are what the addon
-# links to) exactly like the other Flathub Fcitx5 addons (Sayura, Hangul).
+# Installing this addon alongside org.fcitx.Fcitx5 from Flathub gives a
+# fully sandboxed Fcitx5 + Shanti setup with nothing Fcitx-related on the
+# host. The build links against the parent app's Fcitx5Core exactly like
+# the other Flathub Fcitx5 addons (Sayura, Hangul, Rime).
 #
 # Note: the Qt5 settings GUI is not built here (BUILD_FRONTEND=OFF,
 # no Qt5 in the Fcitx5 runtime); the Fcitx5 config dialog's launcher entry
 # therefore cannot open the GUI. Engine, layouts and data files install to
 # /app/addons/Shanti, mounted into the parent at runtime.
 app-id: org.fcitx.Fcitx5.Addon.Shanti
-branch: master
 runtime: org.fcitx.Fcitx5
-runtime-version: master
+runtime-version: stable
 sdk: org.kde.Sdk//6.11
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.rust-stable

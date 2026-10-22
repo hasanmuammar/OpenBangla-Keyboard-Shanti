@@ -8,7 +8,7 @@ Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.
 
 The primary target systems are Bluefin/Dakota, Bazzite, and similar modern atomic Linux distributions. Other Linux desktops may work, but compatibility should be treated as unverified unless supported by a documented test.
 
-Portable IBus and Fcitx5 packages and two Flatpaks are distributed through [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases): the IBus engine app `org.shanti.ShantiIbus` for GNOME, and the Fcitx5 engine addon `org.fcitx.Fcitx5.Addon.Shanti` for Fcitx5 desktops (it pulls Flathub's sandboxed Fcitx5 automatically; the addon ID must live under Flathub's `org.fcitx.Fcitx5.Addon.*` extension point). See the [Flatpak guide](../../tools/flatpak/README.md).
+Portable IBus and Fcitx5 packages and two Flatpaks are distributed through [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases): the IBus engine app `org.shanti.ShantiIbus` for GNOME, and the Fcitx5 engine addon `org.fcitx.Fcitx5.Addon.Shanti` for Fcitx5 desktops (install it together with Flathub's sandboxed Fcitx5; the addon ID must live under Flathub's `org.fcitx.Fcitx5.Addon.*` extension point). See the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## Project priorities
 

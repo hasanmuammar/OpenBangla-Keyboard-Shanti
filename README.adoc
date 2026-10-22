@@ -63,7 +63,7 @@ For bugs or installation/integration problems introduced by this fork, use this 
 Both Flatpaks are architecture-specific bundles on the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. Which one fits:
 
 * **GNOME** (Ubuntu, Fedora Workstation, atomic/image-based systems running GNOME): the IBus package `shanti-ibus-x86_64.flatpak` (or aarch64), Flatpak ID `org.shanti.ShantiIbus`.
-* **KDE Plasma / Kinoite, or any desktop where you use Fcitx5**: the Fcitx5 addon `shanti-fcitx-addon-x86_64.flatpak` (or aarch64), Flatpak ID `org.fcitx.Fcitx5.Addon.Shanti`. Installing it pulls Flathub's sandboxed Fcitx5 automatically — no host Fcitx5 required.
+* **KDE Plasma / Kinoite, or any desktop where you use Fcitx5**: the Fcitx5 addon `shanti-fcitx-addon-x86_64.flatpak` (or aarch64), Flatpak ID `org.fcitx.Fcitx5.Addon.Shanti`. Install it together with Flathub's sandboxed Fcitx5 (`flatpak install --user flathub org.fcitx.Fcitx5`) — no host Fcitx5 required.
 
 The IBus package needs the Flathub runtime `org.kde.Platform//5.15-25.08` in the same install scope; Flatpak normally downloads it during installation. See the link:tools/flatpak/README.md[Flatpak guide] for per-desktop commands and setup.
 
