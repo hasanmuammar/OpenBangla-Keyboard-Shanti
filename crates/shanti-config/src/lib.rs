@@ -1,10 +1,11 @@
 /*
- *  Shanti config — read-only reader for the OpenBangla Keyboard settings
- *  store shared with the Qt GUI.
+ *  Shanti config — read-only reader for the Shanti Keyboard settings
+ *  store shared with the Qt GUI (the pre-rebrand name was OpenBangla
+ *  Keyboard; the file format is unchanged).
  *
- *  The store is an INI file written by QSettings("OpenBangla", "Keyboard")
+ *  The store is an INI file written by QSettings("Shanti", "Shanti")
  *  (NativeFormat == IniFormat on Linux) at
- *  $XDG_CONFIG_HOME/OpenBangla/Keyboard.conf. Ground truth for the format
+ *  $XDG_CONFIG_HOME/Shanti/Shanti.conf. Ground truth for the format
  *  was captured from Qt 5.15 (see tests/fixtures/keyboard.conf):
  *
  *      [layout]

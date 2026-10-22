@@ -1,7 +1,8 @@
 # keyboard.conf — generated fixture
 
 This file is **captured output from real Qt 5.15** (`QSettings("OpenBangla", "Keyboard")`,
-NativeFormat) in the `openbangla-builder` toolbox. It is the ground truth for
+NativeFormat, captured pre-rebrand — today the GUI writes `QSettings("Shanti", "Shanti")`).
+It is the ground truth for
 `shanti-config`'s parser: run `cargo test` in `crates/shanti-config` to verify
 the parser reads it with Qt parity.
 
@@ -16,7 +17,7 @@ cat > /tmp/qt-dump.cpp <<'EOF'
 #include <QPoint>
 #include <cstdio>
 int main() {
-  QSettings s("OpenBangla", "Keyboard");
+  QSettings s("Shanti", "Shanti");  // pre-rebrand: ("OpenBangla", "Keyboard")
   // Mirrors exactly what src/frontend writes via src/shared/Settings.cpp setters.
   s.setValue("window/positions/TopBar", QPoint(120, 240));
   s.setValue("window/visibility/TopBar", true);
@@ -46,11 +47,12 @@ EOF
 g++ -fPIC $(pkg-config --cflags Qt5Core) /tmp/qt-dump.cpp $(pkg-config --libs Qt5Core) -o /tmp/qt-dump
 export XDG_CONFIG_HOME=PATH_TO_THIS_DIRECTORY/stdout=/dev/null-tmpdir   # choose an empty temp dir
 mkdir -p "$XDG_CONFIG_HOME" && /tmp/qt-dump
-cp "$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf" tests/fixtures/keyboard.conf
+cp "$XDG_CONFIG_HOME/Shanti/Shanti.conf" tests/fixtures/keyboard.conf
 ```
 
 Notes:
-- Qt writes `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf` (org/app subdirectory),
+- Qt writes `$XDG_CONFIG_HOME/Shanti/Shanti.conf` (org/app subdirectory; before
+  the rebrand: `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf`),
   NOT a `.plist` despite what older code/comments may suggest on macOS.
 - The remaining group path components are folded into the key with `\`
   separators inside each section (`[settings]` + `FixedLayout\ShowPrevWin`).

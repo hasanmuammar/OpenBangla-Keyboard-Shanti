@@ -1,6 +1,7 @@
 /*  Shanti config — C ABI of the shanti-config crate
- *  (crates/shanti-config), a read-only reader for the OpenBangla Keyboard
- *  settings store shared with the Qt GUI.
+ *  (crates/shanti-config), a read-only reader for the Shanti Keyboard
+ *  settings store shared with the Qt GUI (legacy name: OpenBangla Keyboard
+ *  — the file format is unchanged by the rebrand).
  *
  *  This header is hand-written on purpose; keep it in sync with src/lib.rs.
  *

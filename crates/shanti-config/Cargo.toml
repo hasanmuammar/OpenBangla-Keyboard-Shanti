@@ -3,7 +3,7 @@ name = "shanti-config"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
-description = "Read-only parser for the OpenBangla Keyboard settings store ($XDG_CONFIG_HOME/OpenBangla/Keyboard.conf), byte-compatible with what QSettings (\"OpenBangla\", \"Keyboard\") writes on Linux."
+description = "Read-only parser for the Shanti Keyboard settings store ($XDG_CONFIG_HOME/Shanti/Shanti.conf), byte-compatible with what QSettings (\"Shanti\", \"Shanti\") writes on Linux (and, format-wise, with the legacy OpenBangla store)."
 publish = false
 
 [lib]
