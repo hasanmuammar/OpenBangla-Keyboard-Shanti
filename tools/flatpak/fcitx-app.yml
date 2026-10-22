@@ -62,6 +62,12 @@ finish-args:
   # GUI writes ~/.config/Shanti/Shanti.conf; engine reads it on activation.
   - --filesystem=xdg-config/Shanti:create
   - --filesystem=xdg-data/shanti-keyboard:create
+  # The GUI's Fcitx integration writes the HOST login autostart entry that
+  # starts the daemon at session login (the daemon cannot export autostart
+  # entries itself). The Fcitx5 profile stays sandbox-local on purpose:
+  # daemon, configtool and GUI all live here and must see exactly the same
+  # config, and no host path shadow can orphan an existing setup.
+  - --filesystem=xdg-config/autostart:create
   # Pre-rebrand locations, needed for the one-time legacy migration.
   - --filesystem=xdg-config/OpenBangla:create
   - --filesystem=xdg-data/openbangla-keyboard:create

@@ -48,6 +48,8 @@ private:
   AutoCorrectDialog *autoCorrectDialog;
   QLabel *ibusIntegrationStatus;
   QPushButton *ibusIntegrationRemoveButton;
+  QLabel *fcitxIntegrationStatus;
+  QPushButton *fcitxIntegrationRemoveButton;
   bool m_darkMode;
 
   void applyTheme();
@@ -56,6 +58,7 @@ private:
   void implementSignals();
   void saveSettings();
   void updateIbusIntegrationStatus();
+  void updateFcitxIntegrationStatus();
 };
 
 #endif // SETTINGSDIALOG_H

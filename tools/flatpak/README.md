@@ -14,12 +14,9 @@ page (`.x86_64` for most Intel/AMD computers, `.aarch64` for ARM64).
 | KDE Plasma / Kinoite, or anywhere you already use Fcitx5 | **ShantiFcitx5** | `org.shanti.ShantiFcitx5` |
 | Not sure? | On GNOME → **ShantiIbus**; elsewhere run `echo $XDG_CURRENT_DESKTOP` — `KDE`/`KDE-Live` → **ShantiFcitx5**, anything else → **ShantiIbus** consistently |
 
-Flatpak technical fact behind the Fcitx package: it is a *self-contained app*
-(`org.shanti.ShantiFcitx5`) that uses Flathub's published Fcitx5 app
-(`org.fcitx.Fcitx5`) as its manifest **base**, so one bundle carries the whole
-sandboxed Fcitx5 stack — the input method daemon, our engine, and the Fcitx5
-config tool — plus the Shanti settings data. Nothing needs to be installed on
-the host, and no host Fcitx5 is required.
+If you are on KDE (including Kinoite), the **ShantiFcitx5** app is completely
+self-sufficient — the Fcitx5 keyboard service it needs comes inside the app,
+so nothing extra is required on your computer.
 
 ---
 
@@ -96,22 +93,21 @@ locations. After the upgrade you can remove the old app:
 
 ## ShantiFcitx5 — the Fcitx5 app
 
-`org.shanti.ShantiFcitx5` is a single self-contained Flatpak: the bundle
-carries the whole Fcitx5 stack inside the Flatpak sandbox — the fcitx5
-daemon, its config tool, the Fcitx5 Qt input-context plugin and the Shanti
-engine — plus the **same Shanti settings GUI as the IBus package**, so you do
-not need Fcitx5 on the host system at all, including on Kinoite, Silverblue,
-or any immutable desktop. Both Flatpaaks are built on the same Qt5 runtime
-(`org.kde.Platform//5.15-25.08`) and both include `shanti-gui`; the two
-bundles differ only in the engine backend they carry. The app shares
-Fcitx5's own session-bus name, so it must **not** run alongside Flathub's
-`org.fcitx.Fcitx5` app (if that is installed, uninstall it or pick one of
-the two).
+This package is for people who use KDE (including Kinoite), or any desktop
+where you already type with Fcitx5. Everything it needs — the Fcitx5
+keyboard service and the Shanti engine — is inside the app itself, so
+**you don't need to install anything extra** on your system.
 
-### Install and add the Fcitx input method
+Two things to know:
 
-1. Add Flathub (per-user, matching the app's install scope — the base app and
-   runtime are pulled from it automatically):
+- Use this app **or** Flathub's plain Fcitx5 app (`org.fcitx.Fcitx5`) — not
+  both at the same time. If Flathub's Fcitx5 is installed, remove it first.
+- It comes with the **same Shanti settings app as the IBus package**, so the
+  experience is identical either way.
+
+### Install and start typing
+
+1. Add Flathub (the app downloads its base bits from there):
 
    ```sh
    flatpak remote-add --user --if-not-exists flathub \
@@ -124,52 +120,43 @@ the two).
    flatpak install --user ./shanti-fcitx5-x86_64.flatpak
    ```
 
-3. Make sure the app runs at login. The bundle has no host systemd unit, so
-   set a one-time XDG autostart entry (Kinoite/Plasma and all other desktops
-   honor it):
+3. Open **Shanti Keyboard (Fcitx5)** from your app grid. On first launch it
+   asks:
 
-   ```sh
-   mkdir -p ~/.config/autostart
-   cat > ~/.config/autostart/org.shanti.ShantiFcitx5.desktop <<'EOF'
-   [Desktop Entry]
-   Type=Application
-   Name=Shanti Keyboard (Fcitx5)
-   Exec=flatpak run --user org.shanti.ShantiFcitx5
-   X-Flatpak=org.shanti.ShantiFcitx5
-   EOF
-   ```
+   > Shanti is not set up with Fcitx5 yet. **Set up integration?**
 
-   On KDE the same entry appears in **System Settings → Autostart**
-   afterwards. (If your host already runs a native Fcitx5, prefer the native
-   IME instead — see [installing from source](../README.md) or the distro
-   package.)
+   Click **Set up integration** — that's all it takes. Shanti gets switched
+   on, started now, and started automatically every time you log in.
 
-4. Add **Shanti Keyboard** (method name `shanti`) to an input method group
-   with the bundled Fcitx5 config tool:
+4. Switch to Shanti with **Ctrl+Space** (the usual input-method switch key)
+   and start typing Bangla.
 
-   ```sh
-   flatpak run --user org.shanti.ShantiFcitx5 --command=fcitx5-configtool
-   ```
+   Every other setting — keyboard layout, phonetic mode, autocorrect, and
+   so on — is in the same **Shanti Keyboard (Fcitx5)** window, just like in
+   the IBus package.
 
-5. All other settings — layout, phonetic/fixed options, ANSI mode,
-   autocorrect, layout viewer — are in the bundled **Shanti Keyboard
-   (Fcitx5)** settings GUI, opened from the app grid or with:
+If anything ever stops working (for example after an update), open the app
+again — it notices and offers to repair the setup. The same lives in
+**Settings → Fcitx5 Integration**, and in the tray menu as **Fcitx5
+Integration…**.
 
-   ```sh
-   flatpak run --user org.shanti.ShantiFcitx5 --command=shanti-gui
-   ```
+Advanced users can still tweak Fcitx5 itself with the bundled config tool:
 
-   It writes the same `~/.config/Shanti/Shanti.conf` store the IBus package
-   uses; the engine applies changes the moment an input context activates.
+```sh
+flatpak run --user org.shanti.ShantiFcitx5 --command=fcitx5-configtool
+```
 
 ### Remove
 
-Remove the autostart entry, then uninstall:
+1. Open the app, go to **Settings → Fcitx5 Integration**, and click
+   **Remove integration**. (If you can't open the app anymore, skip this —
+   it only removes Shanti's auto-start entry.)
 
-```sh
-rm ~/.config/autostart/org.shanti.ShantiFcitx5.desktop
-flatpak uninstall --user org.shanti.ShantiFcitx5
-```
+2. Uninstall the app:
+
+   ```sh
+   flatpak uninstall --user org.shanti.ShantiFcitx5
+   ```
 
 ---
 

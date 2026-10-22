@@ -14,6 +14,7 @@ set(SRC_GUI
     SettingsDialog.cpp
     ToggleSwitch.cpp
     FlatpakIbusIntegration.cpp
+    FcitxIntegration.cpp
     AutoCorrectDialog.cpp
     SingleInstance.cpp
     SingleInstance.h
