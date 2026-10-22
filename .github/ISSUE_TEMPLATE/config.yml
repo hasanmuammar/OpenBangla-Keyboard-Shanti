@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Got any questions?
-    url: https://github.com/OpenBangla/OpenBangla-Keyboard/discussions/categories/q-a
-    about: General inquiries or help with OpenBangla Keyboard.
+    url: https://github.com/Shanti/Shanti-Keyboard/discussions/categories/q-a
+    about: General inquiries or help with Shanti Keyboard.
   - name: Share your ideas!
-    url: https://github.com/OpenBangla/OpenBangla-Keyboard/discussions/categories/ideas
+    url: https://github.com/Shanti/Shanti-Keyboard/discussions/categories/ideas
     about: Suggest new features or improvements for the project.

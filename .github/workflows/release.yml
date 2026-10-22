@@ -54,7 +54,7 @@ jobs:
             build-dir tools/flatpak/shanti-ibus.yml
           flatpak build-bundle --arch="$FLATPAK_ARCH" \
             flatpak-repo "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
-            org.openbangla.Shanti.IBus stable
+            org.shanti.ShantiIbus stable
           sha256sum "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
             > "shanti-ibus-${FLATPAK_ARCH}.flatpak.sha256"
 
@@ -72,6 +72,71 @@ jobs:
           path: |
             shanti-ibus-${{ matrix.arch }}.flatpak
             shanti-ibus-${{ matrix.arch }}.flatpak.sha256
+          if-no-files-found: error
+
+  build-flatpak-fcitx:
+    # Fcitx5 addon extension of Flathub's org.fcitx.Fcitx5 app (see
+    # tools/flatpak/fcitx-addon.yml): Flatpak requires the
+    # org.fcitx.Fcitx5.Addon.* ID and pulls the parent from Flathub.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
+
+      - name: Configure Flathub remote
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build Flatpak bundle
+        env:
+          FLATPAK_ARCH: ${{ matrix.arch }}
+          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --install-deps-from=flathub \
+            --repo=flatpak-repo-fcitx \
+            build-dir-fcitx tools/flatpak/fcitx-addon.yml
+          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+            flatpak-repo-fcitx "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
+            org.fcitx.Fcitx5.Addon.Shanti master
+          sha256sum "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
+            > "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak.sha256"
+
+      - name: Attest Fcitx addon bundle and checksum
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            shanti-fcitx-addon-${{ matrix.arch }}.flatpak
+            shanti-fcitx-addon-${{ matrix.arch }}.flatpak.sha256
+
+      - name: Upload Fcitx addon release assets
+        uses: actions/upload-artifact@v5
+        with:
+          name: flatpak-fcitx-${{ matrix.arch }}
+          path: |
+            shanti-fcitx-addon-${{ matrix.arch }}.flatpak
+            shanti-fcitx-addon-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
   build:
@@ -123,8 +188,8 @@ jobs:
 
       - name: Build release archive
         env:
-          OPENBANGLA_BUILD_USE_HOST: "1"
-          OPENBANGLA_NONINTERACTIVE: "1"
+          SHANTI_BUILD_USE_HOST: "1"
+          SHANTI_NONINTERACTIVE: "1"
         run: bash tools/build.sh --backend ${{ matrix.backend }} --package
 
       - name: Attest release archive and checksum
@@ -144,7 +209,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: [build, build-flatpak]
+    needs: [build, build-flatpak, build-flatpak-fcitx]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -155,7 +220,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v5
         with:
-          path: dist
+          path: release
           merge-multiple: true
 
       - name: Create GitHub release
@@ -163,11 +228,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            --title "OpenBangla Keyboard ${GITHUB_REF_NAME}" \
+            --title "Shanti Keyboard ${GITHUB_REF_NAME}" \
             --prerelease \
             --notes-file .github/release-notes.md
 
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" dist/*
+        run: gh release upload "$GITHUB_REF_NAME" release/*

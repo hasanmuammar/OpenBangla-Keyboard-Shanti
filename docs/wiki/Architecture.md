@@ -1,6 +1,6 @@
 # Architecture — Shanti Linux Fork
 
-Shanti is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenBangla/OpenBangla-Keyboard). It has two distinct delivery paths: a portable user-local installer for IBus or Fcitx5, and an experimental IBus-only Flatpak. They have different runtime and host-integration models; instructions for one should not be applied to the other.
+Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenBangla/OpenBangla-Keyboard). It has three distinct delivery paths: a portable user-local installer for IBus or Fcitx5, an IBus engine Flatpak (`org.shanti.ShantiIbus`), and a Fcitx5 engine addon Flatpak (`org.fcitx.Fcitx5.Addon.Shanti`). They have different runtime and host-integration models; instructions for one should not be applied to the other.
 
 ## Delivery paths
 
@@ -15,13 +15,13 @@ Shanti is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenB
 - `tools/portable/install.sh` installs files and registers desktop/input-method resources.
 - `tools/uninstall.sh` removes the user-local installation; user data is preserved unless the corresponding purge option is requested.
 
-The default prefix is `~/.local`. Bundled runtime libraries are placed under `~/.local/lib/openbangla`; build and staging state is kept under the XDG cache directory. The portable installer selects one backend per installation: Fcitx5 on KDE/Plasma, IBus elsewhere.
+The default prefix is `~/.local`. Bundled runtime libraries are placed under `~/.local/lib/shanti`; build and staging state is kept under the XDG cache directory. The portable installer selects one backend per installation: Fcitx5 on KDE/Plasma, IBus elsewhere.
 
 For IBus, the portable installation registers a user component and configures the user service environment so the host IBus daemon can discover it. For Fcitx5, it installs the module and addon metadata and may update the user's Fcitx5 profile.
 
 ### IBus-only Flatpak
 
-The developer-built Flatpak manifest is `tools/flatpak/shanti-ibus.yml`, with app ID `org.openbangla.Shanti.IBus`. It includes the GUI and IBus engine, not the Fcitx5 engine. Its GUI settings and layout data live in the Flatpak's sandboxed data/config locations.
+The developer-built Flatpak manifest is `tools/flatpak/shanti-ibus.yml`, with app ID `org.shanti.ShantiIbus`. It includes the GUI and IBus engine, not the Fcitx5 engine. Its GUI settings and layout data live in the Flatpak's sandboxed data/config locations.
 
 On GNOME, the app can offer to register the Flatpak engine with the host IBus session. The app Settings panel shows registration/service status and provides **Set up / repair** and **Remove integration** actions. Setup writes three app-managed, user-scoped files: an IBus component descriptor, a launcher that invokes the Flatpak engine, and a systemd user-service drop-in for `org.freedesktop.IBus.session.GNOME.service`. It then reloads the user systemd manager and restarts that service. The tray menu also exposes **GNOME IBus Integration…** as a shortcut.
 
@@ -31,9 +31,9 @@ The Flatpak manifest grants access to the user IBus component directory, helper 
 
 ## Build and validation boundaries
 
-CI builds portable packages for x86_64 and aarch64 and tests IBus/Fcitx5 package structure. Tagged alpha releases also build and attach direct-download IBus Flatpak bundles for both architectures, with checksums and provenance attestations. Passing build/package workflows do not prove real desktop input, setup recovery, reboot persistence or cross-distribution compatibility.
+CI builds portable packages for x86_64 and aarch64 and tests IBus/Fcitx5 package structure. Every push also builds the IBus Flatpak and the Fcitx5 addon Flatpak for both architectures as downloadable CI artifacts; tagged alpha releases attach direct-download bundles of both, with checksums and provenance attestations. Passing build/package workflows do not prove real desktop input, setup recovery, reboot persistence or cross-distribution compatibility.
 
-The Flatpak is distributed as downloadable bundles rather than through an OSTree remote. Portable packages and Flatpak bundles are listed on the [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) page. See [Installation](Installation.md), [Development](Development.md), and the [Flatpak guide](../../tools/flatpak/README.md).
+Both Flatpaks are distributed as downloadable bundles rather than through an OSTree remote. Portable packages and Flatpak bundles are listed on the [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) page. See [Installation](Installation.md), [Development](Development.md), and the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## External projects
 

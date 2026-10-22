@@ -1,6 +1,6 @@
-# Shanti
+# Shanti Keyboard
 
-OpenBangla Keyboard Shanti is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenBangla/OpenBangla-Keyboard). The project focuses on a dependable user-local installation, package integrity, and compatibility with modern atomic Linux systems.
+Shanti Keyboard is a Linux-focused fork of [OpenBangla Keyboard](https://github.com/OpenBangla/OpenBangla-Keyboard), rebranded from the pre-rebrand "OpenBangla Keyboard Shanti" naming. The project focuses on a dependable user-local installation, package integrity, and compatibility with modern atomic Linux systems.
 
 **Project status:** Highly Experimental · Vibe-Coded
 
@@ -8,7 +8,7 @@ OpenBangla Keyboard Shanti is a Linux-focused fork of [OpenBangla Keyboard](http
 
 The primary target systems are Bluefin/Dakota, Bazzite, and similar modern atomic Linux distributions. Other Linux desktops may work, but compatibility should be treated as unverified unless supported by a documented test.
 
-Portable IBus and Fcitx5 packages and the IBus-only Flatpak are distributed through [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). The Flatpak app ID is `org.openbangla.Shanti.IBus`; its GNOME host input-source setup is managed from the app's Settings panel. See the [IBus Flatpak guide](../../tools/flatpak/README.md).
+Portable IBus and Fcitx5 packages and two Flatpaks are distributed through [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases): the IBus engine app `org.shanti.ShantiIbus` for GNOME, and the Fcitx5 engine addon `org.fcitx.Fcitx5.Addon.Shanti` for Fcitx5 desktops (it pulls Flathub's sandboxed Fcitx5 automatically; the addon ID must live under Flathub's `org.fcitx.Fcitx5.Addon.*` extension point). See the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## Project priorities
 
@@ -35,7 +35,7 @@ Portable IBus and Fcitx5 packages and the IBus-only Flatpak are distributed thro
 
 ### Packaging and distribution
 
-- [Shanti IBus Flatpak](../../tools/flatpak/README.md) — build and publishing status.
+- [Shanti Flatpaks](../../tools/flatpak/README.md) — both packages, build and publishing status.
 
 ## Development principles
 

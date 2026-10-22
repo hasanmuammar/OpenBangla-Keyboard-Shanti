@@ -1,4 +1,4 @@
-= OpenBangla Keyboard Fork — Shanti
+= Shanti Keyboard
 
 **Shanti — Highly Experimental, Vibe-Coded Fork of OpenBangla Keyboard for Modern Linux Operating Systems, including Bazzite, Bluefin and similar atomic/image-based systems.**
 
@@ -7,11 +7,11 @@
 
 image:https://img.shields.io/badge/platform-Linux-333333?logo=linux&logoColor=white[Linux] image:https://img.shields.io/badge/input%20method-IBus%20%7C%20Fcitx5-0F6CBD[Input methods] image:https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white[CMake] image:https://img.shields.io/badge/UI-Qt5-41CD52?logo=qt&logoColor=white[Qt5] image:https://img.shields.io/badge/C%2B%2B%20%7C%20Rust-00599C?logo=rust&logoColor=white[C++ and Rust]
 
-This repository is a **Linux-focused fork of OpenBangla Keyboard created to make OpenBangla easy to install on modern Linux operating systems such as Bazzite and Bluefin**. It keeps the OpenBangla Keyboard codebase while adding a simpler prebuilt installation and runtime-bundling workflow for conventional Linux systems and modern atomic/image-based systems.
+This repository is **Shanti Keyboard**, a **Linux-focused fork of OpenBangla Keyboard created to make it easy to install on modern Linux operating systems such as Bazzite and Bluefin**. It keeps the OpenBangla Keyboard codebase while adding a simpler prebuilt installation and runtime-bundling workflow for conventional Linux systems and modern atomic/image-based systems.
 
-The main purpose of this fork is to make OpenBangla practical on modern Linux operating systems such as Bazzite and Bluefin, using user-local installation and bundled runtime libraries. Source building and release packaging are available through `tools/build.sh`.
+The main purpose of this fork is to make a Bangla keyboard practical on modern Linux operating systems such as Bazzite and Bluefin, using user-local installation and bundled runtime libraries. Source building and release packaging are available through `tools/build.sh`.
 
-OpenBangla Keyboard is an open-source, Unicode-compliant **Bangla (Bengali) keyboard and input method for Linux**. It provides phonetic and fixed keyboard layouts, typing automation, dictionary support and autocorrection.
+Shanti Keyboard is an open-source, Unicode-compliant **Bangla (Bengali) keyboard and input method for Linux**. It provides phonetic and fixed keyboard layouts, typing automation, dictionary support and autocorrection.
 
 [WARNING]
 ====
@@ -26,24 +26,26 @@ This is an experimental fork. Some fork-specific installation, packaging, runtim
 == What this fork provides
 
 * **Prebuilt Linux releases** for x86_64 and ARM64.
-* **Automatic backend selection:** KDE Plasma uses Fcitx5; other desktop environments use IBus.
+* **Flatpak packages for both input-method stacks:** GNOME uses IBus (`org.shanti.ShantiIbus`); Fcitx5-based desktops use the Fcitx5 addon (`org.fcitx.Fcitx5.Addon.Shanti`).
+* **Automatic backend selection for source/portable installs:** KDE Plasma uses Fcitx5; other desktop environments use IBus.
 * **User-local installation** under `~/.local` without a system-wide package install.
 * **Source builds** remain available through `tools/build.sh`.
 * **Isolated source builds** using Toolbx, Distrobox, Podman, or Docker.
 * **Bundled Qt5 and required runtime libraries** for the user-local installation.
 * **Automatic IBus component registration** for user-local installations.
 * **User-local uninstaller** with optional cache removal.
+* **Legacy-safe upgrades:** installs from pre-rebrand releases (openbangla-keyboard paths, `org.openbangla.Shanti.IBus`) are migrated automatically to the new Shanti names on first run.
 
 == Bangla keyboard and input-method features
 
-The OpenBangla Keyboard codebase is built for Bangla typing on Linux and includes:
+The Shanti Keyboard codebase is built for Bangla typing on Linux and includes:
 
 * Phonetic Bangla typing, including Avro-style phonetic input.
 * Fixed Bangla keyboard layouts.
 * Unicode-compliant Bengali text input.
 * Typing automation for fixed layouts.
 * Dictionary-based suggestions and autocorrection.
-* A Qt-based configuration interface.
+* A Qt-based configuration interface (`shanti-gui`).
 * Linux desktop integration through IBus or Fcitx5.
 
 
@@ -55,6 +57,15 @@ The OpenBangla Keyboard codebase is built for Bangla typing on Linux and include
 
 For bugs or installation/integration problems introduced by this fork, use this repository's issue tracker. Do not send fork-specific reports to upstream.
 ====
+
+=== Flatpak (recommended; pick one for your desktop)
+
+Both Flatpaks are architecture-specific bundles on the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. Which one fits:
+
+* **GNOME** (Ubuntu, Fedora Workstation, atomic/image-based systems running GNOME): the IBus package `shanti-ibus-x86_64.flatpak` (or aarch64), Flatpak ID `org.shanti.ShantiIbus`.
+* **KDE Plasma / Kinoite, or any desktop where you use Fcitx5**: the Fcitx5 addon `shanti-fcitx-addon-x86_64.flatpak` (or aarch64), Flatpak ID `org.fcitx.Fcitx5.Addon.Shanti`. Installing it pulls Flathub's sandboxed Fcitx5 automatically — no host Fcitx5 required.
+
+The IBus package needs the Flathub runtime `org.kde.Platform//5.15-25.08` in the same install scope; Flatpak normally downloads it during installation. See the link:tools/flatpak/README.md[Flatpak guide] for per-desktop commands and setup.
 
 === Prebuilt installation
 
@@ -68,10 +79,6 @@ Supported architectures:
 KDE Plasma automatically uses Fcitx5. Other desktop environments automatically use IBus.
 
 From a source checkout, install with `bash tools/install.sh`. The default release tag is in `release-tag.txt`; use `bash tools/install.sh --version TAG` to choose another release. The CMake project version is tracked separately in `version.txt`.
-
-=== Experimental IBus-only Flatpak
-
-The IBus-only Flatpak (`org.openbangla.Shanti.IBus`) is available as architecture-specific bundles on the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. It requires the separate Flathub runtime `org.kde.Platform//5.15-25.08`; add Flathub in the same install scope and Flatpak normally downloads the runtime with the app. It supports GNOME host input sources through the app's Settings panel. See the link:tools/flatpak/README.md[Flatpak guide] for commands and setup.
 
 === Build from source
 
@@ -99,9 +106,9 @@ GitHub Actions currently tests source builds across:
 * ARM64 (aarch64) with GCC.
 * ARM64 (aarch64) with IBus and Fcitx5.
 
-A separate prebuilt-package test workflow builds release archives for x86_64 and ARM64 with both IBus and Fcitx5, verifies their SHA-256 checksums, inspects the archive contents, checks the bundled runtime and backend metadata, and runs `openbangla-gui --version` plus `openbangla-gui --check-data`. The data check verifies that layout and dictionary files can be found relative to the installed executable, not the CI builder's home directory.
+A separate prebuilt-package test workflow builds release archives for x86_64 and ARM64 with both IBus and Fcitx5, verifies their SHA-256 checksums, inspects the archive contents, checks the bundled runtime and backend metadata, and runs `shanti-gui --version` plus `shanti-gui --check-data`. The data check verifies that layout and dictionary files can be found relative to the installed executable, not the CI builder's home directory.
 
-The installer checks that the required data files are present. You can repeat the check with `~/.local/bin/openbangla-gui --check-data`. CI validates builds and package contents; it does not replace testing Bangla input on your desktop.
+The installer checks that the required data files are present. You can repeat the check with `~/.local/bin/shanti-gui --check-data`. CI validates builds and package contents; it does not replace testing Bangla input on your desktop.
 
 == Related projects and technologies
 
@@ -116,11 +123,11 @@ This project uses or integrates with several established open-source projects. T
 |https://github.com/moby/moby[image:https://img.shields.io/badge/Docker-Containers-2496ED?logo=docker&logoColor=white[Docker]] |— |https://github.com/ninja-build/ninja[image:https://img.shields.io/badge/Ninja-Build-555555?logo=github&logoColor=white[Ninja]] |—
 |===
 
-These projects are dependencies or integrations; they are not part of the OpenBangla Keyboard project itself.
+These projects are dependencies or integrations; they are not part of the Shanti Keyboard project itself.
 
 == Uninstallation
 
-Remove the current-user prebuilt installation:
+Remove the current-user prebuilt installation (it cleans both the current Shanti names and the legacy pre-rebrand names):
 
 [source,bash]
 ----
@@ -133,6 +140,8 @@ To remove the build and staging cache as well:
 ----
 bash tools/uninstall.sh --purge-cache
 ----
+
+Flatpak removal commands for both packages are in the link:tools/flatpak/README.md[Flatpak guide].
 
 == Manual Linux build
 
@@ -166,6 +175,8 @@ cmake --build build --parallel 2
 cmake --install build
 ----
 
+Pass `-DBUILD_FRONTEND=OFF` to skip the Qt5 settings GUI — this is how the Fcitx5 Flatpak addon builds, since the Fcitx5 runtime has no Qt5.
+
 The build requires Qt5, CMake, Ninja, a C/C++ compiler, Rust/Cargo, zstd development files, and the development files for the selected input-method backend.
 
 == Development
@@ -184,14 +195,14 @@ For a clean automated rebuild:
 
 [source,bash]
 ----
-rm -rf "$XDG_CACHE_HOME/openbangla-keyboard/build"
+rm -rf "$XDG_CACHE_HOME/shanti-keyboard/build"
 ----
 
 If `XDG_CACHE_HOME` is not set:
 
 [source,bash]
 ----
-rm -rf "$HOME/.cache/openbangla-keyboard/build"
+rm -rf "$HOME/.cache/shanti-keyboard/build"
 ----
 
 Project-specific documentation is kept under `docs/wiki/`.
@@ -217,14 +228,20 @@ Project-specific documentation is kept under `docs/wiki/`.
 |`tools/portable/`
 |Backend selection, isolated build, runtime bundling and installation logic.
 
+|`tools/flatpak/`
+|Flatpak manifests (IBus app + Fcitx5 addon) and the user guide.
+
+|`crates/`
+|The Rust core: settings store reader, path discovery, and the engine state machine shared by both input-method backends.
+
 |`src/engine/ibus/`
-|IBus backend.
+|IBus backend (`ibus-engine-shanti`).
 
 |`src/engine/fcitx/`
-|Fcitx5 backend.
+|Fcitx5 backend (`shanti` addon).
 
 |`src/frontend/`
-|Qt GUI.
+|Qt GUI (`shanti-gui`).
 
 |`src/engine/riti/`
 |Riti input engine submodule.
@@ -232,7 +249,7 @@ Project-specific documentation is kept under `docs/wiki/`.
 
 == Credits
 
-This project retains the original OpenBangla Keyboard code and attribution, including the work of the original OpenBangla and Avro-related contributors. This repository is a Linux-focused fork that adds portable installation, release packaging and runtime-integration work.
+Shanti Keyboard retains the original OpenBangla Keyboard code and attribution, including the work of the original OpenBangla and Avro-related contributors. This repository is a Linux-focused fork that adds portable installation, release packaging, runtime-integration work and the Shanti rebrand.
 
 == License
 

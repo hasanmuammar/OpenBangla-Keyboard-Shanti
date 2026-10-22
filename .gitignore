@@ -1,6 +1,6 @@
 build
 compile_commands.json
-src/frontend/OpenBanglaKeyboardFrontendUI.pro.user*
+src/frontend/ShantiKeyboardFrontendUI.pro.user*
 .idea/
 CMakeLists.txt.user
 cmake-build-debug/CMakeFiles/

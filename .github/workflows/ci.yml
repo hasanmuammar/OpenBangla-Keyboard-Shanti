@@ -52,13 +52,70 @@ jobs:
             build-dir tools/flatpak/shanti-ibus.yml
           flatpak build-bundle --arch=${{ matrix.arch }} \
             flatpak-repo shanti-ibus-${{ matrix.arch }}.flatpak \
-            org.openbangla.Shanti.IBus stable
+            org.shanti.ShantiIbus stable
 
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v5
         with:
           name: shanti-ibus-flatpak-${{ matrix.arch }}
           path: shanti-ibus-${{ matrix.arch }}.flatpak
+          if-no-files-found: error
+
+  build-flatpak-fcitx:
+    # Fcitx5 addon extension of Flathub's org.fcitx.Fcitx5 app; needs both
+    # the parent app and its runtime from Flathub. Artifacts are the way to
+    # test the addon on a real desktop (e.g. Kinoite) before releasing it.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
+
+      - name: Configure Flathub remote
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build Flatpak bundle
+        env:
+          FLATPAK_ARCH: ${{ matrix.arch }}
+          # Use the distro AppStream tools: a Homebrew appstream on PATH may
+          # lack the appstream-compose helper flatpak-builder needs to finish.
+          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --install-deps-from=flathub \
+            --repo=flatpak-repo-fcitx \
+            build-dir-fcitx tools/flatpak/fcitx-addon.yml
+          flatpak build-bundle --arch=$FLATPAK_ARCH \
+            flatpak-repo-fcitx shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak \
+            org.fcitx.Fcitx5.Addon.Shanti master
+          sha256sum "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
+            > "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak.sha256"
+
+      - name: Upload Flatpak bundle
+        uses: actions/upload-artifact@v5
+        with:
+          name: shanti-fcitx-addon-flatpak-${{ matrix.arch }}
+          path: |
+            shanti-fcitx-addon-${{ matrix.arch }}.flatpak
+            shanti-fcitx-addon-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
   build-linux:

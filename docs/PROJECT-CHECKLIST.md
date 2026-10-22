@@ -11,7 +11,7 @@ This checklist distinguishes repository implementation, CI evidence, real-deskto
 - [x] Separate IBus and Fcitx5 portable builds.
 - [x] x86_64 and aarch64 build targets.
 - [x] Fork-owned alpha tags use the `shanti-alpha.*` pattern.
-- [x] Experimental IBus-only Flatpak has its own app ID: `org.openbangla.Shanti.IBus`.
+- [x] IBus Flatpak has its own app ID: `org.shanti.ShantiIbus` (pre-rebrand was `org.openbangla.Shanti.IBus`).
 
 ## 2. Portable installer and runtime
 

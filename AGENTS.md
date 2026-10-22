@@ -2,9 +2,17 @@
 
 ## Project Overview
 
-Linux-only fork of OpenBangla Keyboard (Qt5 Bengali input method). Remotes: `origin` = this fork (`hasanmuammar/OpenBangla-Keyboard-Shanti`), `upstream` = `OpenBangla/OpenBangla-Keyboard`. All fork development happens on the `develop` branch; Windows/macOS are out of scope.
+Shanti Keyboard — a Linux-only fork of OpenBangla Keyboard (Qt5 Bengali input method), rebranded from the pre-rebrand "OpenBangla Keyboard Shanti" naming. Remotes: `origin` = this fork (`hasanmuammar/OpenBangla-Keyboard-Shanti`), `upstream` = `OpenBangla/OpenBangla-Keyboard`. All fork development happens on the `develop` branch; Windows/macOS are out of scope.
 
-Layout: `src/engine/` (C++ IBus and Fcitx5 engine plugins, `common/`, plus the `riti` Rust transliteration engine built as a static lib via corrosion), `src/frontend/` (Qt5 GUI → the `openbangla-gui` binary), `src/ibus` engine binary is `ibus-engine-openbangla`, `src/shared/` (shared C++ utilities), `src/platform/` (Rust platform support), `crates/` (std-only Rust crates for settings (`shanti-config`) and path discovery (`shanti-paths`); test with plain `cargo test` per crate; their CMake import targets use underscores — `shanti_config`, `shanti_paths` — because corrosion maps crate-name dashes to underscores). Keyboard layouts and language data live in `data/`. Fork-specific docs belong in `docs/wiki/`. The Flatpak manifest and guide are in `tools/flatpak/`, and CI workflows are in `.github/workflows/`. The adopted `docs/REWRITE-PLAN.md` is the phased roadmap for the eventual Rust (core) + GTK4/libadwaita (GUI) rewrite — consult it and its decision log before any rewrite-adjacent work.
+Layout: `src/engine/` (C++ IBus and Fcitx5 engine plugins, `common/`, plus the `riti` Rust transliteration engine built as a static lib via corrosion), `src/frontend/` (Qt5 GUI → the `shanti-gui` binary), `src/engine/ibus` engine binary is `ibus-engine-shanti`, `src/shared/` (shared C++ utilities), `src/platform/` (Rust platform support), `crates/` (std-only Rust crates for settings (`shanti-config`), path discovery (`shanti-paths`), the shared engine state machine (`shanti-core`) and keysyms (`shanti-keysyms`); test with plain `cargo test` per crate; their CMake import targets use underscores — `shanti_config`, `shanti_paths`… — because corrosion maps crate-name dashes to underscores). Keyboard layouts and language data live in `data/`. Fork-specific docs belong in `docs/wiki/`. Flatpak manifests (IBus app `org.shanti.ShantiIbus` + Fcitx5 addon `org.fcitx.Fcitx5.Addon.Shanti`) and the user guide are in `tools/flatpak/`, and CI workflows are in `.github/workflows/`. The adopted `docs/REWRITE-PLAN.md` is the phased roadmap for the eventual Rust (core) + GTK4/libadwaita (GUI) rewrite — consult it and its decision log before any rewrite-adjacent work.
+
+## Naming map (after the 2026-10 rebrand)
+
+- Binaries: `shanti-gui` (Qt GUI), `ibus-engine-shanti` (IBus engine); Fcitx5 addon id `shanti` (module `shanti.so`).
+- IBus bus/component: `org.freedesktop.IBus.Shanti`; engine name "Shanti"; Fcitx5 input-method display name "Shanti Keyboard".
+- User data: `~/.local/share/shanti-keyboard`; settings store `~/.config/Shanti/Shanti.conf` (`QSettings("Shanti", "Shanti")`); bundled data `<exe_dir>/../share/shanti-keyboard`; build cache `~/.cache/shanti-keyboard`.
+- Release assets: `shanti-keyboard_linux_<arch>_<backend>.tar.gz`; installer env override `SHANTI_VERSION`.
+- Legacy (pre-rebrand) names — `openbangla-keyboard` data tree, `~/.config/OpenBangla/Keyboard.conf`, `ibus-engine-openbangla`, `openbangla-gui`, `org.openbangla.Shanti.IBus`, `~/.cache/openbangla-keyboard`, env.d `90-openbangla-ibus.conf` — are still recognized by the installers/uninstaller and migrated on first run, but every NEW artifact uses the Shanti names. Keep legacy allowlist/migration references intact wherever they exist (marked `legacy`).
 
 ## Submodules — required before building
 
@@ -28,9 +36,9 @@ bash tools/build.sh --backend ibus --package   # release archive in ./dist inste
 Gotchas:
 
 - Default action **builds and installs to the current user's home** — it is not a compile-only step. Use `--package` to only produce the `./dist` archive.
-- It may boot a temporary Toolbx/Distrobox/Podman/Docker build environment (prompted unless `-y`); with `-y` it refuses to install Podman or change host packages.
-- Build/staging state lives in `${XDG_CACHE_HOME:-$HOME/.cache}/openbangla-keyboard/build`— not in a repo `build/` dir. To force a clean CMake config, remove only that cache path.
-- Manual build: enable exactly one backend (`-DENABLE_IBUS=ON -DENABLE_FCITX=OFF` or the reverse), build out of tree with Ninja. In-source builds and both/neither backends are hard errors, as is non-Linux. Deps: Qt5 (Widgets, Network, Svg, DBus), CMake ≥ 3.18, Ninja, Rust/Cargo, libzstd dev, plus ibus-1.0 or Fcitx5Core (≥ 5.0.5) dev headers.
+- It may boot a temporary Toolbx/Distrobox/Podman/Docker build environment (prompted unless `-y`); with `-y` it refuses to install Podman or change host packages. The builder container is named `shanti-builder` (a leftover `openbangla-builder` container from a pre-rebrand checkout is not reused; delete it manually).
+- Build/staging state lives in `${XDG_CACHE_HOME:-$HOME/.cache}/shanti-keyboard/build` — not in a repo `build/` dir. To force a clean CMake config, remove only that cache path.
+- Manual build: enable exactly one backend (`-DENABLE_IBUS=ON -DENABLE_FCITX=OFF` or the reverse), build out of tree with Ninja. In-source builds and both/neither backends are hard errors, as is non-Linux. `-DBUILD_FRONTEND=OFF` skips the Qt GUI (only for the Fcitx5 Flatpak addon; engines are Qt-free). Deps: Qt5 (Widgets, Network, Svg, DBus), CMake ≥ 3.18, Ninja, Rust/Cargo, libzstd dev, plus ibus-1.0 or Fcitx5Core (≥ 5.0.5) dev headers.
 
 ## Generated headers
 
@@ -42,26 +50,26 @@ cbindgen --config cbindgen.toml --output include/platform.h
 
 ## Testing and Verification
 
-There is no unit-test suite. Verified checks:
+Unit tests live in the Rust crates (`cargo test` per crate in `crates/*`); shell changes are covered by `bash -n` and package-test.
 
-- `.github/workflows/ci.yml` compiles portable IBus/Fcitx5 variants and builds the Flatpak for x86_64 and aarch64. It ignores markdown/asciidoc-only commits.
+- `.github/workflows/ci.yml` compiles portable IBus/Fcitx5 variants and builds both Flatpaks (IBus app + Fcitx5 addon) for x86_64 and aarch64. It ignores markdown/asciidoc-only commits.
 - `.github/workflows/package-test.yml` validates shell syntax, release archive/checksum integrity, archive paths and symlink containment, and offscreen GUI/data checks.
 - Offscreen GUI check that mirrors package-test (no desktop session needed):
 
 ```bash
-QT_QPA_PLATFORM=offscreen ~/.local/bin/openbangla-gui --version
-QT_QPA_PLATFORM=offscreen ~/.local/bin/openbangla-gui --check-data
+QT_QPA_PLATFORM=offscreen ~/.local/bin/shanti-gui --version
+QT_QPA_PLATFORM=offscreen ~/.local/bin/shanti-gui --check-data
 ```
 
-- For installer changes run `bash tools/install.sh` then `bash tools/uninstall.sh`; verify IBus registration with `ibus list-engine | grep -i -A3 -B2 openbangla`.
-- Engine behavior changes require actually typing Bangla in a real desktop/input-method session — CI/packaging checks do not cover that, and a successful Flatpak bundle build does not prove host IBus integration works.
-- Local Flatpak builds use `tools/flatpak/shanti-ibus.yml` (see its README); `appstreamcli compose` is known to fail on atomic distros (Bluefin, Bazzite) — see the shanti-alpha.1.4 CHANGELOG entry and docs/wiki/Development.md for the fixes. Every CI push, including PR branches, builds a Flatpak and uploads it as a downloadable artifact (`shanti-ibus-flatpak-x86_64` / `-aarch64`); the README documents testing a PR build with `gh run download` — this is the way to validate engine changes on a real desktop before release. Local builder gotcha: `flatpak-builder`'s state dir must be on the same filesystem as the target dir (pass `--state-dir` under `/tmp` if the clone lives elsewhere).
+- For installer changes run `bash tools/install.sh` then `bash tools/uninstall.sh`; verify IBus registration with `ibus list-engine | grep -i -A3 -B2 shanti`.
+- Engine behavior changes require actually typing Bangla in a real desktop/input-method session — CI/packaging checks do not cover that, and a successful Flatpak bundle build does not prove host IBus/Fcitx integration works.
+- Local Flatpak builds use `tools/flatpak/shanti-ibus.yml` and `tools/flatpak/fcitx-addon.yml` (see that directory's README); `appstreamcli compose` is known to fail on atomic distros (Bluefin, Bazzite) — see the shanti-alpha.1.4 CHANGELOG entry and docs/wiki/Development.md for the fixes. Every CI push, including PR branches, builds both Flatpaks and uploads them as downloadable artifacts (`shanti-ibus-flatpak-x86_64`, `shanti-fcitx-addon-flatpak-x86_64`, `-aarch64`); the README documents testing a PR build with `gh run download` — this is the way to validate engine changes on a real desktop before release. Local builder gotcha: `flatpak-builder`'s state dir must be on the same filesystem as the target dir (pass `--state-dir` under `/tmp` if the clone lives elsewhere).
 
 ## Releases
 
-- Pushing a tag matching `shanti-alpha.*` triggers `.github/workflows/release.yml`: x86_64/aarch64 portable archives for both backends plus IBus-only Flatpaks, with checksums and GitHub provenance attestations, attached to a GitHub prerelease.
-- Release prep commits touch exactly two files: `CHANGELOG.md` (new `shanti-alpha.X` entry) and `release-tag.txt` (holds the next tag string, e.g. `shanti-alpha.1.4`). `version.txt` stays at the inherited upstream `3.0.0`.
-- Pre-releases `shanti-alpha.1` through `shanti-alpha.1.4` are published on GitHub Releases.
+- Pushing a tag matching `shanti-alpha.*` triggers `.github/workflows/release.yml`: x86_64/aarch64 portable archives for both backends plus IBus and Fcitx5-addon Flatpaks, with checksums and GitHub provenance attestations, attached to a GitHub prerelease.
+- Release prep commits touch exactly two files: `CHANGELOG.md` (new `shanti-alpha.X` entry) and `release-tag.txt` (holds the next tag string, e.g. `shanti-alpha.1.5`). `version.txt` stays at the inherited upstream `3.0.0`.
+- Pre-releases `shanti-alpha.1` through `shanti-alpha.1.4` are published on GitHub Releases (under the pre-rebrand naming).
 
 ## Conventions
 

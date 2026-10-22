@@ -1,13 +1,13 @@
 ---
 name: Feature Request
-description: Suggest an idea for improving OpenBangla Keyboard
+description: Suggest an idea for improving Shanti Keyboard
 labels: ["enhancement"]
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting an improvement for OpenBangla Keyboard (OBK). Please provide as much detail as possible to help us understand your idea.
+        Thank you for suggesting an improvement for Shanti Keyboard (OBK). Please provide as much detail as possible to help us understand your idea.
   - type: textarea
     id: feature-description
     attributes:
