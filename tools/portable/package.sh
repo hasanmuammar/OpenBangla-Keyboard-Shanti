@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-package_openbangla() {
+package_shanti() {
     run_builder '
         set -Eeuo pipefail
 
@@ -23,7 +23,7 @@ package_openbangla() {
                 ;;
         esac
 
-        artifact_name="openbangla-keyboard_linux_${artifact_arch}_${OBK_BACKEND}.tar.gz"
+        artifact_name="shanti-keyboard_linux_${artifact_arch}_${OBK_BACKEND}.tar.gz"
         output_dir="$OBK_WORKSPACE/dist"
         archive_path="$output_dir/$artifact_name"
         checksum_path="$archive_path.sha256"
@@ -70,24 +70,24 @@ package_openbangla() {
             }
         fi
 
-        component="$install_root/share/ibus/component/openbangla.xml"
+        component="$install_root/share/ibus/component/shanti.xml"
         if [[ -f "$component" ]]; then
             sed -i -E \
-                -e "s#<exec>[^<]*</exec>#<exec>@OBK_PREFIX@/libexec/ibus-engine-openbangla --ibus</exec>#" \
-                -e "s#<icon>[^<]*</icon>#<icon>@OBK_DATA_HOME@/openbangla-keyboard/icons/OpenBangla-Keyboard.png</icon>#" \
+                -e "s#<exec>[^<]*</exec>#<exec>@OBK_PREFIX@/libexec/ibus-engine-shanti --ibus</exec>#" \
+                -e "s#<icon>[^<]*</icon>#<icon>@OBK_DATA_HOME@/shanti-keyboard/icons/Shanti-Keyboard.png</icon>#" \
                 "$component"
         fi
 
-        desktop="$install_root/share/applications/openbangla-keyboard.desktop"
+        desktop="$install_root/share/applications/shanti-keyboard.desktop"
         if [[ -f "$desktop" ]]; then
-            sed -i -E "s#^Exec=.*\$#Exec=\"@OBK_PREFIX@/bin/openbangla-gui\" %f#" "$desktop"
+            sed -i -E "s#^Exec=.*\$#Exec=\"@OBK_PREFIX@/bin/shanti-gui\" %f#" "$desktop"
         fi
 
         # Ship the user-facing installer and uninstaller inside the archive so a
         # downloaded release can be installed, repaired or removed without a
         # source checkout. The tools/ layout and release-tag.txt are mirrored so
         # that install.sh keeps resolving its libraries and release tag.
-        data_root="$install_root/share/openbangla-keyboard"
+        data_root="$install_root/share/shanti-keyboard"
         release_tools_root="$data_root/tools"
         [[ -d "$OBK_WORKSPACE/tools/portable" ]] || {
             echo "Refusing to package without the portable tools directory." >&2

@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.18...3.29)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 file(STRINGS "${CMAKE_SOURCE_DIR}/version.txt" VERSION_STRING LIMIT_COUNT 1 REGEX "^.+")
-project("OpenBangla-Keyboard" VERSION ${VERSION_STRING})
-set(APP_NAME "OpenBangla-Keyboard")
+project("Shanti-Keyboard" VERSION ${VERSION_STRING})
+set(APP_NAME "Shanti-Keyboard")
 
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(FATAL_ERROR "This fork currently supports Linux only.")
@@ -16,9 +16,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(cmake/corrosion-rs)
-find_package(Qt5 COMPONENTS Widgets Network Svg DBus REQUIRED)
+# Qt5 is only needed by the settings GUI (src/frontend + src/shared); the
+# engine plugins are Qt-free since rewrite phase 2. The Fcitx5 Flatpak
+# addon builds with -DBUILD_FRONTEND=OFF inside the Fcitx5 runtime, which
+# has no Qt5.
+option(BUILD_FRONTEND "Build the Qt5 settings GUI" ON)
+if(BUILD_FRONTEND)
+    find_package(Qt5 COMPONENTS Widgets Network Svg DBus REQUIRED)
+endif()
 
-message(STATUS "Qt5 framework version: ${Qt5Core_VERSION}")
+# Rust crates shared by the engine plugins (shanti-config, shanti-paths);
+# imported as CMake targets so the engines can link them directly.
+add_subdirectory(crates)
+
+if(BUILD_FRONTEND)
+    message(STATUS "Qt5 framework version: ${Qt5Core_VERSION}")
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -42,7 +55,7 @@ if(NOT DEFINED LIBEXECDIR)
     set(LIBEXECDIR "${CMAKE_INSTALL_PREFIX}/libexec")
 endif()
 
-set(PROJECT_DATADIR "${DATADIR}/openbangla-keyboard")
+set(PROJECT_DATADIR "${DATADIR}/shanti-keyboard")
 add_definitions(-DPROJECT_DATADIR="${PROJECT_DATADIR}")
 add_definitions(-DBIN_DIR="${BIN_DIR}")
 add_definitions(-DLIBEXECDIR="${LIBEXECDIR}")
@@ -73,5 +86,7 @@ endif()
 
 add_subdirectory(src/engine)
 add_subdirectory(src/platform)
-add_subdirectory(src/frontend)
-add_subdirectory(src/shared)
+if(BUILD_FRONTEND)
+    add_subdirectory(src/shared)
+    add_subdirectory(src/frontend)
+endif()

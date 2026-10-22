@@ -1,6 +1,6 @@
 # Contributing to this fork
 
-This repository is an experimental Linux-focused fork of OpenBangla Keyboard.
+This repository is an experimental Linux-focused fork of OpenBangla Keyboard, rebranded as Shanti Keyboard.
 
 ## Scope
 
@@ -31,7 +31,7 @@ bash tools/uninstall.sh
 For IBus changes, verify the engine with:
 
 ```bash
-ibus list-engine | grep -i -A3 -B2 openbangla
+ibus list-engine | grep -i -A3 -B2 shanti
 ```
 
 For a manual CMake check, configure exactly one backend:

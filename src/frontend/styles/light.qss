@@ -1,4 +1,4 @@
-/* OpenBangla Keyboard — Settings dialog, light theme */
+/* Shanti Keyboard — Settings dialog, light theme */
 
 QDialog#SettingsDialog {
     background-color: #f1eee8;

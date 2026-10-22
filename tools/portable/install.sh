@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-backup_openbangla_data_file() {
+backup_app_data_file() {
     local target="$1"
-    local backup_root="$OBK_DATA_HOME/.openbangla-keyboard-backups"
+    local backup_root="$OBK_DATA_HOME/.shanti-keyboard-backups"
     local backup_dir
 
     assert_no_symlink_components "$target"
@@ -15,7 +15,7 @@ backup_openbangla_data_file() {
     log "Preserved the previous application data file at: $backup_dir/${target##*/}"
 }
 
-merge_openbangla_data() {
+merge_data_dir() {
     local source="$1"
     local destination="$2"
     local item name layout target
@@ -68,7 +68,7 @@ merge_openbangla_data() {
                         dictionary.json|suffix.json|regex.json)
                             # Preserve a recoverable copy before updating shipped databases.
                             if [[ -e "$target" ]]; then
-                                backup_openbangla_data_file "$target"
+                                backup_app_data_file "$target"
                             fi
                             cp -a -- "$layout" "$target"
                             ;;
@@ -135,8 +135,8 @@ relocate_xdg_resource() {
     fi
 
     if [[ -d "$source" && ! -L "$source" ]]; then
-        if [[ "$relative" == "openbangla-keyboard" ]]; then
-            merge_openbangla_data "$source" "$destination"
+        if [[ "$relative" == "shanti-keyboard" ]]; then
+            merge_data_dir "$source" "$destination"
         else
             mkdir -p "$destination"
             cp -a "$source/." "$destination/"
@@ -148,6 +148,20 @@ relocate_xdg_resource() {
 }
 
 xdg_resource_relatives() {
+    # Current (post-rebrand) resource names, then the pre-rebrand legacy
+    # names so an upgrade from shanti-alpha.1.4 keeps migrating cleanly.
+    printf '%s\n' \
+        shanti-keyboard \
+        applications/shanti-keyboard.desktop \
+        metainfo/org.shanti.ShantiKeyboard.metainfo.xml \
+        pixmaps/shanti-keyboard.png \
+        ibus/component/shanti.xml \
+        fcitx5/addon/shanti.conf \
+        fcitx5/inputmethod/shanti.conf
+    for size in 16 32 48 128 512 1024; do
+        printf '%s\n' "icons/hicolor/${size}x${size}/apps/shanti-keyboard.png"
+    done
+    # Legacy (pre-rebrand) resource names: migrated/cleaned on upgrade.
     printf '%s\n' \
         openbangla-keyboard \
         applications/openbangla-keyboard.desktop \
@@ -164,7 +178,14 @@ xdg_resource_relatives() {
 confirm_legacy_xdg_migration() {
     [[ "$OBK_DATA_HOME" != "$OBK_PREFIX/share" ]] || return 0
 
-    local migration_marker="$OBK_DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"
+    local migration_marker="$OBK_DATA_HOME/.shanti-keyboard-xdg-migration-v1-complete"
+    local legacy_marker="$OBK_DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"
+    if [[ -e "$legacy_marker" ]]; then
+        # A previous pre-rebrand release already migrated resources into
+        # XDG_DATA_HOME; the GUI migrates openbangla-keyboard data to the
+        # shanti-keyboard tree on first run.
+        return 0
+    fi
     if [[ -e "$migration_marker" || -L "$migration_marker" ]]; then
         [[ -f "$migration_marker" && ! -L "$migration_marker" ]] ||
             die "Refusing to trust an unexpected legacy-migration marker path: $migration_marker"
@@ -203,7 +224,14 @@ migrate_legacy_xdg_resources() {
     [[ "$OBK_DATA_HOME" != "$OBK_PREFIX/share" ]] || return 0
 
     local relative source destination preserved_legacy=0
-    local migration_marker="$OBK_DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"
+    local migration_marker="$OBK_DATA_HOME/.shanti-keyboard-xdg-migration-v1-complete"
+    local legacy_marker="$OBK_DATA_HOME/.openbangla-keyboard-xdg-migration-v1-complete"
+    if [[ -e "$legacy_marker" ]]; then
+        # A previous pre-rebrand release already migrated resources into
+        # XDG_DATA_HOME; the GUI migrates openbangla-keyboard data to the
+        # shanti-keyboard tree on first run.
+        return 0
+    fi
     if [[ -e "$migration_marker" || -L "$migration_marker" ]]; then
         [[ -f "$migration_marker" && ! -L "$migration_marker" ]] ||
             die "Refusing to trust an unexpected legacy-migration marker path: $migration_marker"
@@ -240,8 +268,8 @@ migrate_legacy_xdg_resources() {
         # The merge intentionally skips some duplicate custom layouts/autocorrect
         # files; deleting the whole source here could destroy those user edits.
         if [[ -d "$source" && ! -L "$source" ]]; then
-            if [[ "$relative" == "openbangla-keyboard" ]]; then
-                merge_openbangla_data "$source" "$destination"
+            if [[ "$relative" == "shanti-keyboard" || "$relative" == "openbangla-keyboard" ]]; then
+                merge_data_dir "$source" "$destination"
             else
                 mkdir -p "$destination"
                 cp -a "$source/." "$destination/"
@@ -289,20 +317,20 @@ sed_escape_replacement() {
 }
 
 rewrite_install_metadata() {
-    local component="$OBK_DATA_HOME/ibus/component/openbangla.xml"
-    local desktop="$OBK_DATA_HOME/applications/openbangla-keyboard.desktop"
+    local component="$OBK_DATA_HOME/ibus/component/shanti.xml"
+    local desktop="$OBK_DATA_HOME/applications/shanti-keyboard.desktop"
     local engine icon gui
 
     if [[ -f "$component" ]]; then
-        engine="$(xml_escape "$OBK_PREFIX/libexec/ibus-engine-openbangla")"
-        icon="$(xml_escape "$OBK_DATA_HOME/openbangla-keyboard/icons/OpenBangla-Keyboard.png")"
+        engine="$(xml_escape "$OBK_PREFIX/libexec/ibus-engine-shanti")"
+        icon="$(xml_escape "$OBK_DATA_HOME/shanti-keyboard/icons/Shanti-Keyboard.png")"
         engine="$(sed_escape_replacement "$engine")"
         icon="$(sed_escape_replacement "$icon")"
         sed -i -E             -e "s|<exec>[^<]*</exec>|<exec>\"$engine\" --ibus</exec>|"             -e "s|<icon>[^<]*</icon>|<icon>$icon</icon>|"             "$component"
     fi
 
     if [[ -f "$desktop" ]]; then
-        gui="$OBK_PREFIX/bin/openbangla-gui"
+        gui="$OBK_PREFIX/bin/shanti-gui"
         # Desktop Entry arguments support quoted executable paths.
         gui="${gui//\\/\\\\}"
         gui="${gui//\"/\\\"}"
@@ -322,27 +350,28 @@ confirm_install_replacements() {
     done
 
     for path in \
-        "$OBK_PREFIX/bin/openbangla-gui" \
+        "$OBK_PREFIX/bin/shanti-gui" \
         "$OBK_PREFIX/bin/qt.conf" \
-        "$OBK_PREFIX/bin/openbangla-gui.bin" \
-        "$OBK_PREFIX/libexec/ibus-engine-openbangla" \
-        "$OBK_PREFIX/libexec/ibus-engine-openbangla.bin" \
+        "$OBK_PREFIX/bin/shanti-gui.bin" \
+        "$OBK_PREFIX/libexec/ibus-engine-shanti" \
+        "$OBK_PREFIX/libexec/ibus-engine-shanti.bin" \
+        "$OBK_PREFIX/lib/shanti" \
         "$OBK_PREFIX/lib/openbangla" \
-        "$OBK_PREFIX/share/openbangla-keyboard" \
-        "$OBK_PREFIX/share/applications/openbangla-keyboard.desktop" \
-        "$OBK_PREFIX/share/ibus/component/openbangla.xml" \
-        "$OBK_PREFIX/share/fcitx5/addon/openbangla.conf" \
-        "$OBK_PREFIX/share/fcitx5/inputmethod/openbangla.conf" \
-        "$OBK_PREFIX/share/metainfo/io.github.openbangla.keyboard.metainfo.xml" \
-        "$OBK_PREFIX/share/pixmaps/openbangla-keyboard.png" \
-        "$OBK_DATA_HOME/openbangla-keyboard" \
-        "$OBK_DATA_HOME/applications/openbangla-keyboard.desktop" \
-        "$OBK_DATA_HOME/ibus/component/openbangla.xml" \
-        "$OBK_DATA_HOME/fcitx5/addon/openbangla.conf" \
-        "$OBK_DATA_HOME/fcitx5/inputmethod/openbangla.conf" \
-        "$OBK_DATA_HOME/metainfo/io.github.openbangla.keyboard.metainfo.xml" \
-        "$OBK_DATA_HOME/pixmaps/openbangla-keyboard.png" \
-        "$config_home/environment.d/90-openbangla-ibus.conf"; do
+        "$OBK_PREFIX/share/shanti-keyboard" \
+        "$OBK_PREFIX/share/applications/shanti-keyboard.desktop" \
+        "$OBK_PREFIX/share/ibus/component/shanti.xml" \
+        "$OBK_PREFIX/share/fcitx5/addon/shanti.conf" \
+        "$OBK_PREFIX/share/fcitx5/inputmethod/shanti.conf" \
+        "$OBK_PREFIX/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml" \
+        "$OBK_PREFIX/share/pixmaps/shanti-keyboard.png" \
+        "$OBK_DATA_HOME/shanti-keyboard" \
+        "$OBK_DATA_HOME/applications/shanti-keyboard.desktop" \
+        "$OBK_DATA_HOME/ibus/component/shanti.xml" \
+        "$OBK_DATA_HOME/fcitx5/addon/shanti.conf" \
+        "$OBK_DATA_HOME/fcitx5/inputmethod/shanti.conf" \
+        "$OBK_DATA_HOME/metainfo/org.shanti.ShantiKeyboard.metainfo.xml" \
+        "$OBK_DATA_HOME/pixmaps/shanti-keyboard.png" \
+        "$config_home/environment.d/90-shanti-ibus.conf"; do
         assert_no_symlink_components "$path"
 
         if [[ -L "$path" ]]; then
@@ -350,7 +379,7 @@ confirm_install_replacements() {
         fi
         if [[ -e "$path" ]]; then
             case "$path" in
-                "$OBK_PREFIX/lib/openbangla"|"$OBK_PREFIX/share/openbangla-keyboard"|"$OBK_DATA_HOME/openbangla-keyboard")
+                "$OBK_PREFIX/lib/openbangla"|"$OBK_PREFIX/lib/shanti"|"$OBK_PREFIX/share/shanti-keyboard"|"$OBK_DATA_HOME/shanti-keyboard")
                     [[ -d "$path" ]] ||
                         die "Existing installation path has the wrong type; refusing to replace it: $path"
                     ;;
@@ -360,7 +389,7 @@ confirm_install_replacements() {
                     ;;
             esac
             if [[ "$found" -eq 0 ]]; then
-                printf 'These existing OpenBangla paths may be replaced by the installation:\n'
+                printf 'These existing Shanti (or legacy) paths may be replaced by the installation:\n'
             fi
             printf '  %s\n' "$path"
             found=1
@@ -368,7 +397,7 @@ confirm_install_replacements() {
     done
 
     if [[ "$OBK_BACKEND" == fcitx ]]; then
-        path="$OBK_PREFIX/lib/fcitx5/openbangla.so"
+        path="$OBK_PREFIX/lib/fcitx5/shanti.so"
         assert_no_symlink_components "$path"
         if [[ -L "$OBK_PREFIX/lib/fcitx5" || -L "$path" ]]; then
             die "Refusing to overwrite the Fcitx module through a symlinked path: $path"
@@ -377,7 +406,7 @@ confirm_install_replacements() {
             [[ -f "$path" ]] ||
                 die "Existing Fcitx module path is not a regular file: $path"
             if [[ "$found" -eq 0 ]]; then
-                printf 'These existing OpenBangla paths may be replaced by the installation:\n'
+                printf 'These existing Shanti (or legacy) paths may be replaced by the installation:\n'
             fi
             printf '  %s\n' "$path"
             found=1
@@ -386,7 +415,7 @@ confirm_install_replacements() {
 
     for size in 16 32 48 128 512 1024; do
         for icon_root in "$OBK_PREFIX/share/icons" "$OBK_DATA_HOME/icons"; do
-            path="$icon_root/hicolor/${size}x${size}/apps/openbangla-keyboard.png"
+            path="$icon_root/hicolor/${size}x${size}/apps/shanti-keyboard.png"
             assert_no_symlink_components "$path"
             if [[ -L "$path" ]]; then
                 die "Refusing to overwrite a symlinked icon path: $path"
@@ -395,7 +424,7 @@ confirm_install_replacements() {
                 [[ -f "$path" ]] ||
                     die "Existing icon path is not a regular file; refusing to replace it: $path"
                 if [[ "$found" -eq 0 ]]; then
-                    printf 'These existing OpenBangla paths may be replaced by the installation:\n'
+                    printf 'These existing Shanti (or legacy) paths may be replaced by the installation:\n'
                 fi
                 printf '  %s\n' "$path"
                 found=1
@@ -406,14 +435,50 @@ confirm_install_replacements() {
     [[ "$found" -eq 1 ]] || return 0
 
     if [[ ! -t 0 ]]; then
-        die "Existing OpenBangla files need review. Rerun interactively to choose whether to replace them."
+        die "Existing Shanti files need review. Rerun interactively to choose whether to replace them."
     fi
-    read -r -p 'Continue and replace the listed OpenBangla paths? [y/N] ' reply
+    read -r -p 'Continue and replace the listed Shanti paths? [y/N] ' reply
     [[ "$reply" =~ ^[Yy]([Ee][Ss])?$ ]] ||
-        die "Installation cancelled; existing OpenBangla files were preserved."
+        die "Installation cancelled; existing files were preserved."
 }
 
-install_openbangla() {
+# Remove pre-rebrand registered resources (component/desktop/metainfo/
+# icons/conf files) left behind by shanti-alpha.1.4 and earlier. The legacy
+# user-data directory is deliberately kept: the GUI migrates it to
+# shanti-keyboard on first run and the uninstaller cleans both names.
+remove_legacy_registrations() {
+    local path
+    for path in \
+        "$OBK_DATA_HOME/ibus/component/openbangla.xml" \
+        "$OBK_DATA_HOME/applications/openbangla-keyboard.desktop" \
+        "$OBK_DATA_HOME/metainfo/io.github.openbangla.keyboard.metainfo.xml" \
+        "$OBK_DATA_HOME/pixmaps/openbangla-keyboard.png" \
+        "$OBK_DATA_HOME/fcitx5/addon/openbangla.conf" \
+        "$OBK_DATA_HOME/fcitx5/inputmethod/openbangla.conf"; do
+        if [[ -L "$path" ]]; then
+            die "Refusing to replace a legacy registration through a symlinked path: $path"
+        fi
+        if [[ -f "$path" ]]; then
+            rm -f -- "$path"
+        fi
+    done
+    for size in 16 32 48 128 512 1024; do
+        path="$OBK_DATA_HOME/icons/hicolor/${size}x${size}/apps/openbangla-keyboard.png"
+        if [[ -f "$path" && ! -L "$path" ]]; then
+            rm -f -- "$path"
+        fi
+    done
+    # The pre-rebrand IBUS_COMPONENT_PATH environment file content is still
+    # valid, but the rebranded file replaces it; drop the old name.
+    local legacy_env_file
+    legacy_env_file="$(xdg_dir XDG_CONFIG_HOME "$HOME/.config")/environment.d/90-openbangla-ibus.conf"
+    if [[ -f "$legacy_env_file" && ! -L "$legacy_env_file" ]]; then
+        assert_no_symlink_components "$legacy_env_file"
+        rm -f -- "$legacy_env_file"
+    fi
+}
+
+install_shanti() {
     local staged_root="$OBK_STAGE$OBK_PREFIX"
     local item name
 
@@ -431,14 +496,17 @@ install_openbangla() {
     # XDG_DATA_HOME, avoiding a temporary old-location copy that shadows XDG.
 
     # Never replace an existing library bundle without a separate, explicit choice.
-    if [[ -e "$OBK_PREFIX/lib/openbangla" || -L "$OBK_PREFIX/lib/openbangla" ]]; then
-        if [[ -L "$OBK_PREFIX" || -L "$OBK_PREFIX/lib" || -L "$OBK_PREFIX/lib/openbangla" ]]; then
+    # Both the current (lib/shanti) and the pre-rebrand (lib/openbangla) bundle
+    # names are handled, so an upgrade from shanti-alpha.1.4 cleans up cleanly.
+    for library_dir in "$OBK_PREFIX/lib/shanti" "$OBK_PREFIX/lib/openbangla"; do
+    if [[ -e "$library_dir" || -L "$library_dir" ]]; then
+        if [[ -L "$OBK_PREFIX" || -L "$OBK_PREFIX/lib" || -L "$library_dir" ]]; then
             die "Refusing to replace a bundled library through a symlinked install path."
         fi
         if [[ ! -t 0 ]]; then
             die "An existing library bundle needs a choice: keep a backup, replace without a backup, or cancel. Rerun interactively."
         fi
-        printf 'Existing library bundle: %s\n' "$OBK_PREFIX/lib/openbangla"
+        printf 'Existing library bundle: %s\n' "$library_dir"
         printf 'Choose what to do with it:\n'
         printf '  1) Replace and keep a timestamped backup\n'
         printf '  2) Replace without keeping a backup (old files will be deleted)\n'
@@ -446,43 +514,44 @@ install_openbangla() {
         read -r -p 'Choice [3]: ' library_choice
         case "$library_choice" in
             1)
-                backup="$OBK_PREFIX/lib/openbangla.backup.$(date +%Y%m%d%H%M%S)"
+                backup="$library_dir.backup.$(date +%Y%m%d%H%M%S)"
                 if [[ -e "$backup" || -L "$backup" ]]; then
                     die "Backup path already exists; preserving all files: $backup"
                 fi
-                assert_no_symlink_components "$OBK_PREFIX/lib/openbangla"
-                assert_no_nested_mounts "$OBK_PREFIX/lib/openbangla"
-                [[ -d "$OBK_PREFIX/lib/openbangla" && ! -L "$OBK_PREFIX/lib/openbangla" ]] ||
+                assert_no_symlink_components "$library_dir"
+                assert_no_nested_mounts "$library_dir"
+                [[ -d "$library_dir" && ! -L "$library_dir" ]] ||
                     die "The library bundle changed type before backup; refusing to modify it."
-                mv -nT -- "$OBK_PREFIX/lib/openbangla" "$backup"
-                [[ ! -e "$OBK_PREFIX/lib/openbangla" && -d "$backup" ]] ||
+                mv -nT -- "$library_dir" "$backup"
+                [[ ! -e "$library_dir" && -d "$backup" ]] ||
                     die "Could not move the library bundle to its unique backup path; no existing files were intentionally replaced."
                 printf 'Previous bundled libraries were preserved at: %s\n' "$backup"
                 ;;
             2)
-                printf 'This will permanently remove: %s\n' "$OBK_PREFIX/lib/openbangla"
+                printf 'This will permanently remove: %s\n' "$library_dir"
                 read -r -p 'Confirm deletion of this exact directory? [y/N] ' delete_reply
                 [[ "$delete_reply" =~ ^[Yy]([Ee][Ss])?$ ]] ||
                     die "Replacement cancelled; previous bundled libraries were preserved."
-                assert_no_symlink_components "$OBK_PREFIX/lib/openbangla"
-                assert_no_nested_mounts "$OBK_PREFIX/lib/openbangla"
-                [[ -d "$OBK_PREFIX/lib/openbangla" && ! -L "$OBK_PREFIX/lib/openbangla" ]] ||
+                assert_no_symlink_components "$library_dir"
+                assert_no_nested_mounts "$library_dir"
+                [[ -d "$library_dir" && ! -L "$library_dir" ]] ||
                     die "The library bundle changed type before deletion; refusing to modify it."
-                rm -rf --one-file-system -- "$OBK_PREFIX/lib/openbangla"
+                rm -rf --one-file-system -- "$library_dir"
                 ;;
             *)
                 die "Installation cancelled; previous bundled libraries were preserved."
                 ;;
         esac
     fi
+    done
 
     # The .bin files are the currently installed executables behind our launch wrappers.
     # Preserve any old versions before the new staged binaries replace them.
-    for path in "$OBK_PREFIX/bin/openbangla-gui.bin" "$OBK_PREFIX/libexec/ibus-engine-openbangla.bin"; do
+    for path in "$OBK_PREFIX/bin/shanti-gui.bin" "$OBK_PREFIX/libexec/ibus-engine-shanti.bin"; do
         if [[ -e "$path" ]]; then
             [[ -f "$path" && ! -L "$path" ]] ||
                 die "Refusing to replace an executable backup that is not a regular file: $path"
-            backup_openbangla_data_file "$path"
+            backup_app_data_file "$path"
         fi
     done
 
@@ -496,23 +565,25 @@ install_openbangla() {
 
     install_xdg_resources "$staged_root/share"
 
-    if [[ -x "$OBK_PREFIX/bin/openbangla-gui" ]]; then
-        assert_no_symlink_components "$OBK_PREFIX/bin/openbangla-gui.bin"
-        mv -fT -- "$OBK_PREFIX/bin/openbangla-gui" "$OBK_PREFIX/bin/openbangla-gui.bin"
-        [[ ! -e "$OBK_PREFIX/bin/openbangla-gui" && -f "$OBK_PREFIX/bin/openbangla-gui.bin" ]] ||
+    if [[ -x "$OBK_PREFIX/bin/shanti-gui" ]]; then
+        assert_no_symlink_components "$OBK_PREFIX/bin/shanti-gui.bin"
+        mv -fT -- "$OBK_PREFIX/bin/shanti-gui" "$OBK_PREFIX/bin/shanti-gui.bin"
+        [[ ! -e "$OBK_PREFIX/bin/shanti-gui" && -f "$OBK_PREFIX/bin/shanti-gui.bin" ]] ||
             die "Could not install the GUI executable into its intended path."
-        cp "$OBK_WORKSPACE/tools/portable/launch-bundled.sh" "$OBK_PREFIX/bin/openbangla-gui"
-        chmod +x "$OBK_PREFIX/bin/openbangla-gui"
+        cp "$OBK_WORKSPACE/tools/portable/launch-bundled.sh" "$OBK_PREFIX/bin/shanti-gui"
+        chmod +x "$OBK_PREFIX/bin/shanti-gui"
     fi
 
-    if [[ -x "$OBK_PREFIX/libexec/ibus-engine-openbangla" ]]; then
-        assert_no_symlink_components "$OBK_PREFIX/libexec/ibus-engine-openbangla.bin"
-        mv -fT -- "$OBK_PREFIX/libexec/ibus-engine-openbangla" "$OBK_PREFIX/libexec/ibus-engine-openbangla.bin"
-        [[ ! -e "$OBK_PREFIX/libexec/ibus-engine-openbangla" && -f "$OBK_PREFIX/libexec/ibus-engine-openbangla.bin" ]] ||
+    if [[ -x "$OBK_PREFIX/libexec/ibus-engine-shanti" ]]; then
+        assert_no_symlink_components "$OBK_PREFIX/libexec/ibus-engine-shanti.bin"
+        mv -fT -- "$OBK_PREFIX/libexec/ibus-engine-shanti" "$OBK_PREFIX/libexec/ibus-engine-shanti.bin"
+        [[ ! -e "$OBK_PREFIX/libexec/ibus-engine-shanti" && -f "$OBK_PREFIX/libexec/ibus-engine-shanti.bin" ]] ||
             die "Could not install the IBus engine into its intended path."
-        cp "$OBK_WORKSPACE/tools/portable/launch-bundled.sh" "$OBK_PREFIX/libexec/ibus-engine-openbangla"
-        chmod +x "$OBK_PREFIX/libexec/ibus-engine-openbangla"
+        cp "$OBK_WORKSPACE/tools/portable/launch-bundled.sh" "$OBK_PREFIX/libexec/ibus-engine-shanti"
+        chmod +x "$OBK_PREFIX/libexec/ibus-engine-shanti"
     fi
+
+    remove_legacy_registrations
 
     rewrite_install_metadata
 
@@ -523,10 +594,10 @@ install_openbangla() {
 
         xdg_config_home="$(xdg_dir XDG_CONFIG_HOME "$HOME/.config")"
         assert_no_symlink_components "$xdg_config_home/environment.d"
-        assert_no_symlink_components "$xdg_config_home/environment.d/90-openbangla-ibus.conf"
+        assert_no_symlink_components "$xdg_config_home/environment.d/90-shanti-ibus.conf"
         mkdir -p "$xdg_config_home/environment.d"
-        assert_no_symlink_components "$xdg_config_home/environment.d/90-openbangla-ibus.conf"
-        printf "%s\n" "IBUS_COMPONENT_PATH=$ibus_component_env" > "$xdg_config_home/environment.d/90-openbangla-ibus.conf"
+        assert_no_symlink_components "$xdg_config_home/environment.d/90-shanti-ibus.conf"
+        printf "%s\n" "IBUS_COMPONENT_PATH=$ibus_component_env" > "$xdg_config_home/environment.d/90-shanti-ibus.conf"
 
         if command -v dbus-update-activation-environment >/dev/null 2>&1; then
             dbus-update-activation-environment --systemd "IBUS_COMPONENT_PATH=$ibus_component_env" || true
@@ -541,29 +612,29 @@ install_openbangla() {
 
     if [[ "$OBK_BACKEND" == ibus ]] &&
        command -v dconf >/dev/null 2>&1; then
-        "$OBK_PREFIX/bin/openbangla-gui" --setup-system || true
+        "$OBK_PREFIX/bin/shanti-gui" --setup-system || true
     fi
 }
 
 verify_installation() {
-    [[ -x "$OBK_PREFIX/bin/openbangla-gui" ]] ||
-        die "openbangla-gui was not installed."
+    [[ -x "$OBK_PREFIX/bin/shanti-gui" ]] ||
+        die "shanti-gui was not installed."
 
-    "$OBK_PREFIX/bin/openbangla-gui" --version >/dev/null 2>&1 ||
-        die "openbangla-gui cannot start with the installed runtime."
+    "$OBK_PREFIX/bin/shanti-gui" --version >/dev/null 2>&1 ||
+        die "shanti-gui cannot start with the installed runtime."
 
-    "$OBK_PREFIX/bin/openbangla-gui" --check-data >/dev/null 2>&1 ||
+    "$OBK_PREFIX/bin/shanti-gui" --check-data >/dev/null 2>&1 ||
         die "The installed runtime cannot locate its layout and dictionary data files."
 
     case "$OBK_BACKEND" in
         ibus)
-            [[ -x "$OBK_PREFIX/libexec/ibus-engine-openbangla" ]] ||
+            [[ -x "$OBK_PREFIX/libexec/ibus-engine-shanti" ]] ||
                 die "The IBus engine was not installed."
-            [[ -f "$OBK_DATA_HOME/ibus/component/openbangla.xml" ]] ||
+            [[ -f "$OBK_DATA_HOME/ibus/component/shanti.xml" ]] ||
                 die "The IBus component metadata was not installed under XDG_DATA_HOME."
             ;;
         fcitx)
-            [[ -f "$OBK_DATA_HOME/fcitx5/addon/openbangla.conf" ]] ||
+            [[ -f "$OBK_DATA_HOME/fcitx5/addon/shanti.conf" ]] ||
                 die "The Fcitx5 addon was not installed under XDG_DATA_HOME."
             ;;
     esac

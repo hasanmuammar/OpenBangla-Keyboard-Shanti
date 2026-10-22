@@ -1,18 +1,18 @@
 ---
 name: Bug Report
-description: File a bug report to help us improve OpenBangla Keyboard
+description: File a bug report to help us improve Shanti Keyboard
 labels: ["bug"]
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for reporting a bug in OpenBangla Keyboard (OBK). Please provide as much detail as possible to help us diagnose and fix the issue.
+        Thank you for reporting a bug in Shanti Keyboard (OBK). Please provide as much detail as possible to help us diagnose and fix the issue.
   - type: input
     id: obk-version
     attributes:
       label: OBK Version
-      description: What version of OpenBangla Keyboard are you using? (e.g., 3.0.0)
+      description: What version of Shanti Keyboard are you using? (e.g., 3.0.0)
       placeholder: e.g., 3.0.0
     validations:
       required: true

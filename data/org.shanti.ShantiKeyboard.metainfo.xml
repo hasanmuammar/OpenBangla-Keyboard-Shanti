@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="inputmethod">
-    <id>io.github.openbangla.keyboard</id>
+    <id>org.shanti.ShantiKeyboard</id>
     <metadata_license>FSFAP</metadata_license>
-    <name>OpenBangla Keyboard</name>
+    <name>Shanti Keyboard</name>
     <summary>An OpenSource, Unicode compliant Bengali Input Method</summary>
     <description>
         <p>
-            OpenBangla Keyboard is an OpenSource, Unicode compliant Bengali Input Method for GNU/Linux systems.
+            Shanti Keyboard is an OpenSource, Unicode compliant Bengali Input Method for GNU/Linux systems.
             It provides Avro Phonetic, Probhat, Munir Optima, National (Jatiya), and other layouts together with typing automation tools.
         </p>
         <p>
@@ -14,9 +14,9 @@
         </p>
     </description>
     <project_license>GPL-3.0+</project_license>
-    <url type="homepage">https://github.com/hasanmuammar/OpenBangla-Keyboard</url>
-    <url type="bugtracker">https://github.com/hasanmuammar/OpenBangla-Keyboard/issues</url>
-    <icon type="remote" width="48" height="48">https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard/develop/data/48.png</icon>
+    <url type="homepage">https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti</url>
+    <url type="bugtracker">https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/issues</url>
+    <icon type="remote" width="48" height="48">https://raw.githubusercontent.com/hasanmuammar/OpenBangla-Keyboard-Shanti/develop/data/48.png</icon>
     <releases>
         <release version="shanti-alpha.1.4" date="2026-10-21"/>
     </releases>

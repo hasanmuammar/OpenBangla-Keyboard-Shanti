@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2016 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -48,6 +48,8 @@ private:
   AutoCorrectDialog *autoCorrectDialog;
   QLabel *ibusIntegrationStatus;
   QPushButton *ibusIntegrationRemoveButton;
+  QLabel *fcitxIntegrationStatus;
+  QPushButton *fcitxIntegrationRemoveButton;
   bool m_darkMode;
 
   void applyTheme();
@@ -56,6 +58,7 @@ private:
   void implementSignals();
   void saveSettings();
   void updateIbusIntegrationStatus();
+  void updateFcitxIntegrationStatus();
 };
 
 #endif // SETTINGSDIALOG_H

@@ -1,12 +1,12 @@
-= ওপেনবাংলা কিবোর্ড Fork — Shanti
+= Shanti Keyboard (শান্তি কিবোর্ড)
 
-**Shanti** এই Linux-focused OpenBangla Keyboard fork-এর project codename। এর লক্ষ্য হলো Bazzite, Bluefin এবং আধুনিক Linux system-এ Bangla input সহজ ও আরামদায়কভাবে ব্যবহার করা।
+**Shanti** এই Linux-focused OpenBangla Keyboard fork-এর project codename। এর লক্ষ্য হলো Bazzite, Bluefin এবং আধুনিক Linux system-এ Bangla input সহজ ও আরামদায়কভাবে ব্যবহার করা।
 
-এই repository-টি **OpenBangla Keyboard-এর একটি Linux-focused fork**। মূল OpenBangla Keyboard codebase বজায় রেখে এই fork-এর উদ্দেশ্য হলো **সাধারণ Linux desktop এবং immutable বা image-based Linux system-এ OpenBangla সহজে install ও ব্যবহারযোগ্য করা**।
+এই repository-টি **OpenBangla Keyboard-এর একটি Linux-focused fork — Shanti Keyboard**। মূল OpenBangla Keyboard codebase বজায় রেখে এই fork-এর উদ্দেশ্য হলো **সাধারণ Linux desktop এবং immutable বা image-based Linux system-এ Bangla keyboard সহজে install ও ব্যবহারযোগ্য করা**।
 
-এই fork-এর লক্ষ্য হলো **Bazzite, Bluefin এবং অন্যান্য Linux desktop-এ Bangla input সহজে ব্যবহার করা**। GitHub Releases পেজে portable package ও IBus Flatpak পাওয়া যায়।
+এই fork-এর লক্ষ্য হলো **Bazzite, Bluefin এবং অন্যান্য Linux desktop-এ Bangla input সহজে ব্যবহার করা**। GitHub Releases পেজে দুটি Flatpak (IBus + Fcitx5) পাওয়া যায় — release asset হিসেবে এখন Flatpak-ই মূল বিতরণ মাধ্যম।
 
-OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Bangla (Bengali) keyboard ও input method for Linux**। এতে phonetic ও fixed keyboard layout, typing automation, dictionary এবং autocorrection সুবিধা রয়েছে।
+Shanti Keyboard একটি open-source, Unicode-সমর্থিত **Bangla (Bengali) keyboard ও input method for Linux**। এতে phonetic ও fixed keyboard layout, typing automation, dictionary এবং autocorrection সুবিধা রয়েছে।
 
 [WARNING]
 ====
@@ -14,43 +14,45 @@ OpenBangla Keyboard একটি open-source, Unicode-সমর্থিত **Ba
 
 এটি একটি experimental fork। এই fork-এর কিছু installation, packaging, runtime-bundling ও integration কাজ AI-assisted। তাই regression, অসম্পূর্ণ behaviour এবং Linux-specific integration সমস্যা হতে পারে।
 
-**এই fork-এর কারণে হওয়া সমস্যা upstream OpenBangla Keyboard project-এ report করবেন না।** Fork-specific bug, installation failure এবং integration issue এই repository-তেই report করুন।
+**এই fork-এর কারণে হওয়া সমস্যা upstream OpenBangla Keyboard project-এ report করবেন না।** Fork-specific bug, installation failure এবং integration issue এই repository-তেই report করুন।
 ====
 
-== Installation status and Flatpak
+== Installation
 
 ইনস্টল করার পদ্ধতি:
 
-* **GNOME:** GitHub Releases থেকে নিজের architecture-এর IBus Flatpak ডাউনলোড করুন। একই user বা system scope-এ Flathub remote থাকতে হবে; Flatpak সাধারণত app ইনস্টলের সময় `org.kde.Platform//5.15-25.08` runtime ডাউনলোড করে। তারপর app চালু করে integration setup করুন এবং GNOME Settings → Keyboard → Input Sources থেকে **OpenBangla** যোগ করুন। command-সহ বিস্তারিত: link:tools/flatpak/README.md[Flatpak guide]।
-* **Portable install:** source checkout থেকে `bash tools/install.sh` চালান। এটি `release-tag.txt`-এ থাকা release ইনস্টল করে।
+* **GNOME:** GitHub Releases থেকে নিজের architecture-এর IBus Flatpak (`org.shanti.ShantiIbus`) ডাউনলোড করুন। একই user বা system scope-এ Flathub remote থাকতে হবে; Flatpak সাধারণত app ইনস্টলের সময় `org.kde.Platform//5.15-25.08` runtime ডাউনলোড করে। তারপর app চালু করে integration setup করুন এবং GNOME Settings → Keyboard → Input Sources থেকে **Shanti** যোগ করুন।
+* **KDE Plasma / Kinoite বা Fcitx5 ব্যবহারকারী desktop:** GitHub Releases থেকে নিজের architecture-এর Fcitx5 app Flatpak (`org.shanti.ShantiFcitx5`) ডাউনলোড করে ইনস্টল করুন। এটি self-contained বান্ডেল — sandboxed Fcitx5 stack (daemon, config tool, Qt input-context plugin), আমাদের engine, এবং **IBus বান্ডেলের মতোই একই `shanti-gui` settings GUI** একসাথে; host-এ Fcitx5 রাখার বা অন্য কিছু ইনস্টল করার দরকার নেই। দুটি বান্ডেলই একই Qt5 runtime-এ চলে; শুধু engine backend আলাদা। লগইনে daemon চালু রাখতে একবার XDG autostart entry যোগ করতে হয়।
+* **Portable install:** source checkout থেকে `bash tools/install.sh` চালান। এটি `release-tag.txt`-এ থাকা release ইনস্টল করে (পুরনো pre-release-গুলোর portable archive এখনও আছে; নতুন release-এ asset শুধু Flatpak)।
 * **Source build:** development-এর জন্য `bash tools/build.sh` চালান।
+
+command-সহ বিস্তারিত: link:tools/flatpak/README.md[Flatpak guide]।
 
 Release: https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases
 
 == এই fork-এর বৈশিষ্ট্য
 
-এই fork upstream-এর release cycle অনুসরণ করে না। CMake project version `version.txt`-এ এবং portable installer-এর default release tag `release-tag.txt`-এ রাখা হয়।
+এই fork upstream-এর release cycle অনুসরণ করে না। CMake project version `version.txt`-এ এবং portable installer-এর default release tag `release-tag.txt`-এ রাখা হয়।
 
-* x86_64 ও ARM64-এর জন্য **prebuilt Linux release workflow**; প্রকাশিত release asset এখনো নেই।
+* x86_64 ও ARM64-এর জন্য **prebuilt Linux release workflow**।
+* **দুটি Flatpak:** GNOME-এর জন্য IBus engine (`org.shanti.ShantiIbus`), Fcitx5 desktop-এর জন্য self-contained Fcitx5 app (`org.shanti.ShantiFcitx5`)।
 * **Automatic backend selection:** KDE Plasma-তে Fcitx5 এবং অন্যান্য desktop environment-এ IBus।
 * বর্তমান user-এর জন্য `~/.local`-এ installation।
 * Source build-এর জন্য `tools/build.sh`।
 * Toolbx, Distrobox, Podman অথবা Docker-এর isolated source-build environment।
-* User-local installation-এর জন্য bundled Qt5 ও প্রয়োজনীয় runtime library।
+* User-local installation-এর জন্য bundled Qt5 ও প্রয়োজনীয় runtime library।
 * User-local IBus component registration।
 * User-local uninstaller ও optional cache removal।
+* **Legacy upgrade support:** rebrand-এর আগের release (openbangla-keyboard path ও `org.openbangla.Shanti.IBus`) থেকে ইনস্টল করলে প্রথম চালানোর সময় settings ও user data নতুন Shanti নামের path-এ স্বয়ংক্রিয়ভাবে migrate হয়।
 
 == Bangla keyboard ও input-method features
 
-OpenBangla Keyboard codebase Linux-এ Bangla typing-এর জন্য ব্যবহারযোগ্য এবং এতে রয়েছে:
+Shanti Keyboard codebase Linux-এ Bangla typing-এর জন্য ব্যবহারযোগ্য এবং এতে রয়েছে:
 
 * Avro-style phonetic input-সহ phonetic Bangla typing।
 * Fixed Bangla keyboard layout।
 * Unicode-compliant Bengali text input।
 * Fixed layout-এর typing automation।
 * Dictionary-based suggestion এবং autocorrection।
-* Qt-based configuration interface।
+* Qt-based configuration interface (`shanti-gui`)।
 * IBus অথবা Fcitx5-এর মাধ্যমে Linux desktop integration।
-
-
-

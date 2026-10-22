@@ -1,0 +1,16 @@
+[package]
+name = "shanti-core"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+description = "Engine core for the Shanti rewrite: settings application, key-event state machine, suggestion handling and the riti session, shared by the IBus and Fcitx5 engine shells."
+publish = false
+
+[lib]
+crate-type = ["lib", "staticlib"]
+
+[dependencies]
+riti = { path = "../../src/engine/riti" }
+shanti-config = { path = "../shanti-config" }
+shanti-paths = { path = "../shanti-paths" }
+shanti-keysyms = { path = "../shanti-keysyms" }

@@ -10,13 +10,13 @@ source "$SCRIPT_DIR/portable/install.sh"
 
 ACTION=install
 REQUESTED_BACKEND=""
-NONINTERACTIVE="${OPENBANGLA_NONINTERACTIVE:-0}"
+NONINTERACTIVE="${SHANTI_NONINTERACTIVE:-0}"
 
 usage() {
     cat <<'EOF'
 Usage: tools/build.sh [options]
 
-Build OpenBangla Keyboard from source.
+Build Shanti Keyboard from source.
 
 Options:
   --backend BACKEND   Build IBus or Fcitx5. Default: detect from desktop.
@@ -92,17 +92,17 @@ main() {
         confirm_temporary_build
     fi
 
-    build_openbangla
+    build_shanti
 
     if [[ "$ACTION" == package ]]; then
-        package_openbangla
+        package_shanti
         cleanup_builder
         log "Prebuilt package was created in ./dist/."
     else
-        install_openbangla
+        install_shanti
         verify_installation
         cleanup_builder
-        log "OpenBangla Keyboard was built and installed for the current user."
+        log "Shanti Keyboard was built and installed for the current user."
     fi
 }
 

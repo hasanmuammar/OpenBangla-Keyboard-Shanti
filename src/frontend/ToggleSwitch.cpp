@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2016-2022 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify

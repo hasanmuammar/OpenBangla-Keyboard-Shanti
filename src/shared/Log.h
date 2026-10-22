@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2015-2016 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -28,31 +28,31 @@ extern "C" {
 }
 
 // Helper macro to create format string
-#define NS_FORMAT(fmt) CFSTR("[OpenBangla-Info]: " fmt)
+#define NS_FORMAT(fmt) CFSTR("[Shanti-Info]: " fmt)
 #define LOG_INFO(fmt, ...) NSLog(NS_FORMAT(fmt), ##__VA_ARGS__)
 
 #if DEBUG
-#define NS_DEBUG_FORMAT(fmt) CFSTR("[OpenBangla-Debug]: " fmt)
+#define NS_DEBUG_FORMAT(fmt) CFSTR("[Shanti-Debug]: " fmt)
 #define LOG_DEBUG(fmt, ...) NSLog(NS_DEBUG_FORMAT(fmt), ##__VA_ARGS__)
 #else
 #define LOG_DEBUG(...)
 #endif
 
-#define NS_ERROR_FORMAT(fmt) CFSTR("[OpenBangla-Error]: " fmt)
+#define NS_ERROR_FORMAT(fmt) CFSTR("[Shanti-Error]: " fmt)
 #define LOG_ERROR(fmt, ...) NSLog(NS_ERROR_FORMAT(fmt), ##__VA_ARGS__)
 
 #else
 #include <cstdio>
 
-#define LOG_INFO(...) std::fprintf(stdout, "[OpenBangla-Info]: " __VA_ARGS__)
+#define LOG_INFO(...) std::fprintf(stdout, "[Shanti-Info]: " __VA_ARGS__)
 
 #if DEBUG
-#define LOG_DEBUG(...) std::fprintf(stdout, "[OpenBangla-Debug]: " __VA_ARGS__)
+#define LOG_DEBUG(...) std::fprintf(stdout, "[Shanti-Debug]: " __VA_ARGS__)
 #else
 #define LOG_DEBUG(...)
 #endif
 
-#define LOG_ERROR(...) std::fprintf(stderr, "[OpenBangla-Error]: " __VA_ARGS__)
+#define LOG_ERROR(...) std::fprintf(stderr, "[Shanti-Error]: " __VA_ARGS__)
 
 #endif /* __APPLE__ */
 

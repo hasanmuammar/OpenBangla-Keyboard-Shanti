@@ -11,11 +11,11 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>About OpenBangla Keyboard</string>
+   <string>About Shanti Keyboard</string>
   </property>
   <property name="windowIcon">
    <iconset resource="images.qrc">
-    <normaloff>:/images/OpenBangla-Keyboard.png</normaloff>:/images/OpenBangla-Keyboard.png</iconset>
+    <normaloff>:/images/Shanti-Keyboard.png</normaloff>:/images/Shanti-Keyboard.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
@@ -72,7 +72,7 @@
            <string/>
           </property>
           <property name="pixmap">
-           <pixmap resource="images.qrc">:/images/OpenBangla-Keyboard.png</pixmap>
+           <pixmap resource="images.qrc">:/images/Shanti-Keyboard.png</pixmap>
           </property>
          </widget>
         </item>
@@ -109,7 +109,7 @@
         <item>
          <widget class="QLabel" name="label">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;OpenBangla Keyboard&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:20pt; font-weight:600;&quot;&gt;Shanti Keyboard&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -232,7 +232,7 @@
         <item>
          <widget class="QLabel" name="lblWebsite">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://openbangla.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#16a394;&quot;&gt;Website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#16a394;&quot;&gt;Website&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -269,7 +269,7 @@
         <item>
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;© 2015–2026 The OpenBangla Keyboard Authors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;© 2015–2026 The Shanti Keyboard Authors&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>
@@ -306,7 +306,7 @@
         <item>
          <widget class="QLabel" name="lblContrib">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Made with 💖 by &lt;a href=&quot;https://github.com/mominul&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#16a394;&quot;&gt;Muhammad Mominul Huque&lt;/span&gt;&lt;/a&gt; and ✨&lt;a href=&quot;https://github.com/OpenBangla/OpenBangla-Keyboard/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#16a394;&quot;&gt; contributors&lt;/span&gt;&lt;/a&gt; ✨ !&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Made with 💖 by &lt;a href=&quot;https://github.com/mominul&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#16a394;&quot;&gt;Muhammad Mominul Huque&lt;/span&gt;&lt;/a&gt; and ✨&lt;a href=&quot;https://github.com/Shanti/Shanti-Keyboard/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#16a394;&quot;&gt; contributors&lt;/span&gt;&lt;/a&gt; ✨ !&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
          </widget>
         </item>

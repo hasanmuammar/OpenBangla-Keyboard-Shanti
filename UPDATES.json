@@ -1,10 +1,10 @@
 {
   "updates": {
     "linux": {
-      "open-url": "https://openbangla.github.io/blog/releasing-2-0-0/",
-      "latest-version": "2.0.0",
-      "download-url": "https://github.com/OpenBangla/OpenBangla-Keyboard/releases/tag/2.0.0",
-      "changelog": "https://openbangla.github.io/blog/releasing-2-0-0/"
+      "open-url": "https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases",
+      "latest-version": "3.0.0",
+      "download-url": "https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases/latest",
+      "changelog": "https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/blob/develop/CHANGELOG.md"
     }
   }
 }

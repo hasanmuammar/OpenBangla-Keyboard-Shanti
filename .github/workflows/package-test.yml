@@ -54,11 +54,11 @@ jobs:
         run: |
           set -Eeuo pipefail
           test_root="$(mktemp -d)"
-          mkdir -p "$test_root/payload/bin" "$test_root/payload/lib/openbangla" "$test_root/payload/share/openbangla-keyboard"
-          printf '%s\n' 'gui fixture' > "$test_root/payload/bin/openbangla-gui"
-          printf '%s\n' 'runtime fixture' > "$test_root/payload/lib/openbangla/runtime.so"
-          printf '%s\n' 'data fixture' > "$test_root/payload/share/openbangla-keyboard/data.json"
-          chmod +x "$test_root/payload/bin/openbangla-gui"
+          mkdir -p "$test_root/payload/bin" "$test_root/payload/lib/shanti" "$test_root/payload/share/shanti-keyboard"
+          printf '%s\n' 'gui fixture' > "$test_root/payload/bin/shanti-gui"
+          printf '%s\n' 'runtime fixture' > "$test_root/payload/lib/shanti/runtime.so"
+          printf '%s\n' 'data fixture' > "$test_root/payload/share/shanti-keyboard/data.json"
+          chmod +x "$test_root/payload/bin/shanti-gui"
           tar -czf "$test_root/good.tar.gz" -C "$test_root/payload" .
           (cd "$test_root" && sha256sum good.tar.gz > good.tar.gz.sha256)
 
@@ -103,7 +103,7 @@ jobs:
           with tarfile.open(sys.argv[1], "w:gz") as archive:
               link = tarfile.TarInfo("lib/link")
               link.type = tarfile.SYMTYPE
-              link.linkname = "openbangla"
+              link.linkname = "shanti"
               archive.addfile(link)
               info = tarfile.TarInfo("lib/link/payload.bin")
               payload = b"must not be extracted through a symlink"
@@ -122,7 +122,7 @@ jobs:
           with tarfile.open(sys.argv[1], "w:gz") as archive:
               link = tarfile.TarInfo("lib/link")
               link.type = tarfile.SYMTYPE
-              link.linkname = "openbangla"
+              link.linkname = "shanti"
               archive.addfile(link)
               info = tarfile.TarInfo("lib/link/payload.bin")
               payload = b"must not be extracted through a symlink"
@@ -143,8 +143,8 @@ jobs:
 
       - name: Build prebuilt package
         env:
-          OPENBANGLA_BUILD_USE_HOST: "1"
-          OPENBANGLA_NONINTERACTIVE: "1"
+          SHANTI_BUILD_USE_HOST: "1"
+          SHANTI_NONINTERACTIVE: "1"
         run: bash tools/build.sh --backend ${{ matrix.backend }} --package
 
       - name: Validate package
@@ -154,7 +154,7 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          archive="dist/openbangla-keyboard_linux_${ARCH}_${BACKEND}.tar.gz"
+          archive="dist/shanti-keyboard_linux_${ARCH}_${BACKEND}.tar.gz"
           checksum="${archive}.sha256"
 
           test -f "$archive"
@@ -173,43 +173,57 @@ jobs:
           tar --no-same-owner --no-same-permissions -xzf "$archive" -C "$work"
           validate_extracted_symlinks "$work"
 
-          test -x "$work/bin/openbangla-gui"
-          test -f "$work/share/applications/openbangla-keyboard.desktop"
-          grep -Fq 'Exec="@OBK_PREFIX@/bin/openbangla-gui" %f' "$work/share/applications/openbangla-keyboard.desktop"
-          ! grep -Fq '/home/runner/' "$work/share/applications/openbangla-keyboard.desktop"
-          test -d "$work/lib/openbangla"
-          test -d "$work/share/openbangla-keyboard"
-          test -f "$work/share/openbangla-keyboard/layouts/avrophonetic.json"
-          test -f "$work/share/openbangla-keyboard/data/autocorrect.json"
-          test -f "$work/share/openbangla-keyboard/data/dictionary.json"
-          test -f "$work/share/openbangla-keyboard/data/suffix.json"
-          test -f "$work/share/openbangla-keyboard/data/regex.json"
+          test -x "$work/bin/shanti-gui"
+          test -f "$work/share/applications/shanti-keyboard.desktop"
+          grep -Fq 'Exec="@OBK_PREFIX@/bin/shanti-gui" %f' "$work/share/applications/shanti-keyboard.desktop"
+          ! grep -Fq '/home/runner/' "$work/share/applications/shanti-keyboard.desktop"
+          test -d "$work/lib/shanti"
+          test -d "$work/share/shanti-keyboard"
+          test -f "$work/share/shanti-keyboard/layouts/avrophonetic.json"
+          test -f "$work/share/shanti-keyboard/data/autocorrect.json"
+          test -f "$work/share/shanti-keyboard/data/dictionary.json"
+          test -f "$work/share/shanti-keyboard/data/suffix.json"
+          test -f "$work/share/shanti-keyboard/data/regex.json"
 
           # The archive must carry the user-facing scripts with their layout and
           # release tag intact, so a download alone can install or uninstall.
-          test -f "$work/share/openbangla-keyboard/tools/install.sh"
-          test -x "$work/share/openbangla-keyboard/tools/install.sh"
-          test -f "$work/share/openbangla-keyboard/tools/uninstall.sh"
-          test -x "$work/share/openbangla-keyboard/tools/uninstall.sh"
-          test -f "$work/share/openbangla-keyboard/tools/portable/common.sh"
-          test -f "$work/share/openbangla-keyboard/tools/portable/install.sh"
-          test -f "$work/share/openbangla-keyboard/tools/portable/launch-bundled.sh"
-          test -f "$work/share/openbangla-keyboard/release-tag.txt"
-          bash -n "$work/share/openbangla-keyboard/tools/install.sh"
-          bash -n "$work/share/openbangla-keyboard/tools/uninstall.sh"
+          test -f "$work/share/shanti-keyboard/tools/install.sh"
+          test -x "$work/share/shanti-keyboard/tools/install.sh"
+          test -f "$work/share/shanti-keyboard/tools/uninstall.sh"
+          test -x "$work/share/shanti-keyboard/tools/uninstall.sh"
+          test -f "$work/share/shanti-keyboard/tools/portable/common.sh"
+          test -f "$work/share/shanti-keyboard/tools/portable/install.sh"
+          test -f "$work/share/shanti-keyboard/tools/portable/launch-bundled.sh"
+          test -f "$work/share/shanti-keyboard/release-tag.txt"
+          bash -n "$work/share/shanti-keyboard/tools/install.sh"
+          bash -n "$work/share/shanti-keyboard/tools/uninstall.sh"
 
-          if [[ "$BACKEND" == ibus ]]; then
-            test -x "$work/libexec/ibus-engine-openbangla"
-            test -f "$work/share/ibus/component/openbangla.xml"
-            grep -Fq '<exec>@OBK_PREFIX@/libexec/ibus-engine-openbangla --ibus</exec>' "$work/share/ibus/component/openbangla.xml"
-            grep -Fq '<icon>@OBK_DATA_HOME@/openbangla-keyboard/icons/OpenBangla-Keyboard.png</icon>' "$work/share/ibus/component/openbangla.xml"
-            ! grep -Fq '/home/runner/' "$work/share/ibus/component/openbangla.xml"
-          else
-            test -f "$work/share/fcitx5/addon/openbangla.conf"
+          # Rewrite phase 1 contract: the shipped IBus engine must be Qt-free
+          # (its settings/paths support moved to the Rust shanti-config and
+          # shanti-paths crates; see docs/REWRITE-PLAN.md). IBus backend only:
+          # the fcitx archive does not carry the ibus engine binary.
+          if [ "$BACKEND" = "ibus" ]; then
+            ibus_engine="$work/libexec/ibus-engine-shanti"
+            test -x "$ibus_engine"
+            if ldd "$ibus_engine" | grep -qi 'libQt'; then
+              echo "IBus engine links Qt libraries (must be Qt-free):" >&2
+              ldd "$ibus_engine" | grep -i 'libQt' >&2
+              exit 1
+            fi
           fi
 
-          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/openbangla-gui" --version
-          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/openbangla-gui" --check-data
+          if [[ "$BACKEND" == ibus ]]; then
+            test -x "$work/libexec/ibus-engine-shanti"
+            test -f "$work/share/ibus/component/shanti.xml"
+            grep -Fq '<exec>@OBK_PREFIX@/libexec/ibus-engine-shanti --ibus</exec>' "$work/share/ibus/component/shanti.xml"
+            grep -Fq '<icon>@OBK_DATA_HOME@/shanti-keyboard/icons/Shanti-Keyboard.png</icon>' "$work/share/ibus/component/shanti.xml"
+            ! grep -Fq '/home/runner/' "$work/share/ibus/component/shanti.xml"
+          else
+            test -f "$work/share/fcitx5/addon/shanti.conf"
+          fi
+
+          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/shanti-gui" --version
+          XDG_DATA_HOME="$work/share" XDG_CONFIG_HOME="$work/check-config" XDG_CACHE_HOME="$work/check-cache" QT_QPA_PLATFORM=offscreen "$work/bin/shanti-gui" --check-data
 
           # Simulate installation with a non-default absolute XDG_DATA_HOME.
           install_prefix="$install_home/.local"
@@ -239,35 +253,35 @@ jobs:
             install_xdg_resources "$OBK_STAGE$OBK_PREFIX/share"
             rewrite_install_metadata
 
-            test -f "$OBK_DATA_HOME/openbangla-keyboard/data/dictionary.json"
+            test -f "$OBK_DATA_HOME/shanti-keyboard/data/dictionary.json"
             # The bundled scripts travel with the relocated data directory.
-            test -f "$OBK_DATA_HOME/openbangla-keyboard/tools/install.sh"
-            test -f "$OBK_DATA_HOME/openbangla-keyboard/tools/uninstall.sh"
-            test -f "$OBK_DATA_HOME/openbangla-keyboard/release-tag.txt"
+            test -f "$OBK_DATA_HOME/shanti-keyboard/tools/install.sh"
+            test -f "$OBK_DATA_HOME/shanti-keyboard/tools/uninstall.sh"
+            test -f "$OBK_DATA_HOME/shanti-keyboard/release-tag.txt"
             # Custom XDG_DATA_HOME must receive resources without a shadowing
             # copy left under the install prefix.
-            test ! -e "$OBK_PREFIX/share/openbangla-keyboard"
-            test -f "$OBK_DATA_HOME/applications/openbangla-keyboard.desktop"
-            grep -Fq "Exec=\"$OBK_PREFIX/bin/openbangla-gui\" %f" \
-              "$OBK_DATA_HOME/applications/openbangla-keyboard.desktop"
+            test ! -e "$OBK_PREFIX/share/shanti-keyboard"
+            test -f "$OBK_DATA_HOME/applications/shanti-keyboard.desktop"
+            grep -Fq "Exec=\"$OBK_PREFIX/bin/shanti-gui\" %f" \
+              "$OBK_DATA_HOME/applications/shanti-keyboard.desktop"
 
-            QT_QPA_PLATFORM=offscreen "$OBK_PREFIX/bin/openbangla-gui" --check-data
+            QT_QPA_PLATFORM=offscreen "$OBK_PREFIX/bin/shanti-gui" --check-data
 
             if [[ "$OBK_BACKEND" == ibus ]]; then
-              grep -Fq "<exec>\"$OBK_PREFIX/libexec/ibus-engine-openbangla\" --ibus</exec>" \
-                "$OBK_DATA_HOME/ibus/component/openbangla.xml"
-              grep -Fq "<icon>$OBK_DATA_HOME/openbangla-keyboard/icons/OpenBangla-Keyboard.png</icon>" \
-                "$OBK_DATA_HOME/ibus/component/openbangla.xml"
+              grep -Fq "<exec>\"$OBK_PREFIX/libexec/ibus-engine-shanti\" --ibus</exec>" \
+                "$OBK_DATA_HOME/ibus/component/shanti.xml"
+              grep -Fq "<icon>$OBK_DATA_HOME/shanti-keyboard/icons/Shanti-Keyboard.png</icon>" \
+                "$OBK_DATA_HOME/ibus/component/shanti.xml"
             else
-              test -f "$OBK_DATA_HOME/fcitx5/addon/openbangla.conf"
-              test -f "$OBK_DATA_HOME/fcitx5/inputmethod/openbangla.conf"
+              test -f "$OBK_DATA_HOME/fcitx5/addon/shanti.conf"
+              test -f "$OBK_DATA_HOME/fcitx5/inputmethod/shanti.conf"
             fi
 
             # Regression test: merge collisions must not delete skipped user data.
             migration_prefix="$HOME/migration/.local"
             migration_data="$HOME/migration/xdg"
-            legacy_data="$migration_prefix/share/openbangla-keyboard"
-            target_data="$migration_data/openbangla-keyboard"
+            legacy_data="$migration_prefix/share/shanti-keyboard"
+            target_data="$migration_data/shanti-keyboard"
             mkdir -p "$legacy_data/layouts" "$legacy_data/data" \
               "$target_data/layouts" "$target_data/data"
             printf "%s\n" "legacy custom layout" > "$legacy_data/layouts/custom.json"
@@ -283,7 +297,7 @@ jobs:
             test -f "$legacy_data/data/autocorrect.json"
             test "$(cat "$target_data/layouts/custom.json")" = "destination custom layout"
             test "$(cat "$target_data/data/autocorrect.json")" = "destination autocorrect"
-            test -f "$migration_data/.openbangla-keyboard-xdg-migration-v1-complete"
+            test -f "$migration_data/.shanti-keyboard-xdg-migration-v1-complete"
 
             # A subsequent run must not re-import stale legacy files.
             printf "%s\n" "new destination layout" > "$target_data/layouts/custom.json"
@@ -306,8 +320,8 @@ jobs:
             # Regression test: a migration with no destination copies and retains the source.
             migration_prefix_copy="$HOME/migration-copy/.local"
             migration_data_copy="$HOME/migration-copy/xdg"
-            legacy_desktop_copy="$migration_prefix_copy/share/applications/openbangla-keyboard.desktop"
-            destination_desktop_copy="$migration_data_copy/applications/openbangla-keyboard.desktop"
+            legacy_desktop_copy="$migration_prefix_copy/share/applications/shanti-keyboard.desktop"
+            destination_desktop_copy="$migration_data_copy/applications/shanti-keyboard.desktop"
             mkdir -p "$(dirname "$legacy_desktop_copy")"
             printf "%s\n" "legacy desktop resource" > "$legacy_desktop_copy"
             OBK_PREFIX="$migration_prefix_copy"
@@ -322,14 +336,14 @@ jobs:
             database_root="$HOME/database-backup-test"
             database_data="$database_root/xdg"
             database_source="$database_root/source"
-            database_destination="$database_data/openbangla-keyboard"
+            database_destination="$database_data/shanti-keyboard"
             mkdir -p "$database_source/data" "$database_destination/data"
             printf "%s\n" "custom dictionary entries" > "$database_destination/data/dictionary.json"
             printf "%s\n" "new shipped dictionary" > "$database_source/data/dictionary.json"
             OBK_DATA_HOME="$database_data"
-            merge_openbangla_data "$database_source" "$database_destination"
+            merge_data_dir "$database_source" "$database_destination"
             test "$(cat "$database_destination/data/dictionary.json")" = "new shipped dictionary"
-            dictionary_backup="$(find "$database_data/.openbangla-keyboard-backups" -type f -name dictionary.json -print -quit)"
+            dictionary_backup="$(find "$database_data/.shanti-keyboard-backups" -type f -name dictionary.json -print -quit)"
             test -n "$dictionary_backup"
             test "$(cat "$dictionary_backup")" = "custom dictionary entries"
           '
@@ -341,32 +355,32 @@ jobs:
           mkdir -p "$test_home/.local/unrelated"
           printf '%s\n' 'keep this file' > "$test_home/.local/unrelated/valuable.txt"
           if HOME="$test_home" bash -c 'source tools/uninstall.sh; remove_path "$PREFIX/unrelated"'; then
-            echo "Uninstaller unexpectedly accepted a non-OpenBangla path." >&2
+            echo "Uninstaller unexpectedly accepted a non-Shanti path." >&2
             exit 1
           fi
           test -f "$test_home/.local/unrelated/valuable.txt"
           test "$(cat "$test_home/.local/unrelated/valuable.txt")" = 'keep this file'
-          HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_openbangla_target "$PREFIX/lib/openbangla"'
-          if HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_openbangla_target "$PREFIX/lib/vendor/nested/fcitx5/openbangla.so"'; then
+          HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_shanti_target "$PREFIX/lib/shanti"'
+          if HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_shanti_target "$PREFIX/lib/vendor/nested/fcitx5/shanti.so"'; then
             echo "Uninstaller unexpectedly accepted a deeply nested lookalike Fcitx module." >&2
             exit 1
           fi
-          HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_openbangla_target "$PREFIX/lib/x86_64-linux-gnu/fcitx5/openbangla.so"'
+          HOME="$test_home" bash -c 'source tools/uninstall.sh; is_allowed_shanti_target "$PREFIX/lib/x86_64-linux-gnu/fcitx5/shanti.so"'
 
           # Recursive removal must remove only the named tree, not follow child symlinks.
           outside="$test_home/outside"
-          bundle="$test_home/.local/lib/openbangla"
+          bundle="$test_home/.local/lib/shanti"
           mkdir -p "$outside" "$bundle"
           printf '%s\n' 'outside data must survive' > "$outside/keep.txt"
           printf '%s\n' 'bundle file' > "$bundle/bundle.txt"
           ln -s "$outside/keep.txt" "$bundle/external-link"
-          HOME="$test_home" bash -c 'source tools/uninstall.sh; remove_path "$PREFIX/lib/openbangla"'
+          HOME="$test_home" bash -c 'source tools/uninstall.sh; remove_path "$PREFIX/lib/shanti"'
           test ! -e "$bundle"
           test -f "$outside/keep.txt"
           test "$(cat "$outside/keep.txt")" = 'outside data must survive'
 
           # Simulate a nested mount point and verify that recursive removal fails closed.
-          mount_tree="$test_home/.local/lib/openbangla"
+          mount_tree="$test_home/.local/lib/shanti"
           mkdir -p "$mount_tree/nested"
           mock_bin="$test_home/mock-bin"
           mkdir -p "$mock_bin"
@@ -376,7 +390,7 @@ jobs:
           [[ "${target:-}" == "${MOCK_MOUNT_POINT:?}" ]]
           MOCK
           chmod +x "$mock_bin/mountpoint"
-          if MOCK_BIN="$mock_bin" MOCK_MOUNT_POINT="$mount_tree/nested" HOME="$test_home" bash -c 'source tools/uninstall.sh; PATH="$MOCK_BIN:$PATH"; remove_path "$PREFIX/lib/openbangla"'; then
+          if MOCK_BIN="$mock_bin" MOCK_MOUNT_POINT="$mount_tree/nested" HOME="$test_home" bash -c 'source tools/uninstall.sh; PATH="$MOCK_BIN:$PATH"; remove_path "$PREFIX/lib/shanti"'; then
             echo "Uninstaller unexpectedly removed a tree containing a mount point." >&2
             exit 1
           fi

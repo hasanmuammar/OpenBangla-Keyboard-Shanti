@@ -31,7 +31,11 @@ jobs:
           submodules: recursive
 
       - name: Install Flatpak build tools
+        # Ubuntu 24.04's apt flatpak (1.14) predates the
+        # inherit-wayland-socket finish-arg and ships old flatpak-builder;
+        # use the Flatpak team's stable PPA for current versions.
         run: |
+          sudo add-apt-repository -y ppa:flatpak/stable
           sudo apt-get update -qq
           sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
 
@@ -54,7 +58,7 @@ jobs:
             build-dir tools/flatpak/shanti-ibus.yml
           flatpak build-bundle --arch="$FLATPAK_ARCH" \
             flatpak-repo "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
-            org.openbangla.Shanti.IBus stable
+            org.shanti.ShantiIbus stable
           sha256sum "shanti-ibus-${FLATPAK_ARCH}.flatpak" \
             > "shanti-ibus-${FLATPAK_ARCH}.flatpak.sha256"
 
@@ -74,23 +78,19 @@ jobs:
             shanti-ibus-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
-  build:
+  build-flatpak-fcitx:
+    # Self-contained Fcitx5 app (org.shanti.ShantiFcitx5): Flathub's
+    # published org.fcitx.Fcitx5 app is the manifest base, so one bundle
+    # carries the whole sandboxed Fcitx5 stack plus the Shanti engine.
+    # See tools/flatpak/fcitx-app.yml.
     strategy:
       fail-fast: false
       matrix:
         include:
-          - backend: ibus
-            arch: x86_64
-            runner: ubuntu-22.04
-          - backend: fcitx
-            arch: x86_64
-            runner: ubuntu-22.04
-          - backend: ibus
-            arch: aarch64
-            runner: ubuntu-22.04-arm
-          - backend: fcitx
-            arch: aarch64
-            runner: ubuntu-22.04-arm
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     permissions:
       contents: read
@@ -103,48 +103,56 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install build dependencies
+      - name: Install Flatpak build tools
+        # Ubuntu 24.04's apt flatpak (1.14) predates the
+        # inherit-wayland-socket finish-arg and ships old flatpak-builder;
+        # use the Flatpak team's stable PPA for current versions.
         run: |
+          sudo add-apt-repository -y ppa:flatpak/stable
           sudo apt-get update -qq
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            ninja-build \
-            pkg-config \
-            rustc \
-            cargo \
-            libzstd-dev \
-            qtbase5-dev \
-            qtbase5-dev-tools \
-            libqt5svg5-dev \
-            libibus-1.0-dev \
-            libfcitx5core-dev \
-            ca-certificates
+          sudo apt-get install -y flatpak flatpak-builder appstream appstream-compose
 
-      - name: Build release archive
+      - name: Configure Flathub remote
+        run: |
+          flatpak remote-add --user --if-not-exists flathub \
+            https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build Flatpak bundle
         env:
-          OPENBANGLA_BUILD_USE_HOST: "1"
-          OPENBANGLA_NONINTERACTIVE: "1"
-        run: bash tools/build.sh --backend ${{ matrix.backend }} --package
+          FLATPAK_ARCH: ${{ matrix.arch }}
+          # Use the distro AppStream tools: a Homebrew appstream on PATH may
+          # lack the appstream-compose helper flatpak-builder needs to finish.
+          PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --default-branch=stable \
+            --install-deps-from=flathub \
+            --repo=flatpak-repo-fcitx \
+            build-dir-fcitx tools/flatpak/fcitx-app.yml
+          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+            flatpak-repo-fcitx "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
+            org.shanti.ShantiFcitx5 stable
+          sha256sum "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
+            > "shanti-fcitx5-${FLATPAK_ARCH}.flatpak.sha256"
 
-      - name: Attest release archive and checksum
+      - name: Attest Fcitx app bundle and checksum
         uses: actions/attest@v4
         with:
           subject-path: |
-            dist/*.tar.gz
-            dist/*.sha256
+            shanti-fcitx5-${{ matrix.arch }}.flatpak
+            shanti-fcitx5-${{ matrix.arch }}.flatpak.sha256
 
-      - name: Upload build artifact
+      - name: Upload Fcitx app release assets
         uses: actions/upload-artifact@v5
         with:
-          name: linux-${{ matrix.arch }}-${{ matrix.backend }}
+          name: flatpak-fcitx-${{ matrix.arch }}
           path: |
-            dist/*.tar.gz
-            dist/*.sha256
+            shanti-fcitx5-${{ matrix.arch }}.flatpak
+            shanti-fcitx5-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
   release:
-    needs: [build, build-flatpak]
+    needs: [build-flatpak, build-flatpak-fcitx]
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -155,7 +163,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v5
         with:
-          path: dist
+          path: release
           merge-multiple: true
 
       - name: Create GitHub release
@@ -163,11 +171,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            --title "OpenBangla Keyboard ${GITHUB_REF_NAME}" \
+            --title "Shanti Keyboard ${GITHUB_REF_NAME}" \
             --prerelease \
             --notes-file .github/release-notes.md
 
       - name: Upload release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" dist/*
+        run: gh release upload "$GITHUB_REF_NAME" release/*
