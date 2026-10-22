@@ -5,12 +5,17 @@
  *  user specific data, mirroring the QSettings/QStandardPaths behavior the
  *  Qt GUI (src/shared) relies on:
  *
- *   - settings store:  $XDG_CONFIG_HOME/OpenBangla/Keyboard.conf
- *     (QSettings("OpenBangla", "Keyboard"); verified against Qt 5.15)
- *   - user data tree:  $XDG_DATA_HOME/openbangla-keyboard
+ *   - settings store:  $XDG_CONFIG_HOME/Shanti/Shanti.conf
+ *     (QSettings("Shanti", "Shanti"))
+ *   - user data tree:  $XDG_DATA_HOME/shanti-keyboard
  *     (QStandardPaths::GenericDataLocation path used by the GUI and engines)
- *   - bundled data:    "<exe_dir>/../share/openbangla-keyboard" when present
+ *   - bundled data:    "<exe_dir>/../share/shanti-keyboard" when present
  *     (used for the portable/DESTDIR install layouts)
+ *
+ *  Legacy layouts from before the rebrand (openbangla-keyboard / OpenBangla)
+ *  are discovered by ensure_migration() and copied to the new locations on
+ *  first run; the legacy files are deliberately left in place so the
+ *  uninstaller can still clean them up.
  */
 
 use std::ffi::{c_char, CString};
@@ -48,14 +53,20 @@ pub fn data_home() -> PathBuf {
 
 /// QStandardPaths::writableLocation(GenericDataLocation)-based user tree.
 pub fn user_data_dir() -> PathBuf {
+    data_home().join("shanti-keyboard")
+}
+
+/// Pre-rebrand user data tree (left in place after migration so the
+/// uninstaller can still clean it).
+pub fn legacy_user_data_dir() -> PathBuf {
     data_home().join("openbangla-keyboard")
 }
 
-/// "<exe_dir>/../share/openbangla-keyboard" used by portable/DESTDIR installs.
+/// "<exe_dir>/../share/shanti-keyboard" used by portable/DESTDIR installs.
 /// Resolution mirrors linuxDataDirectory() in FileSystem.cpp.
 pub fn bundled_data_dir() -> Option<PathBuf> {
     let exe = std::fs::read_link("/proc/self/exe").ok()?;
-    let candidate = exe.parent()?.parent()?.join("share").join("openbangla-keyboard");
+    let candidate = exe.parent()?.parent()?.join("share").join("shanti-keyboard");
     if candidate.is_dir() {
         Some(candidate)
     } else {
@@ -74,16 +85,64 @@ pub fn layouts_dir() -> PathBuf {
 
 /// The settings store file shared with the Qt GUI.
 pub fn settings_file() -> PathBuf {
+    config_dir().join("Shanti").join("Shanti.conf")
+}
+
+/// Pre-rebrand settings store (QSettings("OpenBangla", "Keyboard")).
+pub fn legacy_settings_file() -> PathBuf {
     config_dir().join("OpenBangla").join("Keyboard.conf")
 }
 
 pub fn user_icon_file() -> PathBuf {
-    user_data_dir().join("icons").join("OpenBangla-Keyboard.png")
+    user_data_dir().join("icons").join("Shanti-Keyboard.png")
+}
+
+/// Copy `src` into `dst` recursively (best effort; existing files in `dst`
+/// are left untouched). Symlinks are copied as plain files.
+fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(dst)?;
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let target = dst.join(entry.file_name());
+        if ty.is_dir() {
+            copy_dir_all(&entry.path(), &target)?;
+        } else if !target.exists() {
+            std::fs::copy(entry.path(), &target)?;
+        }
+    }
+    Ok(())
+}
+
+/// One-time migration of the pre-rebrand locations: when the new user data
+/// tree / settings store is missing, copy the legacy ones to the new names.
+/// Legacy files are kept untouched (the uninstaller cleans both names).
+pub fn ensure_migration() {
+    let old_data = legacy_user_data_dir();
+    let new_data = user_data_dir();
+    let old_store = legacy_settings_file();
+    let new_store = settings_file();
+
+    if old_data.is_dir() && !new_data.exists() {
+        // Best effort: readers handle a partially missing tree gracefully
+        // (bundled data and defaults), so a failed copy is not fatal.
+        let _ = copy_dir_all(&old_data, &new_data);
+    }
+
+    if old_store.is_file() && !new_store.exists() {
+        if let Some(parent) = new_store.parent() {
+            if std::fs::create_dir_all(parent).is_ok() {
+                let _ = std::fs::copy(&old_store, &new_store);
+            }
+        }
+    }
 }
 
 /// Create the user data directories the GUI used to create via UserFolders
 /// (best-effort; errors are ignored, readers handle missing directories).
+/// Runs the legacy-location migration first.
 pub fn ensure_user_dirs() {
+    ensure_migration();
     let _ = std::fs::create_dir_all(user_data_dir().join("layouts"));
 }
 
@@ -130,6 +189,11 @@ pub extern "C" fn shanti_paths_settings_file() -> *mut c_char {
 #[no_mangle]
 pub extern "C" fn shanti_paths_user_icon_file() -> *mut c_char {
     owned(&user_icon_file())
+}
+
+#[no_mangle]
+pub extern "C" fn shanti_paths_ensure_migration() {
+    ensure_migration()
 }
 
 #[no_mangle]
@@ -183,6 +247,18 @@ mod tests {
     fn settings_file_follows_org_app_layout() {
         assert_eq!(
             settings_file(),
+            config_dir().join("Shanti").join("Shanti.conf")
+        );
+    }
+
+    #[test]
+    fn legacy_names_remain_openbangla() {
+        assert_eq!(
+            legacy_user_data_dir(),
+            data_home().join("openbangla-keyboard")
+        );
+        assert_eq!(
+            legacy_settings_file(),
             config_dir().join("OpenBangla").join("Keyboard.conf")
         );
     }

@@ -32,25 +32,30 @@ char *shanti_paths_config_dir(void);
 /* $XDG_DATA_HOME (absolute) or $HOME/.local/share */
 char *shanti_paths_data_home(void);
 
-/* data_home + "/openbangla-keyboard" — always writable user data tree.
- * Does not create it; use shanti_paths_ensure_user_dirs() for that. */
-char *shanti_paths_user_data_dir(void);
+/* data_home + "/shanti-keyboard" — always writable post-rebrand user data
+ * tree. Does not create it; use shanti_paths_ensure_user_dirs() for that. */
 
-/* Engine-visible data tree: the bundled "<exe_dir>/../share/openbangla-keyboard"
+/* Engine-visible data tree: the bundled "<exe_dir>/../share/shanti-keyboard"
  * directory when it exists, else user_data_dir(). Mirrors linuxDataDirectory(). */
 char *shanti_paths_engine_data_dir(void);
 
 /* engine_data_dir() + "/layouts" */
 char *shanti_paths_layouts_dir(void);
 
-/* config_dir + "/OpenBangla/Keyboard.conf" — the settings store shared
- * with the Qt GUI (QSettings("OpenBangla", "Keyboard")). */
+/* config_dir + "/Shanti/Shanti.conf" — the settings store shared
+ * with the Qt GUI (QSettings("Shanti", "Shanti")). */
 char *shanti_paths_settings_file(void);
 
-/* user_data_dir + "/icons/OpenBangla-Keyboard.png" */
+/* user_data_dir + "/icons/Shanti-Keyboard.png" */
 char *shanti_paths_user_icon_file(void);
 
-/* Create user_data_dir and user_data_dir/layouts if missing (best effort). */
+/* One-time legacy migration: copy the pre-rebrand openbangla-keyboard user
+ * data tree and OpenBangla/Keyboard.conf store to the shanti names when the
+ * new locations are missing. Legacy files are left untouched. */
+void shanti_paths_ensure_migration(void);
+
+/* Create user_data_dir and user_data_dir/layouts if missing (best effort);
+ * runs the legacy migration first. */
 void shanti_paths_ensure_user_dirs(void);
 
 /* Free a string returned by any shanti_paths_* / shanti_config_* function. */

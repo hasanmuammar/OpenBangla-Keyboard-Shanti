@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2016 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 /* For Linux we follow XDG Directory Specification for storing user specific data.
    https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 
-   On macOS we use ~/Library/Containers/org.openbangla.inputmethod.keyboard/Data/Library/Application Support/org.openbangla.inputmethod.keyboard
+   On macOS we use ~/Library/Containers/org.shanti.inputmethod.keyboard/Data/Library/Application Support/org.shanti.inputmethod.keyboard
    as the user specific data folder and copy data files from the application bundle to this folder on first run.
  */
 class UserFolders {

@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2016 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,6 +17,9 @@
  */
 
 #include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QStandardPaths>
 #include "FileSystem.h"
 #include "Log.h"
@@ -28,20 +31,66 @@ namespace {
 QString linuxDataDirectory() {
     const QString bundledDirectory =
         QDir::cleanPath(QCoreApplication::applicationDirPath() +
-                        "/../share/openbangla-keyboard");
+                        "/../share/shanti-keyboard");
     if (QDir(bundledDirectory).exists()) {
         return bundledDirectory;
     }
 
     return QDir::cleanPath(
         QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) +
-        "/openbangla-keyboard");
+        "/shanti-keyboard");
+}
+
+// Copy `src` into `dst` recursively (files already present in `dst` are kept).
+bool copyDirRecursively(const QString &srcPath, const QString &dstPath) {
+    QDir dst(dstPath);
+    if (!dst.mkpath(dstPath)) return false;
+    const QDir src(srcPath);
+    const auto entries = src.entryInfoList(QDir::NoDotAndDotDot | QDir::Files | QDir::Dirs);
+    for (const QFileInfo &entry : entries) {
+        if (entry.isDir()) {
+            if (!copyDirRecursively(entry.absoluteFilePath(),
+                                    dst.filePath(entry.fileName()))) {
+                return false;
+            }
+        } else {
+            const QString target = dst.filePath(entry.fileName());
+            if (QFile::exists(target)) continue;
+            if (!QFile::copy(entry.absoluteFilePath(), target)) return false;
+        }
+    }
+    return true;
+}
+
+// One-time rebrand migration: copy the legacy openbangla-keyboard locations
+// to the shanti names when the new ones are missing. Legacy files are kept
+// untouched (the uninstaller cleans both names).
+void migrateLegacyPaths() {
+    const QString genericData =
+        QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
+    const QString legacyData = genericData + "/openbangla-keyboard";
+    const QString dataDir = genericData + "/shanti-keyboard";
+    if (QDir(legacyData).exists() && !QDir(dataDir).exists()) {
+        copyDirRecursively(legacyData, dataDir);
+    }
+
+    const QString configHome =
+        QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+    const QString legacyStore = configHome + "/OpenBangla/Keyboard.conf";
+    const QString storeDir = configHome + "/Shanti";
+    const QString store = storeDir + "/Shanti.conf";
+    if (QFile::exists(legacyStore) && !QFile::exists(store)) {
+        if (QDir().mkpath(storeDir)) {
+            QFile::copy(legacyStore, store);
+        }
+    }
 }
 }
 #endif
 
 void UserFolders::setupLinux() {
-    path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/openbangla-keyboard";
+    migrateLegacyPaths();
+    path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/shanti-keyboard";
     // Create our folder in the user specific data folder
     dir.mkpath(path);
     // Create user specific layouts folder
@@ -49,20 +98,20 @@ void UserFolders::setupLinux() {
 }
 
 void UserFolders::setupMacOS() {
-    path = dir.homePath() + "/Library/Containers/org.openbangla.inputmethod.keyboard/Data/Library/Application Support/org.openbangla.inputmethod.keyboard";
+    path = dir.homePath() + "/Library/Containers/org.shanti.inputmethod.keyboard/Data/Library/Application Support/org.shanti.inputmethod.keyboard";
     // Create our folder in the user specific data folder
     bool ret = dir.mkpath(path);
 
     // Create user specific layouts folder
     dir.mkpath(path + "/layouts/");
 
-    LOG_DEBUG("OpenBangla IME directory present: %d\n", ret);
+    LOG_DEBUG("Shanti IME directory present: %d\n", ret);
 
     QString resourcePath = QCoreApplication::applicationDirPath() + "/../Resources/";
     QDir resourceDir =  QDir(resourcePath);
 
-    LOG_DEBUG("OpenBangla user folder: %s\n", path.toStdString().c_str());
-    LOG_DEBUG("OpenBangla GUI path: %s\n", resourceDir.absolutePath().toUtf8().constData());
+    LOG_DEBUG("Shanti user folder: %s\n", path.toStdString().c_str());
+    LOG_DEBUG("Shanti GUI path: %s\n", resourceDir.absolutePath().toUtf8().constData());
 
     QDir layoutsDir = QDir(resourceDir.filePath("layouts"));
     QDir userLayoutsDir = QDir(path + "/layouts/");
@@ -77,7 +126,7 @@ void UserFolders::setupMacOS() {
 }
 
 void UserFolders::setupWindows() {
-    path = qEnvironmentVariable("LOCALAPPDATA") + "/OpenBangla";
+    path = qEnvironmentVariable("LOCALAPPDATA") + "/Shanti";
     // Create our folder in the user specific data folder
     dir.mkpath(path);
     // Create user specific layouts folder

@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2015-2018 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -24,9 +24,9 @@ Settings *gSettings;
 
 Settings::Settings() {
 #ifdef Q_OS_MACOS
-  setting = new QSettings(gUserFolders->dataPath() + "/org.openbangla.keyboard.plist", QSettings::NativeFormat);
+  setting = new QSettings(gUserFolders->dataPath() + "/org.shanti.inputmethod.keyboard.plist", QSettings::NativeFormat);
 #else
-  setting = new QSettings("OpenBangla", "Keyboard");
+  setting = new QSettings("Shanti", "Shanti");
 #endif
   setting->sync();
 }

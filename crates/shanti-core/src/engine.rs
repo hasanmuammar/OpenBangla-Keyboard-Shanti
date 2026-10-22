@@ -100,7 +100,7 @@ impl ShantiCore {
     }
 
     /// Injection point for the test suite: pin the settings store instead of
-    /// reading the host's `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf`.
+    /// reading the host's `$XDG_CONFIG_HOME/Shanti/Shanti.conf`.
     pub fn with_settings_store(store: Option<shanti_config::Config>) -> Self {
         shanti_paths::ensure_user_dirs();
 
@@ -166,7 +166,7 @@ impl ShantiCore {
         }
     }
 
-    /// Full state reset (the old `OpenBanglaState::reset()` /
+    /// Full state reset (the old `ShantiState::reset()` /
     /// `engine_focus_out_cb` pairing): clear the suggestion, selection and
     /// AltGr tracking, and finish an ongoing session. The shell clears its
     /// rendered windows; committed text history is also cleared since it is

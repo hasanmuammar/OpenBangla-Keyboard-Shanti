@@ -3,7 +3,7 @@ name = "shanti-paths"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0"
-description = "Rust port of the OpenBangla Keyboard shared/FileSystem.cpp path-discovery contract (XDG user dirs, bundled data tree, settings store location)."
+description = "Rust port of the Shanti Keyboard shared/FileSystem.cpp path-discovery contract (XDG user dirs, bundled data tree, settings store location)."
 publish = false
 
 [lib]

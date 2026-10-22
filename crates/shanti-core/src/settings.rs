@@ -1,5 +1,5 @@
 //! Settings application: reads the GUI-written settings store (the same
-//! `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf` file the Qt GUI saves) and
+//! `$XDG_CONFIG_HOME/Shanti/Shanti.conf` file the Qt GUI saves) and
 //! maps it onto the riti configuration, mirroring the old
 //! `update_with_settings()` in `src/engine/ibus/main.cpp` with its exact
 //! defaults.
@@ -31,6 +31,14 @@ pub fn map_store(config: &mut RitiConfig, store: &Store) -> Viewport {
 
     config.set_suggestion_include_english(store.get_bool("settings/PreviewWin/IncludeEnglish", true));
     config.set_phonetic_suggestion(store.get_bool("settings/CandidateWin/Phonetic", true));
+
+    // riti's premature defaults still point the user data tree at the legacy
+    // openbangla-keyboard name (src/engine/riti/src/config.rs); pin it to the
+    // post-rebrand location every time the config is (re)applied.
+    let user_dir = shanti_paths::user_data_dir();
+    if !config.set_user_dir(user_dir.to_string_lossy().as_ref()) {
+        setting_error("user data directory", user_dir.to_string_lossy().as_ref());
+    }
 
     // The database directory is derived from the engine data dir; riti
     // prefixes its suffix/auto-correct filenames onto it.
