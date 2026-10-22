@@ -81,6 +81,7 @@ modules:
   - name: libuv
     buildsystem: cmake-ninja
     config-opts:
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
     # fcitx5 5.1.23's accepted event-loop backends are systemd | libuv |
     # none; libuv is the portable one (no libevent anymore upstream).
@@ -99,6 +100,7 @@ modules:
   - name: json-c
     buildsystem: cmake-ninja
     config-opts:
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
       # Old module declares cmake_minimum_required < 3.5, which new CMake
       # refuses; opt back into the old policy range.
@@ -115,6 +117,7 @@ modules:
   - name: xcb-imdkit
     buildsystem: cmake-ninja
     config-opts:
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
     cleanup:
       - /include
@@ -129,6 +132,7 @@ modules:
   - name: fcitx5
     buildsystem: cmake-ninja
     config-opts:
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
       - -DUSE_SYSTEMD=Off
       - -DENABLE_ENCHANT=Off
@@ -155,6 +159,7 @@ modules:
   - name: fcitx5-qt
     buildsystem: cmake-ninja
     config-opts:
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
       - -DENABLE_QT6=Off
       - -DCMAKE_INSTALL_QT5PLUGINDIR=/app/lib/plugins
@@ -171,6 +176,7 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_BUILD_TYPE=Release
       # 5.1.6 is the last configtool release with Qt5/KF5 support.
       - -DUSE_QT6=Off
@@ -191,6 +197,9 @@ modules:
         - --share=network
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
+      # Ubuntu's flatpak-builder 1.4.2 lacks the SDK's lib->lib64 handling;
+      # pin lib explicitly so every arch installs to /app/lib.
+      - -DCMAKE_INSTALL_LIBDIR=lib
       - -DCMAKE_INSTALL_PREFIX=/app
       - -DBIN_DIR=/app/bin
       - -DDATADIR=/app/share
