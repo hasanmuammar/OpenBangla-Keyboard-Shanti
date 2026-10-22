@@ -117,7 +117,7 @@ Strangler-fig order: core first, wrapper stays until the port is proven.
 **Task list:**
 - [x] Keysym tables generated from `crates/shanti-keysyms` (single source; C header emitted for the C++ shells still standing — hand-written like the other crate headers, not cbindgen). Real-desktop IBus typing check confirmed by the maintainer on 2026-10-22 (local Flatpak built from `rust-rewrite`); Fcitx5 real-desktop check still owed (maintainer has a test environment in progress).
 - [x] Scouting write-up for libibus GIR coverage, recorded in the decision log.
-- [ ] Rust engine implementation (preedit, lookup table, auxiliary, commits, config refresh, key filtering). *(Progress: engine state machine moved into `crates/shanti-core` behind a C ABI and the IBus shell rewired to render its decisions — 11 unit tests over the real riti phonetic engine; Fcitx5 addon rewire onto the same core still pending, plus the on-device typing check for the rewired IBus shell.)*
+- [ ] Rust engine implementation (preedit, lookup table, auxiliary, commits, config refresh, key filtering). *(Progress: engine state machine moved into `crates/shanti-core` behind a C ABI and the IBus shell rewired to render its decisions — 11 unit tests over the real riti phonetic engine; real-desktop IBus typing check confirmed by the maintainer on 2026-10-22. Fcitx5 addon rewire onto the same core still pending.)*
 - [ ] Parallel-run `ibus-engine-shanti` descriptor + opt-in packaging.
 - [ ] Real-desktop typing matrix; default flip decision recorded.
 
