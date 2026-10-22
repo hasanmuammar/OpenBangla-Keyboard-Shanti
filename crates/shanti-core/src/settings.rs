@@ -27,6 +27,15 @@ pub fn map_store(config: &mut RitiConfig, store: &Store) -> Viewport {
     let layout_path = resolve_layout_path(&store.get_string("layout/path", "avro_phonetic"));
     if !config.set_layout_file_path(&layout_path) {
         setting_error("layout file", &layout_path);
+        // The configured layout file may be gone after a release change or a
+        // Flatpak migration (the GUI stores absolute paths, so a path saved
+        // inside another app sandbox never exists here). Leave the fallback to
+        // a bundled fixed layout — riti's FixedMethod constructor cannot fall
+        // back and would abort the whole input method on an empty config.
+        let fallback = bundled_layout_fallback();
+        if config.set_layout_file_path(&fallback) {
+            eprintln!("[IM:Shanti core]: Falling back to bundled layout {}", fallback);
+        }
     }
 
     config.set_suggestion_include_english(store.get_bool("settings/PreviewWin/IncludeEnglish", true));
@@ -91,6 +100,18 @@ pub fn resolve_layout_path(configured_path: &str) -> String {
         }
     }
     configured_path.to_owned()
+}
+
+/// Bundled fixed-layout fallback used when the configured layout file is
+/// missing. `Probhat` ships with the project data (both desktop installs and
+/// the Flatpak bundles put the layouts under the engine data tree) and is the
+/// standard fixed layout.
+fn bundled_layout_fallback() -> String {
+    shanti_paths::engine_data_dir()
+        .join("layouts")
+        .join("Probhat.json")
+        .to_string_lossy()
+        .into_owned()
 }
 
 fn setting_error(kind: &str, path: &str) {

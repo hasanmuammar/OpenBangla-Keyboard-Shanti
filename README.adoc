@@ -26,7 +26,7 @@ This is an experimental fork. Some fork-specific installation, packaging, runtim
 == What this fork provides
 
 * **Prebuilt Linux releases** for x86_64 and ARM64.
-* **Flatpak packages for both input-method stacks:** GNOME uses IBus (`org.shanti.ShantiIbus`); Fcitx5-based desktops use the Fcitx5 addon (`org.fcitx.Fcitx5.Addon.Shanti`).
+* **Flatpak packages for both input-method stacks:** GNOME uses IBus (`org.shanti.ShantiIbus`); Fcitx5-based desktops get a self-contained Fcitx5 app (`org.shanti.ShantiFcitx5`).
 * **Automatic backend selection for source/portable installs:** KDE Plasma uses Fcitx5; other desktop environments use IBus.
 * **User-local installation** under `~/.local` without a system-wide package install.
 * **Source builds** remain available through `tools/build.sh`.
@@ -63,9 +63,9 @@ For bugs or installation/integration problems introduced by this fork, use this 
 Both Flatpaks are architecture-specific bundles on the link:https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases[GitHub Releases] page. Which one fits:
 
 * **GNOME** (Ubuntu, Fedora Workstation, atomic/image-based systems running GNOME): the IBus package `shanti-ibus-x86_64.flatpak` (or aarch64), Flatpak ID `org.shanti.ShantiIbus`.
-* **KDE Plasma / Kinoite, or any desktop where you use Fcitx5**: the Fcitx5 addon `shanti-fcitx-addon-x86_64.flatpak` (or aarch64), Flatpak ID `org.fcitx.Fcitx5.Addon.Shanti`. Install it together with Flathub's sandboxed Fcitx5 (`flatpak install --user flathub org.fcitx.Fcitx5`) — no host Fcitx5 required.
+* **KDE Plasma / Kinoite, or any desktop where you use Fcitx5**: the Fcitx5 app `shanti-fcitx5-x86_64.flatpak` (or aarch64), Flatpak ID `org.shanti.ShantiFcitx5`. One self-contained bundle: the sandboxed Fcitx5 stack (daemon, config tool, Qt input-context plugin) plus the Shanti engine — and the **same `shanti-gui` settings app as the IBus bundle**, so no host Fcitx5 is required and nothing else needs installing.
 
-The IBus package needs the Flathub runtime `org.kde.Platform//5.15-25.08` in the same install scope; Flatpak normally downloads it during installation. See the link:tools/flatpak/README.md[Flatpak guide] for per-desktop commands and setup.
+Both packages use the same Flathub runtime `org.kde.Platform//5.15-25.08`; Flatpak normally downloads it during installation. See the link:tools/flatpak/README.md[Flatpak guide] for per-desktop commands, the Fcitx5 login-autostart step and setup.
 
 === Prebuilt installation
 
@@ -175,7 +175,7 @@ cmake --build build --parallel 2
 cmake --install build
 ----
 
-Pass `-DBUILD_FRONTEND=OFF` to skip the Qt5 settings GUI — this is how the Fcitx5 Flatpak addon builds, since the Fcitx5 runtime has no Qt5.
+Pass `-DBUILD_FRONTEND=OFF` to skip the Qt5 settings GUI — this is how the Fcitx5 Flatpak engine module builds, since its manifest has no Qt5 in the build environment.
 
 The build requires Qt5, CMake, Ninja, a C/C++ compiler, Rust/Cargo, zstd development files, and the development files for the selected input-method backend.
 

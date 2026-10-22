@@ -8,8 +8,7 @@ command: shanti-gui
 separate-locales: false
 
 # IBus engine Flatpak. The Fcitx5 engine ships separately as the
-# org.fcitx.Fcitx5.Addon.Shanti extension (Flatpak requires Fcitx5 addons
-# to live under Flathub's org.fcitx.Fcitx5.Addon.* extension point).
+# self-contained Fcitx5 app org.shanti.ShantiFcitx5 (see fcitx-app.yml).
 finish-args:
   - --share=ipc
   - --socket=wayland

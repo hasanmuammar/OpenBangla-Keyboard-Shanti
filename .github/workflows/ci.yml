@@ -62,9 +62,10 @@ jobs:
           if-no-files-found: error
 
   build-flatpak-fcitx:
-    # Fcitx5 addon extension of Flathub's org.fcitx.Fcitx5 app; needs both
-    # the parent app and its runtime from Flathub. Artifacts are the way to
-    # test the addon on a real desktop (e.g. Kinoite) before releasing it.
+    # Self-contained Fcitx5 app (org.shanti.ShantiFcitx5): Flathub's
+    # published org.fcitx.Fcitx5 app is the manifest base, so one bundle
+    # carries the whole sandboxed Fcitx5 stack plus the Shanti engine.
+    # See tools/flatpak/fcitx-app.yml.
     strategy:
       fail-fast: false
       matrix:
@@ -100,33 +101,23 @@ jobs:
           PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --default-branch=stable \
             --install-deps-from=flathub \
             --repo=flatpak-repo-fcitx \
-            build-dir-fcitx tools/flatpak/fcitx-addon.yml
-          # The addon is committed as a runtime ref (see the manifest
-          # comment); bundle it with --runtime and its actual branch.
-          # (List the refs via the repo's refs/heads layout.)
-          ref_path=$(find flatpak-repo-fcitx/refs/heads -type f \
-            -path "*org.fcitx.Fcitx5.Addon.Shanti/$FLATPAK_ARCH/*" | head -n1)
-          ref=${ref_path#flatpak-repo-fcitx/refs/heads/}
-          echo "addon ref: $ref"
-          kind=$(echo "$ref" | cut -d/ -f1)
-          branch=$(echo "$ref" | cut -d/ -f4)
-          flags=""
-          [ "$kind" = runtime ] && flags="--runtime"
-          flatpak build-bundle $flags --arch="$FLATPAK_ARCH" \
-            flatpak-repo-fcitx "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
-            org.fcitx.Fcitx5.Addon.Shanti "$branch"
-          sha256sum "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
-            > "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak.sha256"
+            build-dir-fcitx tools/flatpak/fcitx-app.yml
+          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+            flatpak-repo-fcitx "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
+            org.shanti.ShantiFcitx5 stable
+          sha256sum "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
+            > "shanti-fcitx5-${FLATPAK_ARCH}.flatpak.sha256"
 
       - name: Upload Flatpak bundle
         uses: actions/upload-artifact@v5
         with:
-          name: shanti-fcitx-addon-flatpak-${{ matrix.arch }}
+          name: shanti-fcitx5-flatpak-${{ matrix.arch }}
           path: |
-            shanti-fcitx-addon-${{ matrix.arch }}.flatpak
-            shanti-fcitx-addon-${{ matrix.arch }}.flatpak.sha256
+            shanti-fcitx5-${{ matrix.arch }}.flatpak
+            shanti-fcitx5-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
   build-linux:
@@ -143,16 +134,6 @@ jobs:
             arch: x86_64
             cc: gcc
             cxx: g++
-            backend: fcitx
-          - runner: ubuntu-24.04
-            arch: x86_64
-            cc: clang
-            cxx: clang++
-            backend: ibus
-          - runner: ubuntu-24.04
-            arch: x86_64
-            cc: clang
-            cxx: clang++
             backend: fcitx
           - runner: ubuntu-24.04-arm
             arch: aarch64

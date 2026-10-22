@@ -2,17 +2,15 @@
 
 Choose the method that matches your desktop:
 
-## GNOME: IBus Flatpak
+## KDE Plasma / Kinoite: Fcitx5 Flatpak
 
-## KDE Plasma / Kinoite: Fcitx5 addon Flatpak
-
-Download the Fcitx5 addon bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases) and install it alongside Flathub's sandboxed Fcitx5 (`org.fcitx.Fcitx5`) if it is not already installed:
+Download the Fcitx5 bundle for your architecture from [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). It is a self-contained Fcitx5 app (`org.shanti.ShantiFcitx5`) — the Fcitx5 stack, our engine and the same `shanti-gui` settings app as the IBus bundle come as one bundle. No host Fcitx5 is needed:
 
 ```bash
-flatpak install --user ./shanti-fcitx-addon-x86_64.flatpak
+flatpak install --user ./shanti-fcitx5-x86_64.flatpak
 ```
 
-Then pick **Shanti** in the Fcitx5 input-method list (see the [Flatpak guide](../../tools/flatpak/README.md) for the Fcitx5 autostart step on Kinoite).
+Then add **Shanti Keyboard** with the bundled `fcitx5-configtool`, set the engine options in the bundled **Shanti Keyboard (Fcitx5)** GUI, and set up a login autostart entry so the daemon runs at boot. All steps are shown in the [Flatpak guide](../../tools/flatpak/README.md).
 
 ## GNOME: IBus Flatpak
 
@@ -35,7 +33,8 @@ See the [Flatpak guide](../../tools/flatpak/README.md) for screenshots-free step
 
 ## Portable install
 
-The portable installer is for IBus and Fcitx5 desktops. From a source checkout, run:
+Release assets are Flatpak-only; the portable model remains available as a
+**from-checkout** install. From a source checkout, run:
 
 ```bash
 bash tools/install.sh
@@ -47,13 +46,17 @@ It downloads the release selected in `release-tag.txt`, checks its SHA-256 check
 bash tools/install.sh --version shanti-alpha.1
 ```
 
-Release assets and available versions are listed on [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). Optional provenance verification requires `gh`:
+Older pre-releases (`shanti-alpha.1` through `shanti-alpha.1.4`) still publish
+portable archives, so `--version` keeps working for them. Available versions
+are listed on [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases). Optional provenance verification requires `gh`:
 
 ```bash
 bash tools/install.sh --version shanti-alpha.1 --verify-provenance
 ```
 
-Every release archive also contains the installer and uninstaller, so a downloaded archive needs no source checkout:
+Downloaded release archives (pre-releases and local `tools/build.sh --package`
+output) contain the installer and uninstaller, so an archive needs no source
+checkout:
 
 ```text
 share/shanti-keyboard/tools/install.sh

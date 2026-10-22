@@ -75,9 +75,10 @@ jobs:
           if-no-files-found: error
 
   build-flatpak-fcitx:
-    # Fcitx5 addon extension of Flathub's org.fcitx.Fcitx5 app (see
-    # tools/flatpak/fcitx-addon.yml): Flatpak requires the
-    # org.fcitx.Fcitx5.Addon.* ID and pulls the parent from Flathub.
+    # Self-contained Fcitx5 app (org.shanti.ShantiFcitx5): Flathub's
+    # published org.fcitx.Fcitx5 app is the manifest base, so one bundle
+    # carries the whole sandboxed Fcitx5 stack plus the Shanti engine.
+    # See tools/flatpak/fcitx-app.yml.
     strategy:
       fail-fast: false
       matrix:
@@ -111,116 +112,39 @@ jobs:
       - name: Build Flatpak bundle
         env:
           FLATPAK_ARCH: ${{ matrix.arch }}
+          # Use the distro AppStream tools: a Homebrew appstream on PATH may
+          # lack the appstream-compose helper flatpak-builder needs to finish.
           PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
         run: |
           flatpak-builder --disable-rofiles-fuse --force-clean --user \
+            --default-branch=stable \
             --install-deps-from=flathub \
             --repo=flatpak-repo-fcitx \
-            build-dir-fcitx tools/flatpak/fcitx-addon.yml
-          # The addon is committed as a runtime ref (see the manifest
-          # comment); bundle it with --runtime and its actual branch.
-          # (List the refs via the repo's refs/heads layout.)
-          ref_path=$(find flatpak-repo-fcitx/refs/heads -type f \
-            -path "*org.fcitx.Fcitx5.Addon.Shanti/$FLATPAK_ARCH/*" | head -n1)
-          ref=${ref_path#flatpak-repo-fcitx/refs/heads/}
-          echo "addon ref: $ref"
-          kind=$(echo "$ref" | cut -d/ -f1)
-          branch=$(echo "$ref" | cut -d/ -f4)
-          flags=""
-          [ "$kind" = runtime ] && flags="--runtime"
-          flatpak build-bundle $flags --arch="$FLATPAK_ARCH" \
-            flatpak-repo-fcitx "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
-            org.fcitx.Fcitx5.Addon.Shanti "$branch"
-          sha256sum "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak" \
-            > "shanti-fcitx-addon-${FLATPAK_ARCH}.flatpak.sha256"
+            build-dir-fcitx tools/flatpak/fcitx-app.yml
+          flatpak build-bundle --arch="$FLATPAK_ARCH" \
+            flatpak-repo-fcitx "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
+            org.shanti.ShantiFcitx5 stable
+          sha256sum "shanti-fcitx5-${FLATPAK_ARCH}.flatpak" \
+            > "shanti-fcitx5-${FLATPAK_ARCH}.flatpak.sha256"
 
-      - name: Attest Fcitx addon bundle and checksum
+      - name: Attest Fcitx app bundle and checksum
         uses: actions/attest@v4
         with:
           subject-path: |
-            shanti-fcitx-addon-${{ matrix.arch }}.flatpak
-            shanti-fcitx-addon-${{ matrix.arch }}.flatpak.sha256
+            shanti-fcitx5-${{ matrix.arch }}.flatpak
+            shanti-fcitx5-${{ matrix.arch }}.flatpak.sha256
 
-      - name: Upload Fcitx addon release assets
+      - name: Upload Fcitx app release assets
         uses: actions/upload-artifact@v5
         with:
           name: flatpak-fcitx-${{ matrix.arch }}
           path: |
-            shanti-fcitx-addon-${{ matrix.arch }}.flatpak
-            shanti-fcitx-addon-${{ matrix.arch }}.flatpak.sha256
-          if-no-files-found: error
-
-  build:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - backend: ibus
-            arch: x86_64
-            runner: ubuntu-22.04
-          - backend: fcitx
-            arch: x86_64
-            runner: ubuntu-22.04
-          - backend: ibus
-            arch: aarch64
-            runner: ubuntu-22.04-arm
-          - backend: fcitx
-            arch: aarch64
-            runner: ubuntu-22.04-arm
-    runs-on: ${{ matrix.runner }}
-    permissions:
-      contents: read
-      id-token: write
-      attestations: write
-      artifact-metadata: write
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            ninja-build \
-            pkg-config \
-            rustc \
-            cargo \
-            libzstd-dev \
-            qtbase5-dev \
-            qtbase5-dev-tools \
-            libqt5svg5-dev \
-            libibus-1.0-dev \
-            libfcitx5core-dev \
-            ca-certificates
-
-      - name: Build release archive
-        env:
-          SHANTI_BUILD_USE_HOST: "1"
-          SHANTI_NONINTERACTIVE: "1"
-        run: bash tools/build.sh --backend ${{ matrix.backend }} --package
-
-      - name: Attest release archive and checksum
-        uses: actions/attest@v4
-        with:
-          subject-path: |
-            dist/*.tar.gz
-            dist/*.sha256
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v5
-        with:
-          name: linux-${{ matrix.arch }}-${{ matrix.backend }}
-          path: |
-            dist/*.tar.gz
-            dist/*.sha256
+            shanti-fcitx5-${{ matrix.arch }}.flatpak
+            shanti-fcitx5-${{ matrix.arch }}.flatpak.sha256
           if-no-files-found: error
 
   release:
-    needs: [build, build-flatpak, build-flatpak-fcitx]
+    needs: [build-flatpak, build-flatpak-fcitx]
     runs-on: ubuntu-22.04
     permissions:
       contents: write

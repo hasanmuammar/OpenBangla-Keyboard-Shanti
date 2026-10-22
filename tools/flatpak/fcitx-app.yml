@@ -1,0 +1,226 @@
+# Shanti Keyboard for Fcitx-based desktops — a self-contained Flatpak app.
+#
+# Model: OURappid org.shanti.ShantiFcitx5 carries BOTH backend variants of
+# the same source tree. Same frontend everywhere: shanti-gui (Qt5) is built
+# in both flatpaks (IBus manifest: shanti-ibus.yml). Only the engine
+# backend differs; both engines read the same ~/.config/Shanti/Shanti.conf
+# written by the GUI, so the settings experience is identical and the
+# engine needs no Fcitx-specific configuration UI.
+#
+# This bundle builds the whole Fcitx5 stack itself — daemon, configtool and
+# the Qt5 input-context plugin — on the same Qt5 runtime as the IBus app
+# (org.kde.Platform//5.15-25.08), no Qt from source and no stack borrowed
+# from Flathub (flathub's org.fcitx.Fcitx5 moved to the Qt6-only 6.11
+# runtime, where shanti-gui's Qt5 cannot run). Fcitx5 itself links no Qt;
+# only configtool/fcitx5-qt are Qt5/KF5, and the 5.15 SDK ships Qt5+KF5
+# dev headers for all of them. Module pins (upper bounds noted inline):
+#   xcb-imdkit 1.0.9, libuv 1.53.0 (5.1.14's event loop; libevent is gone
+#   upstream), json-c 0.16 (5.1.14 uses json-c, not nlohmann-json),
+#   plasma-wayland-protocols DROPPED (only fcitx5 >= 5.1.15+ wants >= 1.20),
+#   fcitx5 5.1.14 (newest fcitx5 that still pulls stringutils.h transitively
+#   from standardpath.h — configtool 5.1.x relies on it; 5.1.23 splits the
+#   header and 5.1.15+ also demands PlasmaWaylandProtocols >= 1.20 which the
+#   Qt5 SDK lacks), fcitx5-qt 5.1.16 (-DENABLE_QT6=Off; defaults On and then
+#   fails finding Qt6), fcitx5-configtool 5.1.6 (last configtool line that
+#   still builds with Qt5/KF5: -DUSE_QT6=Off).
+#   Upgrade = bump the tags AND re-verify the header-deps pairing above.
+#
+# The engine installs at the canonical /app Fcitx5 paths: shanti.so ->
+# /app/lib/fcitx5/shanti.so, confs -> /app/share/fcitx5/{addon,inputmethod},
+# data -> /app/share/shanti-keyboard. The addon conf mirrors upstream
+# OpenBangla's fcitx5 conf shape verbatim ([Dependencies] group,
+# OnDemand=True): lazy loading is normal there, like emoji/spell.
+#
+# The app owns the org.fcitx.Fcitx5 session-bus name (fcitx5's own bus), so
+# it must not run alongside Flathub's Fcitx5 app. Login startup: no systemd
+# user unit ships (neither does Flathub's); document the XDG autostart
+# entry (~/.config/autostart/org.shanti.ShantiFcitx5.desktop) for the
+# daemon; the shanti-gui settings app opens from the desktop entry.
+app-id: org.shanti.ShantiFcitx5
+runtime: org.kde.Platform
+runtime-version: '5.15-25.08'
+sdk: org.kde.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: fcitx5
+separate-locales: false
+finish-args:
+  # From Flathub's org.fcitx.Fcitx5 finish-args (kept at parity).
+  - --socket=session-bus
+  - --socket=x11
+  - --socket=wayland
+  - --socket=inherit-wayland-socket
+  - --share=ipc
+  - --share=network
+  - --device=dri
+  - --filesystem=xdg-config/kxkbrc:rw
+  - --filesystem=xdg-config/fontconfig:ro
+  - --filesystem=xdg-config/fcitx:create
+  - --filesystem=xdg-config/ibus:create
+  - --filesystem=xdg-cache/ibus:create
+  # Shanti settings store and user data, same contract as the IBus app:
+  # GUI writes ~/.config/Shanti/Shanti.conf; engine reads it on activation.
+  - --filesystem=xdg-config/Shanti:create
+  - --filesystem=xdg-data/shanti-keyboard:create
+  # Pre-rebrand locations, needed for the one-time legacy migration.
+  - --filesystem=xdg-config/OpenBangla:create
+  - --filesystem=xdg-data/openbangla-keyboard:create
+  # shanti-gui tray icon (StatusNotifierItem) on KDE.
+  - --talk-name=org.kde.StatusNotifierWatcher
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /lib/cmake
+  - /share/cmake
+  - /share/pkgconfig
+  - '*.la'
+  - '*.a'
+
+modules:
+  - name: libuv
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    # fcitx5 5.1.23's accepted event-loop backends are systemd | libuv |
+    # none; libuv is the portable one (no libevent anymore upstream).
+    sources:
+      - type: git
+        url: https://github.com/libuv/libuv/
+        tag: v1.53.0
+        commit: 840404ce8ba7cc0204be52389a6cfff9f2c90fb6
+    cleanup:
+      - /bin
+      - /include
+      - /lib/pkgconfig
+      - /lib/cmake
+      - /lib/*.a
+
+  - name: json-c
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      # Old module declares cmake_minimum_required < 3.5, which new CMake
+      # refuses; opt back into the old policy range.
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DENABLE_THREADING=ON
+      - -DENABLE_RDRAND=OFF
+    sources:
+      - type: git
+        url: https://github.com/json-c/json-c/
+        tag: json-c-0.16-20220414
+        commit: 2f2ddc1f2dbca56c874e8f9c31b5b963202d80e7
+
+
+  - name: xcb-imdkit
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib/cmake
+    sources:
+      - type: git
+        url: https://github.com/fcitx/xcb-imdkit
+        tag: 1.0.9
+        commit: 44f5c8219bcae9e6afc2391dc50486efcf0bdf06
+
+  - name: fcitx5
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DUSE_SYSTEMD=Off
+      - -DENABLE_ENCHANT=Off
+      - -DUSE_FLATPAK_ICON=On
+    sources:
+      - type: git
+        url: https://github.com/fcitx/fcitx5
+        tag: 5.1.14
+        commit: 7688bd73249f4fc880baaa520c2240a2579dc0b9
+      - type: file
+        # English spelling dictionary vendored for the spell module,
+        # identical pin to Flathub's Fcitx5 manifest.
+        url: https://download.fcitx-im.org/data/en_dict-20121020.tar.gz
+        sha256: c44a5d7847925eea9e4d2d04748d442cd28dd9299a0b572ef7d91eac4f5a6ceb
+        dest: src/modules/spell
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+      - /lib/cmake
+      - /share/pkgconfig
+      - /bin/rime_deployer
+      - /bin/rime_patch
+
+  - name: fcitx5-qt
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DENABLE_QT6=Off
+      - -DCMAKE_INSTALL_QT5PLUGINDIR=/app/lib/plugins
+    sources:
+      - type: git
+        url: https://github.com/fcitx/fcitx5-qt
+        tag: 5.1.16
+        commit: 115750044f3d0db16ca5859808c7da830fd1ff52
+    cleanup:
+      - /include
+      - /lib/cmake
+
+  - name: fcitx5-configtool
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      # 5.1.6 is the last configtool release with Qt5/KF5 support.
+      - -DUSE_QT6=Off
+    sources:
+      - type: git
+        url: https://github.com/fcitx/fcitx5-configtool
+        tag: 5.1.6
+        commit: 2c8680f94ec130a397a456619955ca473e203464
+    cleanup:
+      - /lib/cmake
+
+  - name: shanti-keyboard
+    buildsystem: cmake-ninja
+    builddir: true
+    build-options:
+      append-path: /usr/lib/sdk/rust-stable/bin
+      build-args:
+        - --share=network
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/app
+      - -DBIN_DIR=/app/bin
+      - -DDATADIR=/app/share
+      - -DLIBEXECDIR=/app/libexec
+      - -DENABLE_IBUS=OFF
+      - -DENABLE_FCITX=ON
+      # Same shanti-gui as the IBus flatpak — one frontend everywhere.
+      - -DBUILD_FRONTEND=ON
+    post-install:
+      # The GUI binary runs against both the runtime Qt5 and our
+      # fcitx5-qt IM plugin; wrap so its plugin path includes ours.
+      - mv /app/bin/shanti-gui /app/bin/shanti-gui-bin
+      - |
+        cat > /app/bin/shanti-gui << 'EOF'
+        #!/bin/sh
+        export QT_PLUGIN_PATH="/usr/lib/x86_64-linux-gnu/qt5/plugins:/app/lib/plugins"
+        exec /app/bin/shanti-gui-bin "$@"
+        EOF
+        chmod +x /app/bin/shanti-gui
+      - install -Dm644 /app/share/applications/shanti-keyboard.desktop /app/share/applications/org.shanti.ShantiFcitx5.desktop
+      - sed -i 's/^Name=Shanti Keyboard$/Name=Shanti Keyboard (Fcitx5)/; s/^Icon=shanti-keyboard$/Icon=org.shanti.ShantiFcitx5/' /app/share/applications/org.shanti.ShantiFcitx5.desktop
+      - rm /app/share/applications/shanti-keyboard.desktop
+      - install -Dm644 /app/share/icons/hicolor/16x16/apps/shanti-keyboard.png /app/share/icons/hicolor/16x16/apps/org.shanti.ShantiFcitx5.png
+      - install -Dm644 /app/share/icons/hicolor/32x32/apps/shanti-keyboard.png /app/share/icons/hicolor/32x32/apps/org.shanti.ShantiFcitx5.png
+      - install -Dm644 /app/share/icons/hicolor/48x48/apps/shanti-keyboard.png /app/share/icons/hicolor/48x48/apps/org.shanti.ShantiFcitx5.png
+      - install -Dm644 /app/share/icons/hicolor/128x128/apps/shanti-keyboard.png /app/share/icons/hicolor/128x128/apps/org.shanti.ShantiFcitx5.png
+      - install -Dm644 /app/share/icons/hicolor/512x512/apps/shanti-keyboard.png /app/share/icons/hicolor/512x512/apps/org.shanti.ShantiFcitx5.png
+      - install -Dm644 /app/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml /app/share/metainfo/org.shanti.ShantiFcitx5.metainfo.xml
+      - sed -i 's#<id>org.shanti.ShantiKeyboard</id>#<id>org.shanti.ShantiFcitx5</id>#; s#<name>Shanti Keyboard</name>#<name>Shanti Keyboard (Fcitx5)</name>#; s#<icon type="remote"[^>]*>[^<]*</icon>#<icon type="stock">org.shanti.ShantiFcitx5</icon>#' /app/share/metainfo/org.shanti.ShantiFcitx5.metainfo.xml
+      - rm /app/share/metainfo/org.shanti.ShantiKeyboard.metainfo.xml
+    sources:
+      - type: dir
+        path: ../..

@@ -1,21 +1,25 @@
 # Flatpak packages
 
 Shanti Keyboard ships as two Flatpaks. Pick the one that matches your desktop —
-both give you the same Shanti Keyboard engine, the same layouts, and the same
-settings GUI. Download the bundle for your architecture from the
+both give you the same Shanti Keyboard engine, the same layouts, and the **same
+settings GUI**, built on the same Qt5 runtime (`org.kde.Platform//5.15-25.08`).
+The two bundles differ only in the engine backend they carry. Download the
+bundle for your architecture from the
 [GitHub Releases](https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases)
 page (`.x86_64` for most Intel/AMD computers, `.aarch64` for ARM64).
 
 | If your desktop uses... | Install | Flatpak ID |
 | --- | --- | --- |
 | GNOME (Ubuntu, Fedora Workstation, Fedora Silverblue, GNOME OS, …) | **ShantiIbus** | `org.shanti.ShantiIbus` |
-| KDE Plasma / Kinoite, or anywhere you already use Fcitx5 | **ShantiFcitx** | `org.fcitx.Fcitx5.Addon.Shanti` |
-| Not sure? | On GNOME → **ShantiIbus**; elsewhere run `echo $XDG_CURRENT_DESKTOP` — `KDE`/`KDE-Live` → **ShantiFcitx**, anything else → **ShantiIbus** consistently |
+| KDE Plasma / Kinoite, or anywhere you already use Fcitx5 | **ShantiFcitx5** | `org.shanti.ShantiFcitx5` |
+| Not sure? | On GNOME → **ShantiIbus**; elsewhere run `echo $XDG_CURRENT_DESKTOP` — `KDE`/`KDE-Live` → **ShantiFcitx5**, anything else → **ShantiIbus** consistently |
 
-Flatpak technical fact behind the naming: Fcitx5 addons must be *extensions of
-Flathub's `org.fcitx.Fcitx5` app* and Flatpak requires extension app IDs to
-start with `org.fcitx.Fcitx5.Addon.` — that is why the Fcitx package is called
-`org.fcitx.Fcitx5.Addon.Shanti` rather than a `org.shanti.*` ID.
+Flatpak technical fact behind the Fcitx package: it is a *self-contained app*
+(`org.shanti.ShantiFcitx5`) that uses Flathub's published Fcitx5 app
+(`org.fcitx.Fcitx5`) as its manifest **base**, so one bundle carries the whole
+sandboxed Fcitx5 stack — the input method daemon, our engine, and the Fcitx5
+config tool — plus the Shanti settings data. Nothing needs to be installed on
+the host, and no host Fcitx5 is required.
 
 ---
 
@@ -90,55 +94,81 @@ from the old `openbangla-keyboard` locations to the new `shanti-keyboard`
 locations. After the upgrade you can remove the old app:
 `flatpak uninstall --user org.openbangla.Shanti.IBus`.
 
-## ShantiFcitx — the Fcitx5 engine addon
+## ShantiFcitx5 — the Fcitx5 app
 
-`org.fcitx.Fcitx5.Addon.Shanti` is an *addon* for the sandboxed Fcitx5 Flatpak
-(`org.fcitx.Fcitx5`, published on Flathub). Installing the sandboxed Fcitx5
-from Flathub puts the whole Fcitx5 stack inside the Flatpak sandbox — you do
+`org.shanti.ShantiFcitx5` is a single self-contained Flatpak: the bundle
+carries the whole Fcitx5 stack inside the Flatpak sandbox — the fcitx5
+daemon, its config tool, the Fcitx5 Qt input-context plugin and the Shanti
+engine — plus the **same Shanti settings GUI as the IBus package**, so you do
 not need Fcitx5 on the host system at all, including on Kinoite, Silverblue,
-or any immutable desktop.
+or any immutable desktop. Both Flatpaaks are built on the same Qt5 runtime
+(`org.kde.Platform//5.15-25.08`) and both include `shanti-gui`; the two
+bundles differ only in the engine backend they carry. The app shares
+Fcitx5's own session-bus name, so it must **not** run alongside Flathub's
+`org.fcitx.Fcitx5` app (if that is installed, uninstall it or pick one of
+the two).
 
 ### Install and add the Fcitx input method
 
-1. Add Flathub (per-user, matching the addon's install scope):
+1. Add Flathub (per-user, matching the app's install scope — the base app and
+   runtime are pulled from it automatically):
 
    ```sh
    flatpak remote-add --user --if-not-exists flathub \
      https://flathub.org/repo/flathub.flatpakrepo
    ```
 
-2. Install the sandboxed Fcitx5 and then the addon (both per-user; the first
-   command is a no-op when Fcitx5 is already installed):
+2. Install the downloaded bundle:
 
    ```sh
-   flatpak install --user flathub org.fcitx.Fcitx5
-   flatpak install --user ./shanti-fcitx-addon-x86_64.flatpak
+   flatpak install --user ./shanti-fcitx5-x86_64.flatpak
    ```
 
-   During installation, keep the source-remote choice at its default (accept)
-
-3. Make sure the sandboxed Fcitx5 runs at login. On Kinoite/Plasma, enable
-   Flatpak Fcitx5 with:
+3. Make sure the app runs at login. The bundle has no host systemd unit, so
+   set a one-time XDG autostart entry (Kinoite/Plasma and all other desktops
+   honor it):
 
    ```sh
-   systemctl --user enable --now org.fcitx.Fcitx5
+   mkdir -p ~/.config/autostart
+   cat > ~/.config/autostart/org.shanti.ShantiFcitx5.desktop <<'EOF'
+   [Desktop Entry]
+   Type=Application
+   Name=Shanti Keyboard (Fcitx5)
+   Exec=flatpak run --user org.shanti.ShantiFcitx5
+   X-Flatpak=org.shanti.ShantiFcitx5
+   EOF
    ```
 
-   (If your host already runs a native Fcitx5, prefer the native IME instead —
-   see [installing from source](../README.md), a portable release archive, or the
-   distro package.)
+   On KDE the same entry appears in **System Settings → Autostart**
+   afterwards. (If your host already runs a native Fcitx5, prefer the native
+   IME instead — see [installing from source](../README.md) or the distro
+   package.)
 
-4. Open the Fcitx config area: `flatpak run --user org.fcitx.Fcitx5` exposes
-   the addon's **Shanti Keyboard** entry; pick **Shanti** in the Fcitx5
-   method list (the method name shown to Fcitx5 is `shanti`). Note: this
-   addon build does not include the Qt settings GUI, so its Configure
-   launcher entry does nothing — edit `~/.var/app/org.fcitx.Fcitx5/config`
-   the same way the portable install does, or use the portable `shanti-gui`.
+4. Add **Shanti Keyboard** (method name `shanti`) to an input method group
+   with the bundled Fcitx5 config tool:
+
+   ```sh
+   flatpak run --user org.shanti.ShantiFcitx5 --command=fcitx5-configtool
+   ```
+
+5. All other settings — layout, phonetic/fixed options, ANSI mode,
+   autocorrect, layout viewer — are in the bundled **Shanti Keyboard
+   (Fcitx5)** settings GUI, opened from the app grid or with:
+
+   ```sh
+   flatpak run --user org.shanti.ShantiFcitx5 --command=shanti-gui
+   ```
+
+   It writes the same `~/.config/Shanti/Shanti.conf` store the IBus package
+   uses; the engine applies changes the moment an input context activates.
 
 ### Remove
 
+Remove the autostart entry, then uninstall:
+
 ```sh
-flatpak uninstall --user org.fcitx.Fcitx5.Addon.Shanti
+rm ~/.config/autostart/org.shanti.ShantiFcitx5.desktop
+flatpak uninstall --user org.shanti.ShantiFcitx5
 ```
 
 ---
@@ -161,11 +191,10 @@ documentation if you want to verify one with `gh`.
 
 ### Test a CI build from a branch or PR
 
-Every push (including PR branches) already builds the IBus Flatpak and the
-Fcitx5 addon in CI and uploads them as downloadable artifacts, named
-`shanti-ibus-flatpak-x86_64`, `shanti-ibus-flatpak-aarch64`,
-`shanti-fcitx-addon-flatpak-x86_64` and `shanti-fcitx-addon-flatpak-aarch64`.
-Grab them with `gh` using the run ID:
+Every push (including PR branches) already builds both Flatpaks in CI and
+uploads them as downloadable artifacts, named `shanti-ibus-flatpak-x86_64`,
+`shanti-ibus-flatpak-aarch64`, `shanti-fcitx5-flatpak-x86_64` and
+`shanti-fcitx5-flatpak-aarch64`. Grab them with `gh` using the run ID:
 
 ```sh
 gh -R hasanmuammar/OpenBangla-Keyboard-Shanti run list --branch rust-rewrite
@@ -195,11 +224,12 @@ it with:
 flatpak run --user org.shanti.ShantiIbus
 ```
 
-The Fcitx addon builds the same way against the Flathub Fcitx5 runtime:
+The Fcitx5 app builds the same way:
 
 ```sh
 flatpak-builder --user --install --force-clean \
-  /tmp/shanti-fcitx-build tools/flatpak/fcitx-addon.yml
+  --default-branch=stable \
+  /tmp/shanti-fcitx-build tools/flatpak/fcitx-app.yml
 ```
 
 > Tip: `flatpak-builder` requires its state directory (default
@@ -249,5 +279,5 @@ flatpak run org.flatpak.Builder --user --install --force-clean \
 The release bundles are direct downloads, not a Flatpak remote. If installation
 says the required runtime was not found, check that Flathub is added to the
 same installation scope. Then run the explicit runtime install above, omitting
-`--user` for a system-wide install. The Flatpak and portable installer are
-separate installations.
+`--user` for a system-wide install. The Flatpak and the portable installer
+(from the source checkout's `tools/build.sh`) are separate installations.

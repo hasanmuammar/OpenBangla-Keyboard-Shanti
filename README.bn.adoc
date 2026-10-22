@@ -4,7 +4,7 @@
 
 এই repository-টি **OpenBangla Keyboard-এর একটি Linux-focused fork — Shanti Keyboard**। মূল OpenBangla Keyboard codebase বজায় রেখে এই fork-এর উদ্দেশ্য হলো **সাধারণ Linux desktop এবং immutable বা image-based Linux system-এ Bangla keyboard সহজে install ও ব্যবহারযোগ্য করা**।
 
-এই fork-এর লক্ষ্য হলো **Bazzite, Bluefin এবং অন্যান্য Linux desktop-এ Bangla input সহজে ব্যবহার করা**। GitHub Releases পেজে portable package এবং দুটি Flatpak (IBus + Fcitx5) পাওয়া যায়।
+এই fork-এর লক্ষ্য হলো **Bazzite, Bluefin এবং অন্যান্য Linux desktop-এ Bangla input সহজে ব্যবহার করা**। GitHub Releases পেজে দুটি Flatpak (IBus + Fcitx5) পাওয়া যায় — release asset হিসেবে এখন Flatpak-ই মূল বিতরণ মাধ্যম।
 
 Shanti Keyboard একটি open-source, Unicode-সমর্থিত **Bangla (Bengali) keyboard ও input method for Linux**। এতে phonetic ও fixed keyboard layout, typing automation, dictionary এবং autocorrection সুবিধা রয়েছে।
 
@@ -22,8 +22,8 @@ Shanti Keyboard একটি open-source, Unicode-সমর্থিত **Bangla
 ইনস্টল করার পদ্ধতি:
 
 * **GNOME:** GitHub Releases থেকে নিজের architecture-এর IBus Flatpak (`org.shanti.ShantiIbus`) ডাউনলোড করুন। একই user বা system scope-এ Flathub remote থাকতে হবে; Flatpak সাধারণত app ইনস্টলের সময় `org.kde.Platform//5.15-25.08` runtime ডাউনলোড করে। তারপর app চালু করে integration setup করুন এবং GNOME Settings → Keyboard → Input Sources থেকে **Shanti** যোগ করুন।
-* **KDE Plasma / Kinoite বা Fcitx5 ব্যবহারকারী desktop:** GitHub Releases থেকে Fcitx5 addon Flatpak (`org.fcitx.Fcitx5.Addon.Shanti`) ডাউনলোড করুন এবং Flathub-এর sandboxed Fcitx5-এর সাথে একসাথে ইনস্টল করুন (`flatpak install --user flathub org.fcitx.Fcitx5`) — host-এ Fcitx5 রাখার দরকার নেই।
-* **Portable install:** source checkout থেকে `bash tools/install.sh` চালান। এটি `release-tag.txt`-এ থাকা release ইনস্টল করে।
+* **KDE Plasma / Kinoite বা Fcitx5 ব্যবহারকারী desktop:** GitHub Releases থেকে নিজের architecture-এর Fcitx5 app Flatpak (`org.shanti.ShantiFcitx5`) ডাউনলোড করে ইনস্টল করুন। এটি self-contained বান্ডেল — sandboxed Fcitx5 stack (daemon, config tool, Qt input-context plugin), আমাদের engine, এবং **IBus বান্ডেলের মতোই একই `shanti-gui` settings GUI** একসাথে; host-এ Fcitx5 রাখার বা অন্য কিছু ইনস্টল করার দরকার নেই। দুটি বান্ডেলই একই Qt5 runtime-এ চলে; শুধু engine backend আলাদা। লগইনে daemon চালু রাখতে একবার XDG autostart entry যোগ করতে হয়।
+* **Portable install:** source checkout থেকে `bash tools/install.sh` চালান। এটি `release-tag.txt`-এ থাকা release ইনস্টল করে (পুরনো pre-release-গুলোর portable archive এখনও আছে; নতুন release-এ asset শুধু Flatpak)।
 * **Source build:** development-এর জন্য `bash tools/build.sh` চালান।
 
 command-সহ বিস্তারিত: link:tools/flatpak/README.md[Flatpak guide]।
@@ -35,7 +35,7 @@ Release: https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti/releases
 এই fork upstream-এর release cycle অনুসরণ করে না। CMake project version `version.txt`-এ এবং portable installer-এর default release tag `release-tag.txt`-এ রাখা হয়।
 
 * x86_64 ও ARM64-এর জন্য **prebuilt Linux release workflow**।
-* **দুটি Flatpak:** GNOME-এর জন্য IBus engine (`org.shanti.ShantiIbus`), Fcitx5 desktop-এর জন্য Fcitx5 addon (`org.fcitx.Fcitx5.Addon.Shanti`)।
+* **দুটি Flatpak:** GNOME-এর জন্য IBus engine (`org.shanti.ShantiIbus`), Fcitx5 desktop-এর জন্য self-contained Fcitx5 app (`org.shanti.ShantiFcitx5`)।
 * **Automatic backend selection:** KDE Plasma-তে Fcitx5 এবং অন্যান্য desktop environment-এ IBus।
 * বর্তমান user-এর জন্য `~/.local`-এ installation।
 * Source build-এর জন্য `tools/build.sh`।
