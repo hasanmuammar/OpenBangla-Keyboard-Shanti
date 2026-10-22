@@ -29,9 +29,9 @@ set(SRC_MAIN
     PlatformConfig.cpp
 )
 
-add_executable(openbangla-gui ${SRC_MAIN} ${SRC_GUI})
+add_executable(shanti-gui ${SRC_MAIN} ${SRC_GUI})
 target_link_libraries(
-    openbangla-gui
+    shanti-gui
     libShared
     Qt5::Widgets
     Qt5::Network
@@ -41,6 +41,6 @@ target_link_libraries(
     ${ZSTD_LIBRARIES}
 )
 
-install(TARGETS openbangla-gui
+install(TARGETS shanti-gui
     RUNTIME DESTINATION ${BIN_DIR}
 )

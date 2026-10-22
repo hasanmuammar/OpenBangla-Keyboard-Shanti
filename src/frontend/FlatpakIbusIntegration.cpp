@@ -22,17 +22,21 @@
 #include "PlatformConfig.h"
 
 namespace {
-constexpr auto kAppId = "org.openbangla.Shanti.IBus";
+constexpr auto kAppId = "org.shanti.ShantiIbus";
 constexpr auto kUnit = "org.freedesktop.IBus.session.GNOME.service";
-constexpr auto kMarker = "Managed by OpenBangla Keyboard Shanti Flatpak integration.";
-constexpr auto kComponentName = "org.freedesktop.IBus.OpenBangla";
-constexpr auto kEngineName = "OpenBangla";
+constexpr auto kMarker = "Managed by the Shanti Flatpak integration.";
+// Files written by shanti-alpha.1.4 and earlier under the pre-rebrand
+// branding; still recognized as owned so upgrades can clean them up.
+constexpr auto kLegacyMarker = "Managed by Shanti Keyboard Shanti Flatpak integration.";
+constexpr auto kComponentName = "org.freedesktop.IBus.Shanti";
+constexpr auto kEngineName = "Shanti";
 bool gPromptSuppressedUntilHealthy = false;
 
 struct Paths {
     QString dataHome;
     QString configHome;
     QString component;
+    QString legacyComponent;
     QString launcher;
     QString dropIn;
 };
@@ -42,7 +46,8 @@ Paths paths() {
     Paths result;
     result.dataHome = QDir::cleanPath(home + "/.local/share");
     result.configHome = QDir::cleanPath(home + "/.config");
-    result.component = result.dataHome + "/ibus/component/shanti-flatpak-openbangla.xml";
+    result.component = result.dataHome + "/ibus/component/shanti-flatpak.xml";
+    result.legacyComponent = result.dataHome + "/ibus/component/shanti-flatpak-shanti.xml";
     result.launcher = result.dataHome + "/shanti-ibus/ibus-flatpak-host-wrapper.sh";
     result.dropIn = result.configHome + "/systemd/user/" + kUnit + ".d/90-shanti-flatpak-ibus.conf";
     return result;
@@ -55,12 +60,16 @@ QString systemdEscape(QString value) {
     return value;
 }
 
+bool hasOwnedMarker(const QByteArray &contents) {
+    return contents.contains(kMarker) || contents.contains(kLegacyMarker);
+}
+
 bool hasMarker(const QString &path) {
     QFileInfo info(path);
     if (info.isSymLink() || !info.isFile())
         return false;
     QFile file(path);
-    return file.open(QIODevice::ReadOnly) && file.readAll().contains(kMarker);
+    return file.open(QIODevice::ReadOnly) && hasOwnedMarker(file.readAll());
 }
 
 QByteArray componentXml(const QString &launcher) {
@@ -71,23 +80,23 @@ QByteArray componentXml(const QString &launcher) {
     writer.writeComment(kMarker);
     writer.writeStartElement("component");
     writer.writeTextElement("name", kComponentName);
-    writer.writeTextElement("description", "OpenBangla Keyboard (Flatpak engine)");
+    writer.writeTextElement("description", "Shanti Keyboard (Flatpak engine)");
     QString shellQuotedLauncher = launcher;
     shellQuotedLauncher.replace("'", "'\\''");
     writer.writeTextElement("exec", "'" + shellQuotedLauncher + "'");
     writer.writeTextElement("version", QCoreApplication::applicationVersion());
-    writer.writeTextElement("author", "OpenBangla Keyboard Shanti");
+    writer.writeTextElement("author", "Shanti");
     writer.writeTextElement("license", "GPL-3.0-or-later");
-    writer.writeTextElement("homepage", "https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti");
-    writer.writeTextElement("textdomain", "openbangla");
+    writer.writeTextElement("homepage", "https://github.com/hasanmuammar/Shanti-Keyboard-Shanti");
+    writer.writeTextElement("textdomain", "shanti-keyboard");
     writer.writeStartElement("engines");
     writer.writeStartElement("engine");
     writer.writeTextElement("name", kEngineName);
-    writer.writeTextElement("longname", "OpenBangla Keyboard");
-    writer.writeTextElement("description", "OpenBangla Bengali input method running in Flatpak");
+    writer.writeTextElement("longname", "Shanti Keyboard");
+    writer.writeTextElement("description", "Shanti Bengali input method running in Flatpak");
     writer.writeTextElement("language", "bn");
     writer.writeTextElement("license", "GPL-3.0-or-later");
-    writer.writeTextElement("author", "OpenBangla Keyboard Shanti");
+    writer.writeTextElement("author", "Shanti");
     writer.writeTextElement("layout", "default");
     writer.writeTextElement("rank", "80");
     writer.writeTextElement("symbol", "অ");
@@ -100,7 +109,7 @@ QByteArray componentXml(const QString &launcher) {
 
 QByteArray hostWrapper() {
     return QString::fromUtf8(R"SH(#!/usr/bin/env bash
-# Managed by OpenBangla Keyboard Shanti Flatpak integration.
+# Managed by the Shanti Flatpak integration.
 set -euo pipefail
 
 fail() { printf 'Shanti IBus integration: %s\n' "$*" >&2; exit 1; }
@@ -114,7 +123,7 @@ ibus_socket="${ibus_socket%%,*}"
 [[ -n "$ibus_socket" && "$ibus_socket" == /* ]] || fail 'invalid host IBus socket path'
 
 host_config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
-config_dir="$host_config_home/OpenBangla"
+config_dir="$host_config_home/Shanti"
 flatpak_args=("--filesystem=$ibus_socket:ro" "--env=IBUS_ADDRESS=$ibus_address" "--env=XDG_CONFIG_HOME=$host_config_home")
 if [[ -d "$config_dir" ]]; then
     flatpak_args+=("--filesystem=$config_dir:ro")
@@ -145,9 +154,9 @@ set -m
 
 flatpak run "${flatpak_args[@]}" \
     --talk-name=org.freedesktop.IBus \
-    --own-name=org.freedesktop.IBus.OpenBangla \
-    --command=/app/libexec/ibus-engine-openbangla \
-    org.openbangla.Shanti.IBus --ibus "$@" &
+    --own-name=org.freedesktop.IBus.Shanti \
+    --command=/app/libexec/ibus-engine-shanti \
+    org.shanti.ShantiIbus --ibus "$@" &
 flatpak_pid=$!
 
 set +e
@@ -231,7 +240,8 @@ bool setupNeeded() {
 
 bool hasManagedFiles() {
     const Paths p = paths();
-    return hasMarker(p.component) || hasMarker(p.launcher) || hasMarker(p.dropIn);
+    return hasMarker(p.component) || hasMarker(p.launcher) || hasMarker(p.dropIn) ||
+           hasMarker(p.legacyComponent);
 }
 
 bool hasConflictingDropIn(const Paths &p, QString *conflict) {
@@ -254,7 +264,7 @@ bool hasConflictingDropIn(const Paths &p, QString *conflict) {
 }
 
 bool moveDropInToBackup(const QString &path, QString *backupPath, QString *error) {
-    const QString base = path + ".openbangla-backup";
+    const QString base = path + ".shanti-backup";
     QString candidate = base;
     for (int suffix = 2; QFileInfo(candidate).exists(); ++suffix)
         candidate = base + QString("-%1").arg(suffix);
@@ -312,6 +322,11 @@ bool installIntegration(QString *error, QString *conflictPath = nullptr) {
         !atomicWrite(p.dropIn, serviceDropIn(p), readable, error))
         return false;
 
+    // The pre-rebrand releases installed the component under a different
+    // file name; drop it once the new managed files are in place.
+    if (hasMarker(p.legacyComponent))
+        QFile::remove(p.legacyComponent);
+
     if (!systemdCall("Reload", {}, error) ||
         !systemdCall("RestartUnit", {QString(kUnit), QString("replace")}, error))
         return false;
@@ -343,7 +358,7 @@ void showSetupError(QWidget *parent, const QString &title, const QString &error,
 
 void showSetupFailure(QWidget *parent, const QString &error, const QString &conflictPath) {
     if (!conflictPath.isEmpty()) {
-        QMessageBox box(QMessageBox::Question, "Update OpenBangla integration",
+        QMessageBox box(QMessageBox::Question, "Update Shanti integration",
                         QString("An IBus service override is blocking setup:\n%1\n\nIf this is an old Shanti setup you want to replace, choose Back up and continue. The file will be preserved as a backup before the current integration is installed. If you do not recognize it, cancel and leave it unchanged.")
                             .arg(conflictPath),
                         QMessageBox::NoButton, parent);
@@ -363,7 +378,7 @@ void showSetupFailure(QWidget *parent, const QString &error, const QString &conf
         QString backupPath;
         QString backupError;
         if (!moveDropInToBackup(conflictPath, &backupPath, &backupError)) {
-            QMessageBox::critical(parent, "Could not update OpenBangla integration", backupError);
+            QMessageBox::critical(parent, "Could not update Shanti integration", backupError);
             return;
         }
 
@@ -371,24 +386,24 @@ void showSetupFailure(QWidget *parent, const QString &error, const QString &conf
         QString nextConflict;
         if (!installIntegration(&installError, &nextConflict)) {
             restoreLegacyDropIn(backupPath, conflictPath);
-            showSetupError(parent, "Could not update OpenBangla integration", installError, nextConflict);
+            showSetupError(parent, "Could not update Shanti integration", installError, nextConflict);
             return;
         }
 
-        QMessageBox::information(parent, "OpenBangla integration updated",
+        QMessageBox::information(parent, "Shanti integration updated",
                                  QString("The current GNOME IBus integration is set up. The previous configuration was saved as:\n%1")
                                      .arg(backupPath));
         return;
     }
-    showSetupError(parent, "Could not set up OpenBangla", error, conflictPath);
+    showSetupError(parent, "Could not set up Shanti", error, conflictPath);
 }
 
 bool removeIntegration(QString *error) {
     const Paths p = paths();
-    const QStringList ownedFiles = {p.component, p.launcher, p.dropIn};
+    const QStringList ownedFiles = {p.component, p.launcher, p.dropIn, p.legacyComponent};
     for (const QString &path : ownedFiles) {
         if ((QFileInfo(path).exists() || QFileInfo(path).isSymLink()) && !hasMarker(path)) {
-            *error = QString("Refusing to remove a file that is not managed by OpenBangla: %1").arg(path);
+            *error = QString("Refusing to remove a file that is not managed by Shanti: %1").arg(path);
             return false;
         }
     }
@@ -409,8 +424,8 @@ void showSetupPrompt(QWidget *parent) {
     if (!setupNeeded())
         return;
 
-    QMessageBox box(QMessageBox::Information, "Set up OpenBangla for GNOME",
-                    "GNOME IBus does not currently have OpenBangla registered as an input source.\n\n"
+    QMessageBox box(QMessageBox::Information, "Set up Shanti for GNOME",
+                    "GNOME IBus does not currently have Shanti registered as an input source.\n\n"
                     "Set up integration for this user? This adds an IBus component, a Flatpak launcher, "
                     "and a user-level override for GNOME's IBus service.",
                     QMessageBox::NoButton, parent);
@@ -427,9 +442,9 @@ void showSetupPrompt(QWidget *parent) {
         showSetupFailure(parent, error, conflictPath);
         return;
     }
-    QMessageBox::information(parent, "OpenBangla is registered",
+    QMessageBox::information(parent, "Shanti is registered",
                              "GNOME's IBus service has been restarted. Open Settings → Keyboard → Input Sources, "
-                             "choose Add Input Source, and select OpenBangla.");
+                             "choose Add Input Source, and select Shanti.");
 }
 
 void showManagementPrompt(QWidget *parent) {
@@ -441,7 +456,7 @@ void showManagementPrompt(QWidget *parent) {
     }
 
     QMessageBox box(QMessageBox::Question, "GNOME IBus integration",
-                    "OpenBangla is registered with GNOME IBus for this user. Remove that registration?",
+                    "Shanti is registered with GNOME IBus for this user. Remove that registration?",
                     QMessageBox::NoButton, parent);
     QPushButton *remove = box.addButton("Remove integration", QMessageBox::DestructiveRole);
     QPushButton *keep = box.addButton("Keep integration", QMessageBox::RejectRole);
@@ -452,15 +467,15 @@ void showManagementPrompt(QWidget *parent) {
 
     QString error;
     if (!removeIntegration(&error)) {
-        QMessageBox::critical(parent, "Could not remove OpenBangla integration", error);
+        QMessageBox::critical(parent, "Could not remove Shanti integration", error);
         return;
     }
-    QMessageBox::information(parent, "OpenBangla integration removed",
+    QMessageBox::information(parent, "Shanti integration removed",
                              "The user-level IBus registration was removed and GNOME's IBus service restarted.");
 }
 
 void showSetupOrRepair(QWidget *parent) {
-    QMessageBox box(QMessageBox::Question, "Set up OpenBangla for GNOME",
+    QMessageBox box(QMessageBox::Question, "Set up Shanti for GNOME",
                     "Set up or repair this user's GNOME IBus registration? This writes the managed IBus files and restarts GNOME's IBus service.",
                     QMessageBox::Cancel, parent);
     QPushButton *setup = box.addButton("Set up / repair", QMessageBox::AcceptRole);
@@ -475,13 +490,13 @@ void showSetupOrRepair(QWidget *parent) {
         showSetupFailure(parent, error, conflictPath);
         return;
     }
-    QMessageBox::information(parent, "OpenBangla is registered",
-                             "GNOME's IBus service has been restarted. Open Settings → Keyboard → Input Sources and select OpenBangla.");
+    QMessageBox::information(parent, "Shanti is registered",
+                             "GNOME's IBus service has been restarted. Open Settings → Keyboard → Input Sources and select Shanti.");
 }
 
 void showRemoveConfirmation(QWidget *parent) {
     QMessageBox box(QMessageBox::Warning, "Remove GNOME IBus integration",
-                    "Remove OpenBangla's managed GNOME IBus registration for this user? GNOME's IBus service will be restarted.",
+                    "Remove Shanti's managed GNOME IBus registration for this user? GNOME's IBus service will be restarted.",
                     QMessageBox::Cancel, parent);
     QPushButton *remove = box.addButton("Remove integration", QMessageBox::DestructiveRole);
     box.setDefaultButton(QMessageBox::Cancel);
@@ -491,10 +506,10 @@ void showRemoveConfirmation(QWidget *parent) {
 
     QString error;
     if (!removeIntegration(&error)) {
-        QMessageBox::critical(parent, "Could not remove OpenBangla integration", error);
+        QMessageBox::critical(parent, "Could not remove Shanti integration", error);
         return;
     }
-    QMessageBox::information(parent, "OpenBangla integration removed",
+    QMessageBox::information(parent, "Shanti integration removed",
                              "The user-level IBus registration was removed and GNOME's IBus service restarted.");
 }
 }
@@ -548,7 +563,7 @@ void remove(QWidget *parent) {
     if (canRemove())
         showRemoveConfirmation(parent);
     else if (isApplicable())
-        QMessageBox::information(parent, "OpenBangla integration",
+        QMessageBox::information(parent, "Shanti integration",
                                  "No app-managed GNOME IBus files were found to remove.");
 }
 }

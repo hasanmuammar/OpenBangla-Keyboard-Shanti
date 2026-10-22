@@ -20,7 +20,7 @@
    <cursorShape>ArrowCursor</cursorShape>
   </property>
   <property name="windowTitle">
-   <string>OpenBangla Keyboard</string>
+   <string>Shanti Keyboard</string>
   </property>
   <property name="styleSheet">
    <string notr="true">QMainWindow {

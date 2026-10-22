@@ -1,44 +1,44 @@
 # This CMake module handles the installation of files
 
 if(OS_LINUX)
-        configure_file(${CMAKE_SOURCE_DIR}/data/openbangla-keyboard.desktop.in ${CMAKE_BINARY_DIR}/data/openbangla-keyboard.desktop)
+        configure_file(${CMAKE_SOURCE_DIR}/data/shanti-keyboard.desktop.in ${CMAKE_BINARY_DIR}/data/shanti-keyboard.desktop)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/32.png
                 DESTINATION ${PROJECT_DATADIR}/icons
-                RENAME OpenBangla-Keyboard.png)
+                RENAME Shanti-Keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/1024.png
                 DESTINATION ${DATADIR}/pixmaps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/16.png
                 DESTINATION ${DATADIR}/icons/hicolor/16x16/apps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/32.png
                 DESTINATION ${DATADIR}/icons/hicolor/32x32/apps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/48.png
                 DESTINATION ${DATADIR}/icons/hicolor/48x48/apps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/128.png
                 DESTINATION ${DATADIR}/icons/hicolor/128x128/apps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/512.png
                 DESTINATION ${DATADIR}/icons/hicolor/512x512/apps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
 
         install(FILES ${CMAKE_SOURCE_DIR}/data/1024.png
                 DESTINATION ${DATADIR}/icons/hicolor/1024x1024/apps/
-                RENAME openbangla-keyboard.png)
+                RENAME shanti-keyboard.png)
         
-        install(FILES ${CMAKE_BINARY_DIR}/data/openbangla-keyboard.desktop
+        install(FILES ${CMAKE_BINARY_DIR}/data/shanti-keyboard.desktop
                 DESTINATION "${DATADIR}/applications")
         
-        install(FILES ${CMAKE_SOURCE_DIR}/data/io.github.openbangla.keyboard.metainfo.xml
+        install(FILES ${CMAKE_SOURCE_DIR}/data/org.shanti.ShantiKeyboard.metainfo.xml
                 DESTINATION ${DATADIR}/metainfo)
 endif()
 

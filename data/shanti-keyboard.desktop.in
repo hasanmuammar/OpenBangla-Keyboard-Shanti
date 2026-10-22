@@ -1,7 +1,7 @@
 [Desktop Entry]
-Name=OpenBangla Keyboard
+Name=Shanti Keyboard
 Comment=An OpenSource, Unicode compliant Bengali Input Method.
-Exec=@BIN_DIR@/openbangla-gui %f
-Icon=openbangla-keyboard
+Exec=@BIN_DIR@/shanti-gui %f
+Icon=shanti-keyboard
 Type=Application
 Categories=Utility;Application;

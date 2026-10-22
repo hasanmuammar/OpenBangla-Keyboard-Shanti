@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2016 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -61,7 +61,7 @@ static int checkRuntimeDataFiles() {
   }
 
   if (ok)
-    qInfo() << "OpenBangla runtime data files are present.";
+    qInfo() << "Shanti runtime data files are present.";
 
   return ok ? 0 : 1;
 }
@@ -71,15 +71,15 @@ int main(int argc, char *argv[]) {
   gUserFolders = new UserFolders();
   gSettings = new Settings();
 
-  app.setApplicationName("OpenBangla Keyboard");
+  app.setApplicationName("Shanti Keyboard");
   app.setApplicationVersion(PROJECT_VERSION);
 
   QCommandLineParser parser;
-  parser.setApplicationDescription("OpenBangla Keyboard");
+  parser.setApplicationDescription("Shanti Keyboard");
   parser.addHelpOption();
   parser.addVersionOption();
   QCommandLineOption startInTray("tray","Start in tray");
-  QCommandLineOption setupSystem("setup-system","Setup OpenBangla input source");
+  QCommandLineOption setupSystem("setup-system","Setup Shanti input source");
   QCommandLineOption checkData("check-data", "Check installed layout and dictionary data files, then exit.");
   parser.addOption(startInTray);
   parser.addOption(setupSystem);
@@ -97,12 +97,12 @@ int main(int argc, char *argv[]) {
   }
 
   // Prevent many instances of the app to be launched
-  QString name = "com.openbangla.keyboard";
+  QString name = "com.shanti.keyboard";
   SingleInstance instance;
   if (instance.hasPrevious(name)) {
     QMessageBox msgBox(QMessageBox::Information,
-                       "OpenBangla Keyboard",
-                       "OpenBangla Keyboard is already running on this system and\nrunning more than one instance is not allowed.",
+                       "Shanti Keyboard",
+                       "Shanti Keyboard is already running on this system and\nrunning more than one instance is not allowed.",
                        QMessageBox::Ok);
     msgBox.exec();
     return 0;

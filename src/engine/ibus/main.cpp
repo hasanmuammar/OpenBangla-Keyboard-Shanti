@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2015-2018 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*  IBus engine shell for OpenBangla Keyboard.
+/*  IBus engine shell for Shanti Keyboard.
  *
  *  Pure libibus plumbing since rewrite phase 2 (docs/REWRITE-PLAN.md): the
  *  engine state machine (settings application, key filtering, suggestion
@@ -24,7 +24,7 @@
  *  happens; this shell renders those decisions with libibus calls.
  *
  *  Qt-free since phase 1 — configuration flows through shanti-core, which
- *  reads the same `$XDG_CONFIG_HOME/OpenBangla/Keyboard.conf` store the Qt
+ *  reads the same `$XDG_CONFIG_HOME/Shanti/Shanti.conf` store the Qt
  *  GUI writes. */
 
 #include <ibus.h>
@@ -205,13 +205,13 @@ void start_setup(bool ibus) {
   g_signal_connect(factory, "create-engine", G_CALLBACK(create_engine_cb), NULL);
 
   if (ibus) {
-    ibus_bus_request_name(bus, "org.freedesktop.IBus.OpenBangla", 0);
+    ibus_bus_request_name(bus, "org.freedesktop.IBus.Shanti", 0);
   } else {
     std::error_code executableError;
     const auto executablePath =
         std::filesystem::read_symlink("/proc/self/exe", executableError);
     const std::string engineCommand =
-        "\"" + (executableError ? std::string("ibus-engine-openbangla")
+        "\"" + (executableError ? std::string("ibus-engine-shanti")
                                 : executablePath.string()) +
         "\" --ibus";
 
@@ -219,20 +219,20 @@ void start_setup(bool ibus) {
     const std::string iconPath = iconC ? std::string(iconC) : std::string();
     shanti_string_free(iconC);
 
-    component = ibus_component_new("org.freedesktop.IBus.OpenBangla",
-                                   "OpenBangla Keyboard",
+    component = ibus_component_new("org.freedesktop.IBus.Shanti",
+                                   "Shanti Keyboard",
                                    PROJECT_VERSION,
                                    "GPL 3",
                                    "See AboutBox",
-                                   "http://openbangla.github.io/",
+                                   "https://github.com/hasanmuammar/OpenBangla-Keyboard-Shanti",
                                    engineCommand.c_str(),
-                                   "openbangla-keyboard"
+                                   "shanti-keyboard"
     );
 
     ibus_component_add_engine(component,
-                              ibus_engine_desc_new("OpenBangla",
-                                                   "OpenBangla Keyboard",
-                                                   "OpenBangla Keyboard IME for iBus",
+                              ibus_engine_desc_new("Shanti",
+                                                   "Shanti Keyboard",
+                                                   "Shanti Keyboard IME for iBus",
                                                    "bn",
                                                    "GPL 3",
                                                    "See About Dialog",
@@ -241,7 +241,7 @@ void start_setup(bool ibus) {
                               ));
     ibus_bus_register_component(bus, component);
 
-    ibus_bus_set_global_engine_async(bus, "OpenBangla", -1, nullptr, nullptr, nullptr);
+    ibus_bus_set_global_engine_async(bus, "Shanti", -1, nullptr, nullptr, nullptr);
   }
   ibus_main();
 }

@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2016-2022 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ static void notifyTrayStart(QSystemTrayIcon* tray) {
   if (count >= 4) return;
   if (gSettings->getTopBarVisibility()) return;
 
-  tray->showMessage("OpenBangla Keyboard", "Currently running in the system tray.\n"
+  tray->showMessage("Shanti Keyboard", "Currently running in the system tray.\n"
                     "You can use the tray icon to change keyboard layouts and other "
                     "settings and to show the TopBar again.");
   // Update the counter to show only the message for the first three times
@@ -174,7 +174,7 @@ void TopBar::SetupPopupMenus() {
   iconMenuLayout = new QAction("About current keyboard layout", this);
   connect(iconMenuLayout, SIGNAL(triggered()), this, SLOT(iconMenuLayout_clicked()));
 
-  iconMenuAbout = new QAction("About OpenBangla Keyboard", this);
+  iconMenuAbout = new QAction("About Shanti Keyboard", this);
   connect(iconMenuAbout, SIGNAL(triggered()), this, SLOT(iconMenuAbout_clicked()));
 
   iconMenu = new QMenu(this);
@@ -187,11 +187,11 @@ void TopBar::SetupPopupMenus() {
 }
 
 void TopBar::SetupTrayIcon() {
-  // Use the bundled icon so StatusNotifier hosts receive OpenBangla's artwork
-  // even when the host icon theme does not include openbangla-keyboard.
-  const QIcon trayIcon(":/images/OpenBangla-Keyboard.png");
+  // Use the bundled icon so StatusNotifier hosts receive Shanti's artwork
+  // even when the host icon theme does not include shanti-keyboard.
+  const QIcon trayIcon(":/images/Shanti-Keyboard.png");
   tray = new QSystemTrayIcon(trayIcon, this);
-  tray->setToolTip("OpenBangla Keyboard");
+  tray->setToolTip("Shanti Keyboard");
 
   /* Tray Menu */
   trayLayoutViewer = new QAction("Layout Viewer", this);
@@ -316,27 +316,27 @@ void TopBar::layoutMenuLayouts_clicked() {
 
 void TopBar::layoutMenuInstall_clicked() {
   QString fileName = QFileDialog::getOpenFileName(Q_NULLPTR, "Select Keyboard Layout", QDir::homePath(),
-                     "All Supported Layouts (*.avrolayout *.json);;Avro Keyboard 5 Keyboard Layout (*.avrolayout);;OpenBangla Keyboard Layout (*.json)");
+                     "All Supported Layouts (*.avrolayout *.json);;Avro Keyboard 5 Keyboard Layout (*.avrolayout);;Shanti Keyboard Layout (*.json)");
   LayoutConverter conv;
   if (fileName.endsWith(".avrolayout")) {
     ConversionResult res = conv.convertAvroLayout(fileName);
     switch (res) {
     case Ok:
-      QMessageBox::information(Q_NULLPTR, "OpenBangla Keyboard", "Layout Installed Successfully",
+      QMessageBox::information(Q_NULLPTR, "Shanti Keyboard", "Layout Installed Successfully",
                                QMessageBox::Ok);
       break;
     case UnsupportedLayout:
       QMessageBox::critical(Q_NULLPTR,
-                            "OpenBangla Keyboard",
-                            "Unsupported Layout file!\nOpenBangla Keyboard only supports Avro Keyboard 5 layouts.",
+                            "Shanti Keyboard",
+                            "Unsupported Layout file!\nShanti Keyboard only supports Avro Keyboard 5 layouts.",
                             QMessageBox::Ok);
       break;
     case OpenError:
-      QMessageBox::critical(Q_NULLPTR, "OpenBangla Keyboard",
+      QMessageBox::critical(Q_NULLPTR, "Shanti Keyboard",
                             "An error occurred while opening the layout file!", QMessageBox::Ok);
       break;
     case SaveError:
-      QMessageBox::critical(Q_NULLPTR, "OpenBangla Keyboard", "Error occurred while saving the file!",
+      QMessageBox::critical(Q_NULLPTR, "Shanti Keyboard", "Error occurred while saving the file!",
                             QMessageBox::Ok);
       break;
     }
@@ -344,19 +344,19 @@ void TopBar::layoutMenuInstall_clicked() {
     ConversionResult res = conv.saveLayout(fileName);
     switch (res) {
     case Ok:
-      QMessageBox::information(Q_NULLPTR, "OpenBangla Keyboard", "Layout Installed Successfully",
+      QMessageBox::information(Q_NULLPTR, "Shanti Keyboard", "Layout Installed Successfully",
                                QMessageBox::Ok);
       break;
     case UnsupportedLayout:
-      QMessageBox::critical(Q_NULLPTR, "OpenBangla Keyboard", "Unsupported Layout file!",
+      QMessageBox::critical(Q_NULLPTR, "Shanti Keyboard", "Unsupported Layout file!",
                             QMessageBox::Ok);
       break;
     case OpenError:
-      QMessageBox::critical(Q_NULLPTR, "OpenBangla Keyboard",
+      QMessageBox::critical(Q_NULLPTR, "Shanti Keyboard",
                             "An error occurred while opening the layout file!", QMessageBox::Ok);
       break;
     case SaveError:
-      QMessageBox::critical(Q_NULLPTR, "OpenBangla Keyboard", "Error occurred while saving the file!",
+      QMessageBox::critical(Q_NULLPTR, "Shanti Keyboard", "Error occurred while saving the file!",
                             QMessageBox::Ok);
       break;
     }
@@ -460,7 +460,7 @@ void TopBar::on_buttonSettings_clicked() {
 void TopBar::DataMigration() {
   LayoutConverter converter;
   if(gSettings->getPreviousUserDataRemains()) {
-    QDir previousUserDataPath = QDir(qEnvironmentVariable("HOME", "") + "/.OpenBangla-Keyboard");
+    QDir previousUserDataPath = QDir(qEnvironmentVariable("HOME", "") + "/.Shanti-Keyboard");
     if(previousUserDataPath.exists()) {
       // Handle the data files.
       migrateFile("phonetic-candidate-selection.json", previousUserDataPath, gUserFolders->dataPath());
@@ -473,13 +473,13 @@ void TopBar::DataMigration() {
           QString path = previousUserDataPath.path() + "/" + file;
 
           if(converter.convertLayoutFormat(path) != Ok) {
-            QMessageBox::critical(Q_NULLPTR, "OpenBangla Keyboard",
+            QMessageBox::critical(Q_NULLPTR, "Shanti Keyboard",
                             QString("An error occurred while converting %1 layout!").arg(file), QMessageBox::Ok);
             return;
           }
         }
       }
-      QMessageBox::information(Q_NULLPTR, "OpenBangla Keyboard", "User data files has been migrated successfully.",
+      QMessageBox::information(Q_NULLPTR, "Shanti Keyboard", "User data files has been migrated successfully.",
                                QMessageBox::Ok);
       // Delete the previous user directory.
       previousUserDataPath.cdUp();

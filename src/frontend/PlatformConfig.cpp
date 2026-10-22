@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2025 Muhammad Mominul Huque <mominul2082@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -173,7 +173,7 @@ QStringList parseDConfInputSources(const QString &raw) {
     QStringList sourcesList;
 
     // It comes in an array of tuples like this:
-    // [('xkb', 'us'), ('ibus', 'OpenBangla')]
+    // [('xkb', 'us'), ('ibus', 'Shanti')]
     // So we need to do some preprocessing.
     auto string = QString(raw).replace("[", "").replace("]", "");
     auto index = string.indexOf("),");
@@ -202,19 +202,19 @@ void setupGnomeIME() {
 
     QString firstSource = sourcesList.first();
 
-    // Check if OpenBangla exists in the sources
-    bool found = sourcesList.contains("('ibus', 'OpenBangla')");
+    // Check if Shanti exists in the sources
+    bool found = sourcesList.contains("('ibus', 'Shanti')");
 
     if (found) {
-        LOG_DEBUG("OpenBangla found in sources\n");
+        LOG_DEBUG("Shanti found in sources\n");
     } else {
-        LOG_DEBUG("OpenBangla not found in sources\n");
-        // Add OpenBangla to the sources
-        sourcesList.append("('ibus', 'OpenBangla')");
+        LOG_DEBUG("Shanti not found in sources\n");
+        // Add Shanti to the sources
+        sourcesList.append("('ibus', 'Shanti')");
         auto sourcesString = QString("[%1]").arg(sourcesList.join(", "));
         writeDConfSetting("/org/gnome/desktop/input-sources/sources", sourcesString);
         writeDConfSetting("/org/gnome/desktop/input-sources/mru-sources", QString("[%1]").arg(firstSource));
-        LOG_DEBUG("Added OpenBangla to sources\n");
+        LOG_DEBUG("Added Shanti to sources\n");
     }
 }
 
@@ -222,16 +222,16 @@ void setupCinnamonIME() {
     QString sources = readDConfKey("/org/cinnamon/desktop/input-sources/sources");
     QStringList sourcesList = parseDConfInputSources(sources);
 
-    bool found = sourcesList.contains("('ibus', 'OpenBangla')");
+    bool found = sourcesList.contains("('ibus', 'Shanti')");
 
     if (found) {
-        LOG_DEBUG("[Cinnamon] OpenBangla found in sources\n");
+        LOG_DEBUG("[Cinnamon] Shanti found in sources\n");
     } else {
-        LOG_DEBUG("[Cinnamon] OpenBangla not found in sources\n");
-        sourcesList.append("('ibus', 'OpenBangla')");
+        LOG_DEBUG("[Cinnamon] Shanti not found in sources\n");
+        sourcesList.append("('ibus', 'Shanti')");
         auto sourcesString = QString("[%1]").arg(sourcesList.join(", "));
         writeDConfSetting("/org/cinnamon/desktop/input-sources/sources", sourcesString);
-        LOG_DEBUG("[Cinnamon] Added OpenBangla to sources\n");
+        LOG_DEBUG("[Cinnamon] Added Shanti to sources\n");
     }
 }
 
@@ -291,7 +291,7 @@ void setupKdeVirtualKeyboard() {
     }
 }
 
-bool addOpenBanglaToFcitx5ViaDBus() {
+bool addShantiToFcitx5ViaDBus() {
     // Get current input method group info
     QProcess getProcess;
     getProcess.start("gdbus", {"call", "--session",
@@ -305,11 +305,11 @@ bool addOpenBanglaToFcitx5ViaDBus() {
         return false;
     }
 
-    // Output format: ('us', [('keyboard-us', ''), ('openbangla', '')])
+    // Output format: ('us', [('keyboard-us', ''), ('shanti', '')])
     QString output = getProcess.readAllStandardOutput().trimmed();
 
-    if (output.contains("'openbangla'")) {
-        LOG_DEBUG("OpenBangla already in Fcitx5 input method group\n");
+    if (output.contains("'shanti'")) {
+        LOG_DEBUG("Shanti already in Fcitx5 input method group\n");
         return true;
     }
 
@@ -323,7 +323,7 @@ bool addOpenBanglaToFcitx5ViaDBus() {
     }
 
     // Parse the existing input methods array
-    // We need to reconstruct the array with openbangla added
+    // We need to reconstruct the array with shanti added
     int arrayStart = output.indexOf('[');
     int arrayEnd = output.lastIndexOf(']');
     QString existingArray;
@@ -331,13 +331,13 @@ bool addOpenBanglaToFcitx5ViaDBus() {
         existingArray = output.mid(arrayStart, arrayEnd - arrayStart + 1);
     }
 
-    // Build new array: insert openbangla before the closing bracket
+    // Build new array: insert shanti before the closing bracket
     QString newArray;
     if (existingArray.isEmpty() || existingArray == "[]") {
-        newArray = "[('keyboard-us', ''), ('openbangla', '')]";
+        newArray = "[('keyboard-us', ''), ('shanti', '')]";
     } else {
-        // Remove trailing ] and add openbangla
-        newArray = existingArray.left(existingArray.length() - 1) + ", ('openbangla', '')]";
+        // Remove trailing ] and add shanti
+        newArray = existingArray.left(existingArray.length() - 1) + ", ('shanti', '')]";
     }
 
     QProcess setProcess;
@@ -349,25 +349,25 @@ bool addOpenBanglaToFcitx5ViaDBus() {
     setProcess.waitForFinished();
 
     if (setProcess.exitCode() == 0) {
-        LOG_DEBUG("Added OpenBangla to Fcitx5 input method group via DBus\n");
+        LOG_DEBUG("Added Shanti to Fcitx5 input method group via DBus\n");
         return true;
     }
 
-    LOG_ERROR("Failed to add OpenBangla via DBus: %s\n", setProcess.readAllStandardError().toStdString().c_str());
+    LOG_ERROR("Failed to add Shanti via DBus: %s\n", setProcess.readAllStandardError().toStdString().c_str());
     return false;
 }
 
-void addOpenBanglaToFcitx5Profile() {
+void addShantiToFcitx5Profile() {
     QString profilePath = QDir::homePath() + "/.config/fcitx5/profile";
 
     // Ensure the directory exists
     QDir().mkpath(QDir::homePath() + "/.config/fcitx5");
 
     if (QFile::exists(profilePath)) {
-        // Read existing profile and check if openbangla is already present
+        // Read existing profile and check if shanti is already present
         QSettings profile(profilePath, QSettings::IniFormat);
 
-        // Scan existing groups for openbangla
+        // Scan existing groups for shanti
         int itemCount = 0;
         bool found = false;
 
@@ -375,7 +375,7 @@ void addOpenBanglaToFcitx5Profile() {
             if (group.startsWith("Groups/0/Items/")) {
                 itemCount++;
                 profile.beginGroup(group);
-                if (profile.value("Name").toString() == "openbangla") {
+                if (profile.value("Name").toString() == "shanti") {
                     found = true;
                 }
                 profile.endGroup();
@@ -383,27 +383,27 @@ void addOpenBanglaToFcitx5Profile() {
         }
 
         if (found) {
-            LOG_DEBUG("OpenBangla already in Fcitx5 profile\n");
+            LOG_DEBUG("Shanti already in Fcitx5 profile\n");
             return;
         }
 
-        // Add openbangla as the next item
+        // Add shanti as the next item
         QString newGroup = QString("Groups/0/Items/%1").arg(itemCount);
         profile.beginGroup(newGroup);
-        profile.setValue("Name", "openbangla");
+        profile.setValue("Name", "shanti");
         profile.setValue("Layout", "");
         profile.endGroup();
         profile.sync();
 
-        LOG_DEBUG("Added OpenBangla to existing Fcitx5 profile\n");
+        LOG_DEBUG("Added Shanti to existing Fcitx5 profile\n");
     } else {
-        // Create a new profile with keyboard-us and openbangla
+        // Create a new profile with keyboard-us and shanti
         QSettings profile(profilePath, QSettings::IniFormat);
 
         profile.beginGroup("Groups/0");
         profile.setValue("Name", "Default");
         profile.setValue("Default Layout", "us");
-        profile.setValue("DefaultIM", "openbangla");
+        profile.setValue("DefaultIM", "shanti");
         profile.endGroup();
 
         profile.beginGroup("Groups/0/Items/0");
@@ -412,7 +412,7 @@ void addOpenBanglaToFcitx5Profile() {
         profile.endGroup();
 
         profile.beginGroup("Groups/0/Items/1");
-        profile.setValue("Name", "openbangla");
+        profile.setValue("Name", "shanti");
         profile.setValue("Layout", "");
         profile.endGroup();
 
@@ -422,15 +422,15 @@ void addOpenBanglaToFcitx5Profile() {
 
         profile.sync();
 
-        LOG_DEBUG("Created new Fcitx5 profile with OpenBangla\n");
+        LOG_DEBUG("Created new Fcitx5 profile with Shanti\n");
     }
 }
 
 void setupFcitx5InputMethod() {
     // Try DBus first (works when Fcitx5 is already running)
-    if (!addOpenBanglaToFcitx5ViaDBus()) {
+    if (!addShantiToFcitx5ViaDBus()) {
         LOG_DEBUG("Fcitx5 DBus not available, writing profile directly\n");
-        addOpenBanglaToFcitx5Profile();
+        addShantiToFcitx5Profile();
     }
 }
 
@@ -551,7 +551,7 @@ void setupInputSources() {
         setupLXQtIME();
     } else if(de == DesktopEnvironment::macOS) {
         #ifdef Q_OS_MACOS
-            macOS::setupOpenBanglaInputSource();
+            macOS::setupShantiInputSource();
         #endif
     } else {
         LOG_DEBUG("Desktop Environment not supported for input source setup\n");

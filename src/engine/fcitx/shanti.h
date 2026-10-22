@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2012-2012 Yichao Yu
  *  Copyright (C) 2020-2025 CSSlayer <wengxt@gmail.com>
  *
@@ -16,8 +16,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef _FCITX5_OPENBANGLA_OPENBANGLA_H_
-#define _FCITX5_OPENBANGLA_OPENBANGLA_H_
+#ifndef SHANTI_ENGINE_H
+#define SHANTI_ENGINE_H
 
 #include "shanti-core.h"
 #include <fcitx-config/configuration.h>
@@ -35,21 +35,21 @@
 
 namespace fcitx {
 
-class OpenBanglaState;
+class ShantiState;
 
 /* The addon configuration only carries the external launcher option that
- * Fcitx5's config dialog uses to open the (Qt) OpenBangla settings GUI. */
-FCITX_CONFIGURATION(OpenBanglaConfig,
-                    ExternalOption config{this, "OpenBanglaKeyboard",
-                                          _("OpenBangla Keyboard"),
-                                          "openbangla-gui"};);
+ * Fcitx5's config dialog uses to open the Qt settings GUI. */
+FCITX_CONFIGURATION(ShantiConfig,
+                    ExternalOption config{this, "ShantiKeyboard",
+                                          _("Shanti Keyboard"),
+                                          "shanti-gui"};);
 
 /* The engine state machine lives in the shanti-core crate; this class only
  * wires that core into the Fcitx5 addon API and owns its lifetime. */
-class OpenBanglaEngine final : public InputMethodEngine {
+class ShantiEngine final : public InputMethodEngine {
 public:
-  OpenBanglaEngine(Instance *instance);
-  ~OpenBanglaEngine();
+  ShantiEngine(Instance *instance);
+  ~ShantiEngine();
 
   void activate(const fcitx::InputMethodEntry & /*entry*/,
                 fcitx::InputContextEvent & /*event*/) override;
@@ -66,19 +66,19 @@ public:
 
 private:
   Instance *instance_;
-  OpenBanglaConfig config_;
+  ShantiConfig config_;
   ShantiCore *core_ = nullptr;
   TrackableObjectReference<InputContext> currentIC_;
-  FactoryFor<OpenBanglaState> factory_;
+  FactoryFor<ShantiState> factory_;
 };
 
-class OpenBanglaFactory : public AddonFactory {
+class ShantiFactory : public AddonFactory {
 public:
   AddonInstance *create(AddonManager *manager) override {
-    return new OpenBanglaEngine(manager->instance());
+    return new ShantiEngine(manager->instance());
   }
 };
 
 } // namespace fcitx
 
-#endif // _FCITX5_OPENBANGLA_OPENBANGLA_H_
+#endif // SHANTI_ENGINE_H

@@ -1,5 +1,5 @@
 /*
- *  OpenBangla Keyboard
+ *  Shanti Keyboard
  *  Copyright (C) 2012-2012 Yichao Yu
  *  Copyright (C) 2020-2025 CSSlayer <wengxt@gmail.com>
  *
@@ -16,7 +16,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*  Fcitx5 addon shell for OpenBangla.
+/*  Fcitx5 addon shell for Shanti.
  *
  *  Pure Fcitx5 plumbing since rewrite phase 2 (docs/REWRITE-PLAN.md): the
  *  engine state machine (settings application, key filtering, suggestion
@@ -26,7 +26,7 @@
  *  Fcitx5's addon API is a C++ ABI interface, so this shell stays a C++
  *  class by design (documented hard limit in the rewrite plan). */
 
-#include "openbangla.h"
+#include "shanti.h"
 #include "shanti-core.h"
 #include <fcitx-utils/capabilityflags.h>
 #include <fcitx-utils/keysym.h>
@@ -47,21 +47,21 @@
  * bit 1<<30; Fcitx reports release separately on the KeyEvent. */
 #define SHANTI_IBUS_RELEASE_MASK (1u << 30)
 
-FCITX_DEFINE_LOG_CATEGORY(openbangla, "openbangla");
-#define FCITX_OPENBANGLA_DEBUG() FCITX_LOGC(openbangla, Debug)
+FCITX_DEFINE_LOG_CATEGORY(shanti, "shanti");
+#define FCITX_SHANTI_DEBUG() FCITX_LOGC(shanti, Debug)
 
 namespace fcitx {
 
-class OpenBanglaState : public InputContextProperty {
+class ShantiState : public InputContextProperty {
 public:
-  OpenBanglaState(OpenBanglaEngine *engine, InputContext &ic)
+  ShantiState(ShantiEngine *engine, InputContext &ic)
       : engine_(engine), ic_(&ic) {}
 
-  ~OpenBanglaState() {}
+  ~ShantiState() {}
 
-  class OpenBanglaCandidate : public CandidateWord {
+  class ShantiCandidate : public CandidateWord {
   public:
-    OpenBanglaCandidate(OpenBanglaEngine *engine, std::string text, int index)
+    ShantiCandidate(ShantiEngine *engine, std::string text, int index)
         : CandidateWord(Text(std::move(text))), engine_(engine), index_(index) {
     }
 
@@ -71,11 +71,11 @@ public:
     }
 
   private:
-    OpenBanglaEngine *engine_;
+    ShantiEngine *engine_;
     int index_;
   };
 
-  class OpenBanglaCandidateList : public CommonCandidateList {
+  class ShantiCandidateList : public CommonCandidateList {
   public:
     void setGlobalCursorIndex(int index) {
       int items = this->pageSize();
@@ -130,11 +130,11 @@ public:
         }
         shanti_core_string_free(aux);
 
-        auto candidateList = std::make_unique<OpenBanglaCandidateList>();
+        auto candidateList = std::make_unique<ShantiCandidateList>();
         auto len = shanti_core_candidate_count(engine_->core());
         for (int i = 0; i < len; i++) {
           char *text = shanti_core_candidate(engine_->core(), i);
-          candidateList->append<OpenBanglaCandidate>(engine_, text, i);
+          candidateList->append<ShantiCandidate>(engine_, text, i);
           shanti_core_string_free(text);
         }
 
@@ -222,45 +222,45 @@ public:
   }
 
 private:
-  OpenBanglaEngine *engine_;
+  ShantiEngine *engine_;
   InputContext *ic_;
 };
 
-OpenBanglaEngine::OpenBanglaEngine(Instance *instance)
+ShantiEngine::ShantiEngine(Instance *instance)
     : instance_(instance), factory_(
-          [this](InputContext &ic) { return new OpenBanglaState(this, ic); }) {
+          [this](InputContext &ic) { return new ShantiState(this, ic); }) {
   /* shanti_core_new() keeps the UserFolders side effect: it creates the
    * user data tree (and its layouts directory) exactly as before. */
   core_ = shanti_core_new();
-  instance->inputContextManager().registerProperty("openbanglaState",
+  instance->inputContextManager().registerProperty("shantiState",
                                                    &factory_);
 }
 
-OpenBanglaEngine::~OpenBanglaEngine() {
+ShantiEngine::~ShantiEngine() {
   if (core_) {
     shanti_core_free(core_);
     core_ = nullptr;
   }
 }
 
-void OpenBanglaEngine::activate(const InputMethodEntry & /*entry*/,
+void ShantiEngine::activate(const InputMethodEntry & /*entry*/,
                                 InputContextEvent & /*event*/) {
   shanti_core_apply_settings(core_);
 }
 
-void OpenBanglaEngine::reloadConfig() {
+void ShantiEngine::reloadConfig() {
   /* Fcitx5 config-dialog hook: re-apply the settings store into the core. */
   shanti_core_apply_settings(core_);
 }
 
-void OpenBanglaEngine::keyEvent(const InputMethodEntry & /*entry*/,
+void ShantiEngine::keyEvent(const InputMethodEntry & /*entry*/,
                                 KeyEvent &keyEvent) {
   auto *ic = keyEvent.inputContext();
   auto *state = ic->propertyFor(&factory_);
   state->keyEvent(keyEvent);
 }
 
-void OpenBanglaEngine::reset(const InputMethodEntry & /*entry*/,
+void ShantiEngine::reset(const InputMethodEntry & /*entry*/,
                              InputContextEvent &event) {
   auto *state = event.inputContext()->propertyFor(&factory_);
   state->reset();
@@ -270,7 +270,7 @@ void OpenBanglaEngine::reset(const InputMethodEntry & /*entry*/,
  * shared, reset its state when the context switched. (The old engine's
  * context() was structurally the same but never seeded its tracking, so
  * the switch path was dormant — here it actually works.) */
-void OpenBanglaEngine::syncInputContext(InputContext *ic) {
+void ShantiEngine::syncInputContext(InputContext *ic) {
   if (!currentIC_.isValid()) {
     currentIC_ = ic->watch();
     return;
@@ -285,5 +285,5 @@ void OpenBanglaEngine::syncInputContext(InputContext *ic) {
   }
 }
 
-FCITX_ADDON_FACTORY(OpenBanglaFactory);
+FCITX_ADDON_FACTORY(ShantiFactory);
 } // namespace fcitx
